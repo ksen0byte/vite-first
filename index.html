@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Selection Game</title>
+    <script type="module" src="/src/main.ts"></script>
+    <link href="/src/index.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+<div id="game-container" class="text-center space-y-4">
+    <h1 class="text-4xl font-bold">Object Selection Game</h1>
+    <div id="objects" class="relative w-full h-96 border border-gray-700 mx-auto"></div>
+    <div class="space-x-4">
+        <button id="start-button" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Start Game</button>
+        <p class="inline">Time: <span id="timer" class="font-mono">0</span>s</p>
+        <p class="inline">Score: <span id="score" class="font-mono">0</span></p>
+    </div>
+</div>
+</body>
+</html>
