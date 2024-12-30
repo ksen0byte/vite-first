@@ -3,18 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Object Selection Game</title>
+    <title>DaisyUI Game</title>
     <script type="module" src="/src/main.ts"></script>
     <link href="/src/index.css" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
-<div id="game-container" class="text-center space-y-4">
-    <h1 class="text-4xl font-bold">Object Selection Game</h1>
-    <div id="objects" class="relative w-full h-96 border border-gray-700 mx-auto"></div>
-    <div class="space-x-4">
-        <button id="start-button" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Start Game</button>
-        <p class="inline">Time: <span id="timer" class="font-mono">0</span>s</p>
-        <p class="inline">Score: <span id="score" class="font-mono">0</span></p>
+<body class="bg-base-200 text-base-content">
+<div class="flex flex-col items-center justify-center min-h-screen">
+    <div id="game-container" class="p-6 bg-base-100 rounded-lg shadow-lg space-y-6">
+        <h1 class="text-4xl font-bold text-primary">Object Selection Game</h1>
+
+        <!-- Objects container -->
+        <div id="objects"
+             class="relative w-full h-96 border-2 border-primary rounded-lg bg-base-300 overflow-hidden"></div>
+
+        <!-- Info section -->
+        <div class="flex justify-between items-center w-full">
+            <button id="start-button" class="btn btn-primary">Start Game</button>
+            <div class="stats shadow">
+                <div class="stat">
+                    <div class="stat-title">Time</div>
+                    <div id="timer" class="stat-value">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-title">Score</div>
+                    <div id="score" class="stat-value">0</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>
