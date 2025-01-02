@@ -20,7 +20,9 @@ export function setupSettingsScreen(containerId: string): void {
     });
   });
 
-  // shapes sliders
+  /********************************************/
+  /* 1. SHAPES                                */
+  /********************************************/
   const shapeSizeSlider = document.getElementById("shape-size-slider") as HTMLInputElement;
   const shapesExposureTimeSlider = document.getElementById("shapes-exposure-time-slider") as HTMLInputElement;
   const shapesExposureDelaySlider = document.getElementById("shapes-exposure-delay-slider") as HTMLInputElement;
@@ -28,7 +30,30 @@ export function setupSettingsScreen(containerId: string): void {
   const shapesExposureTimeSliderLabel = document.getElementById("shapes-exposure-time-slider-label") as HTMLElement;
   const shapesExposureDelaySliderLabel = document.getElementById("shapes-exposure-delay-slider-label") as HTMLElement;
 
-  function updateSliderTitle(slider: HTMLInputElement, sliderLabel:HTMLElement, localizationKey:string, unit:string): void {
+  const redCircleShape = {
+    name: "Red Circle",
+    svg: `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><circle cx="50" cy="50" r="40" fill="red"/></svg>`,
+  };
+
+  function showRedCircle() {
+    const shapePreview = document.getElementById("shape-preview") as HTMLElement;
+
+    // 1. Get user-chosen shape size
+    const size = parseInt(shapeSizeSlider.value, 10);
+
+    // 2. Insert the chosen shape
+    shapePreview.innerHTML = redCircleShape.svg;
+    // Optionally scale the shape if needed:
+    const svgElement = shapePreview.querySelector("svg")!;
+    svgElement.setAttribute("width", (size / 0.8).toString() + "mm");
+    svgElement.setAttribute("height", (size / 0.8).toString() + "mm");
+  }
+
+  // Whenever the shape size changes, update the display and restart loop
+  shapeSizeSlider.addEventListener("input", () => showRedCircle());
+  showRedCircle();
+
+  function updateSliderTitle(slider: HTMLInputElement, sliderLabel: HTMLElement, localizationKey: string, unit: string): void {
     sliderLabel.textContent = localize(localizationKey) + ` ${(slider.value)} ${unit}`;
   }
 
@@ -42,55 +67,50 @@ export function setupSettingsScreen(containerId: string): void {
   updateSliderTitle(shapesExposureDelaySlider, shapesExposureDelaySliderLabel, "exposureDelayLabel", "ms");
 
   /********************************************/
-  /* 1. SHAPES & RANDOM LOGIC SETUP           */
+  /* 2. WORDS                                 */
   /********************************************/
-  const shapes = [
-    {
-      name: "Red Circle",
-      svg: `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><circle cx="50" cy="50" r="40" fill="red"/></svg>`,
-    },
-    {
-      name: "Green Triangle",
-      svg: `<svg ><polygon points="50,10 10,90 90,90" fill="green"/></svg>`,
-    },
-    {
-      name: "Blue Square",
-      svg: `<svg ><rect x="10" y="10" width="80" height="80" fill="blue"/></svg>`,
-    },
-  ];
+  const wordSizeSlider = document.getElementById("word-size-slider") as HTMLInputElement;
+  const wordsExposureTimeSlider = document.getElementById("words-exposure-time-slider") as HTMLInputElement;
+  const wordsExposureDelaySlider = document.getElementById("words-exposure-delay-slider") as HTMLInputElement;
+  const wordSizeSliderLabel = document.getElementById("word-size-slider-label") as HTMLElement;
+  const wordsExposureTimeSliderLabel = document.getElementById("words-exposure-time-slider-label") as HTMLElement;
+  const wordsExposureDelaySliderLabel = document.getElementById("words-exposure-delay-slider-label") as HTMLElement;
+  const wordPreviewWord = document.getElementById("word-preview-word") as HTMLElement;
 
-  /********************************************/
-  /* 2. ELEMENT REFERENCES                    */
-  /********************************************/
-  const shapePreview = document.getElementById("shape-preview") as HTMLElement;
-
-  /********************************************/
-  /* 3. HELPER FUNCTIONS                      */
-  /********************************************/
-  function showRandomShapeOnce() {
-    // 1. Pick random shape
-    // const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
-    const randomShape = shapes[0];
-
-    // 2. Get user-chosen shape size
-    const size = parseInt(shapeSizeSlider.value, 10);
-
-    // 3. Insert the chosen shape
-    shapePreview.innerHTML = randomShape.svg;
-    // Optionally scale the shape if needed:
-    const svgElement = shapePreview.querySelector("svg")!;
-    svgElement.setAttribute("width", (size / 0.8).toString() + "mm");
-    svgElement.setAttribute("height", (size / 0.8).toString() + "mm");
-  }
-
-  /********************************************/
-  /* 4. EVENT LISTENERS                       */
-  /********************************************/
-  // Whenever the shape size changes, update the display and restart loop
-  shapeSizeSlider.addEventListener("input", () => {
-    showRandomShapeOnce();
+  wordSizeSlider.addEventListener("input", () => {
+    updateSliderTitle(wordSizeSlider, wordSizeSliderLabel, "wordSizeSliderLabel", "mm");
+    wordPreviewWord.style.fontSize = wordSizeSlider.value + "mm";
   });
-  showRandomShapeOnce();
+  wordsExposureTimeSlider.addEventListener("input", () => updateSliderTitle(wordsExposureTimeSlider, wordsExposureTimeSliderLabel, "exposureTimeLabel", "ms"));
+  wordsExposureDelaySlider.addEventListener("input", () => updateSliderTitle(wordsExposureDelaySlider, wordsExposureDelaySliderLabel, "exposureDelayLabel", "ms"));
+
+  // Call it once on page load, so it shows "50 mm" initially
+  updateSliderTitle(wordSizeSlider, wordSizeSliderLabel, "wordSizeSliderLabel", "mm");
+  updateSliderTitle(wordsExposureTimeSlider, wordsExposureTimeSliderLabel, "exposureTimeLabel", "ms");
+  updateSliderTitle(wordsExposureDelaySlider, wordsExposureDelaySliderLabel, "exposureDelayLabel", "ms");
+
+  /********************************************/
+  /* 3. Syllables                             */
+  /********************************************/
+  const syllableSizeSlider = document.getElementById("syllable-size-slider") as HTMLInputElement;
+  const syllablesExposureTimeSlider = document.getElementById("syllables-exposure-time-slider") as HTMLInputElement;
+  const syllablesExposureDelaySlider = document.getElementById("syllables-exposure-delay-slider") as HTMLInputElement;
+  const syllableSizeSliderLabel = document.getElementById("syllable-size-slider-label") as HTMLElement;
+  const syllablesExposureTimeSliderLabel = document.getElementById("syllables-exposure-time-slider-label") as HTMLElement;
+  const syllablesExposureDelaySliderLabel = document.getElementById("syllables-exposure-delay-slider-label") as HTMLElement;
+  const syllablePreviewSyllable = document.getElementById("syllable-preview-syllable") as HTMLElement;
+
+  syllableSizeSlider.addEventListener("input", () => {
+    updateSliderTitle(syllableSizeSlider, syllableSizeSliderLabel, "syllableSizeSliderLabel", "mm");
+    syllablePreviewSyllable.style.fontSize = syllableSizeSlider.value + "mm";
+  });
+  syllablesExposureTimeSlider.addEventListener("input", () => updateSliderTitle(syllablesExposureTimeSlider, syllablesExposureTimeSliderLabel, "exposureTimeLabel", "ms"));
+  syllablesExposureDelaySlider.addEventListener("input", () => updateSliderTitle(syllablesExposureDelaySlider, syllablesExposureDelaySliderLabel, "exposureDelayLabel", "ms"));
+
+  // Call it once on page load, so it shows "50 mm" initially
+  updateSliderTitle(syllableSizeSlider, syllableSizeSliderLabel, "syllableSizeSliderLabel", "mm");
+  updateSliderTitle(syllablesExposureTimeSlider, syllablesExposureTimeSliderLabel, "exposureTimeLabel", "ms");
+  updateSliderTitle(syllablesExposureDelaySlider, syllablesExposureDelaySliderLabel, "exposureDelayLabel", "ms");
 
 
 }
