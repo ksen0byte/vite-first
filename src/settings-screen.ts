@@ -29,8 +29,7 @@ export function setupSettingsScreen(containerId: string): void {
   const shapesExposureDelaySliderLabel = document.getElementById("shapes-exposure-delay-slider-label") as HTMLElement;
 
   function updateSliderTitle(slider: HTMLInputElement, sliderLabel:HTMLElement, localizationKey:string, unit:string): void {
-    const currentSize = slider.value;
-    sliderLabel.textContent = localize(localizationKey) + ` ${currentSize} ${unit}`;
+    sliderLabel.textContent = localize(localizationKey) + ` ${(slider.value)} ${unit}`;
   }
 
   shapeSizeSlider.addEventListener("input", () => updateSliderTitle(shapeSizeSlider, shapeSizeSliderLabel, "shapeSizeSliderLabel", "mm"));

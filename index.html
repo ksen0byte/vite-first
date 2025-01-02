@@ -73,14 +73,13 @@
 
                     <!-- Subsection Title -->
                     <div
-                            class="collapse-title text-lg font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success"
+                            class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success"
                             data-localize="shapesOption"
-                            id="shapes-section-title"
                     >
-                        <!-- e.g., "Geometrical Shapes" -->
+                         Geometrical Shapes
                     </div>
 
-                    <div class="collapse-content expanded-view px-4 py-3 peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success">
+                    <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success">
                         <!-- 2-column layout on medium+ screens -->
                         <div class="grid grid-cols-3 gap-4 items-start">
 
@@ -91,84 +90,89 @@
                             </div>
 
                             <!-- Right Column: Label, Shape Size Slider, Exposure Time Slider, Exposure Delay Slider -->
-                            <div class="col-span-2 flex flex-col space-y-2 w-full">
+                            <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
                                 <!-- Shape Size Slider -->
-                                <label
-                                        for="shape-size-slider"
-                                        id="shape-size-slider-label"
-                                        class="text-sm font-medium"
-                                        data-localize="shapeSizeSliderLabel"
-                                >
-                                    Shape Size:
-                                </label>
-                                <input
-                                        type="range"
-                                        class="range range-primary w-full"
-                                        id="shape-size-slider"
-                                        min="20"
-                                        max="70"
-                                        step="10"
-                                        value="50"
-                                />
-                                <div class="flex w-full justify-between text-xs px-2">
-                                    <span>20</span>
-                                    <span>30</span>
-                                    <span>40</span>
-                                    <span>50</span>
-                                    <span>60</span>
-                                    <span>70</span>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label
+                                            for="shape-size-slider"
+                                            id="shape-size-slider-label"
+                                            class="text-sm font-medium"
+                                            data-localize="shapeSizeSliderLabel"
+                                    >
+                                        Shape Size:
+                                    </label>
+                                    <input
+                                            type="range"
+                                            class="range range-primary w-full"
+                                            id="shape-size-slider"
+                                            min="20"
+                                            max="70"
+                                            step="10"
+                                            value="50"
+                                    />
+                                    <div class="flex w-full justify-between text-xs px-2">
+                                        <span>20</span>
+                                        <span>30</span>
+                                        <span>40</span>
+                                        <span>50</span>
+                                        <span>60</span>
+                                        <span>70</span>
+                                    </div>
                                 </div>
                                 <!-- Exposure Time Slider -->
-                                <label
-                                        for="shape-size-slider"
-                                        id="shapes-exposure-time-slider-label"
-                                        class="text-sm font-medium"
-                                        data-localize="exposureTimeLabel"
-                                >
-                                    Shape Size:
-                                </label>
-                                <input
-                                        type="range"
-                                        class="range range-primary w-full"
-                                        id="shapes-exposure-time-slider"
-                                        min="500"
-                                        max="1000"
-                                        step="50"
-                                        value="700"
-                                />
-                                <div class="flex w-full justify-between text-xs px-2">
-                                    <span>500</span>
-                                    <span>30</span>
-                                    <span>40</span>
-                                    <span>50</span>
-                                    <span>60</span>
-                                    <span>1000</span>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label
+                                            for="shape-size-slider"
+                                            id="shapes-exposure-time-slider-label"
+                                            class="text-sm font-medium"
+                                            data-localize="exposureTimeLabel"
+                                    >
+                                        Shape Size:
+                                    </label>
+                                    <input
+                                            type="range"
+                                            class="range range-primary w-full"
+                                            id="shapes-exposure-time-slider"
+                                            min="500"
+                                            max="1000"
+                                            step="50"
+                                            value="700"
+                                    />
+                                    <div class="flex w-full justify-between text-xs px-2">
+                                        <span>500</span>
+                                        <span>600</span>
+                                        <span>700</span>
+                                        <span>800</span>
+                                        <span>900</span>
+                                        <span>1000</span>
+                                    </div>
                                 </div>
                                 <!-- Exposure Delay Slider -->
-                                <label
-                                        for="shape-size-slider"
-                                        id="shapes-exposure-delay-slider-label"
-                                        class="text-sm font-medium"
-                                        data-localize="exposureDelayLabel"
-                                >
-                                    Shape Size:
-                                </label>
-                                <input
-                                        type="range"
-                                        class="range range-primary w-full"
-                                        id="shapes-exposure-delay-slider"
-                                        min="500"
-                                        max="1500"
-                                        step="50"
-                                        value="500"
-                                />
-                                <div class="flex w-full justify-between text-xs px-2">
-                                    <span>500</span>
-                                    <span>30</span>
-                                    <span>40</span>
-                                    <span>50</span>
-                                    <span>60</span>
-                                    <span>1500</span>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label
+                                            for="shape-size-slider"
+                                            id="shapes-exposure-delay-slider-label"
+                                            class="text-sm font-medium"
+                                            data-localize="exposureDelayLabel"
+                                    >
+                                        Shape Size:
+                                    </label>
+                                    <input
+                                            type="range"
+                                            class="range range-primary w-full"
+                                            id="shapes-exposure-delay-slider"
+                                            min="500"
+                                            max="1500"
+                                            step="50"
+                                            value="500"
+                                    />
+                                    <div class="flex w-full justify-between text-xs px-2">
+                                        <span>500</span>
+                                        <span>750</span>
+                                        <span>1000</span>
+                                        <span>1250</span>
+                                        <span>1500</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -181,10 +185,11 @@
                         class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box mb-2"
                         id="words-subsection"
                 >
+                    <!-- Radio input to control the collapse -->
                     <input type="radio" name="stimulus-type-accordion" class="peer"/>
-                    <div class="collapse-title text-lg font-medium subsection-header" data-localize="wordsOption">
-                    </div>
-                    <div class="collapse-content expanded-view">
+                    <!-- Subsection Title -->
+                    <div class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success" data-localize="wordsOption">Words:</div>
+                    <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success">
                         <div class="flex justify-between items-center">
                             <label data-localize="fontSizeSliderLabel" class="mr-2"></label>
                             <input
@@ -210,9 +215,9 @@
                         id="syllables-subsection"
                 >
                     <input type="radio" name="stimulus-type-accordion" class="peer"/>
-                    <div class="collapse-title text-lg font-medium subsection-header" data-localize="syllablesOption">
+                    <div class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success" data-localize="syllablesOption">
                     </div>
-                    <div class="collapse-content expanded-view">
+                    <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success">
                         <div class="flex justify-between items-center">
                             <label data-localize="fontSizeSliderLabel" class="mr-2"></label>
                             <input
@@ -229,67 +234,6 @@
                             <!-- Syllables preview area -->
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. General Settings Block -->
-        <div class="card bg-base-100 shadow-md">
-            <div class="card-body space-y-4">
-                <h2 class="card-title" data-localize="generalSettingsTitle">General Settings</h2>
-
-                <!-- Exposure Time Slider -->
-                <div>
-                    <label data-localize="exposureTimeLabel"></label>
-                    <input
-                            type="range"
-                            class="range range-primary w-full"
-                            id="exposure-time-slider"
-                            min="500"
-                            max="1000"
-                            step="50"
-                            value="700"
-                    />
-                </div>
-
-                <!-- Exposure Delay Range (Two Sliders) -->
-                <div>
-                    <label data-localize="exposureDelayLabel"></label>
-                    <div class="flex space-x-2 items-center">
-                        <input
-                                type="range"
-                                class="range range-secondary w-1/2"
-                                id="exposure-delay-min"
-                                min="500"
-                                max="1500"
-                                step="50"
-                                value="500"
-                        />
-                        <input
-                                type="range"
-                                class="range range-secondary w-1/2"
-                                id="exposure-delay-max"
-                                min="500"
-                                max="1500"
-                                step="50"
-                                value="1500"
-                        />
-                    </div>
-                    <small data-localize="exposureDelayHint"></small>
-                </div>
-
-                <!-- Stimulus Count -->
-                <div class="flex items-center">
-                    <label for="stimulus-count-input" class="mr-2" data-localize="stimulusCountLabel"></label>
-                    <input
-                            type="number"
-                            class="input input-bordered input-primary w-24"
-                            id="stimulus-count-input"
-                            min="30"
-                            max="100"
-                            step="1"
-                            value="30"
-                    />
                 </div>
             </div>
         </div>
