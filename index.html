@@ -68,25 +68,109 @@
                         class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box mb-2"
                         id="shapes-subsection"
                 >
-                    <input type="radio" name="stimulus-type-accordion" checked="checked"/>
-                    <div class="collapse-title text-lg font-medium subsection-header" data-localize="shapesOption">
-                    </div>
-                    <div class="collapse-content expanded-view">
-                        <div class="flex justify-between items-center">
-                            <label for="shape-size-slider" data-localize="shapeSizeSliderLabel" class="mr-2"></label>
-                            <input
-                                    type="range"
-                                    class="range range-primary w-1/2"
-                                    id="shape-size-slider"
-                                    min="20"
-                                    max="70"
-                                    step="10"
-                                    value="50"
-                            >
+                    <!-- Radio input to control the collapse -->
+                    <input type="radio" name="stimulus-type-accordion" checked="checked" class="peer"/>
 
-                        </div>
-                        <div class="subsection-preview border border-base-300 w-40 h-40 mt-2 flex items-center justify-center">
-                            <!-- Shape preview area -->
+                    <!-- Subsection Title -->
+                    <div
+                            class="collapse-title text-lg font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success"
+                            data-localize="shapesOption"
+                            id="shapes-section-title"
+                    >
+                        <!-- e.g., "Geometrical Shapes" -->
+                    </div>
+
+                    <div class="collapse-content expanded-view px-4 py-3 peer-checked:bg-base-200 peer-checked:border-l-8 peer-checked:border-success">
+                        <!-- 2-column layout on medium+ screens -->
+                        <div class="grid grid-cols-3 gap-4 items-start">
+
+                            <!-- Left Column: Shape Preview -->
+                            <div id="shape-preview"
+                                 class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                <!-- Example placeholder or <svg> -->
+                            </div>
+
+                            <!-- Right Column: Label, Shape Size Slider, Exposure Time Slider, Exposure Delay Slider -->
+                            <div class="col-span-2 flex flex-col space-y-2 w-full">
+                                <!-- Shape Size Slider -->
+                                <label
+                                        for="shape-size-slider"
+                                        id="shape-size-slider-label"
+                                        class="text-sm font-medium"
+                                        data-localize="shapeSizeSliderLabel"
+                                >
+                                    Shape Size:
+                                </label>
+                                <input
+                                        type="range"
+                                        class="range range-primary w-full"
+                                        id="shape-size-slider"
+                                        min="20"
+                                        max="70"
+                                        step="10"
+                                        value="50"
+                                />
+                                <div class="flex w-full justify-between text-xs px-2">
+                                    <span>20</span>
+                                    <span>30</span>
+                                    <span>40</span>
+                                    <span>50</span>
+                                    <span>60</span>
+                                    <span>70</span>
+                                </div>
+                                <!-- Exposure Time Slider -->
+                                <label
+                                        for="shape-size-slider"
+                                        id="shapes-exposure-time-slider-label"
+                                        class="text-sm font-medium"
+                                        data-localize="exposureTimeLabel"
+                                >
+                                    Shape Size:
+                                </label>
+                                <input
+                                        type="range"
+                                        class="range range-primary w-full"
+                                        id="shapes-exposure-time-slider"
+                                        min="500"
+                                        max="1000"
+                                        step="50"
+                                        value="700"
+                                />
+                                <div class="flex w-full justify-between text-xs px-2">
+                                    <span>500</span>
+                                    <span>30</span>
+                                    <span>40</span>
+                                    <span>50</span>
+                                    <span>60</span>
+                                    <span>1000</span>
+                                </div>
+                                <!-- Exposure Delay Slider -->
+                                <label
+                                        for="shape-size-slider"
+                                        id="shapes-exposure-delay-slider-label"
+                                        class="text-sm font-medium"
+                                        data-localize="exposureDelayLabel"
+                                >
+                                    Shape Size:
+                                </label>
+                                <input
+                                        type="range"
+                                        class="range range-primary w-full"
+                                        id="shapes-exposure-delay-slider"
+                                        min="500"
+                                        max="1500"
+                                        step="50"
+                                        value="500"
+                                />
+                                <div class="flex w-full justify-between text-xs px-2">
+                                    <span>500</span>
+                                    <span>30</span>
+                                    <span>40</span>
+                                    <span>50</span>
+                                    <span>60</span>
+                                    <span>1500</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -97,7 +181,7 @@
                         class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box mb-2"
                         id="words-subsection"
                 >
-                    <input type="radio" name="stimulus-type-accordion"/>
+                    <input type="radio" name="stimulus-type-accordion" class="peer"/>
                     <div class="collapse-title text-lg font-medium subsection-header" data-localize="wordsOption">
                     </div>
                     <div class="collapse-content expanded-view">
@@ -125,7 +209,7 @@
                         class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
                         id="syllables-subsection"
                 >
-                    <input type="radio" name="stimulus-type-accordion"/>
+                    <input type="radio" name="stimulus-type-accordion" class="peer"/>
                     <div class="collapse-title text-lg font-medium subsection-header" data-localize="syllablesOption">
                     </div>
                     <div class="collapse-content expanded-view">
