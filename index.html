@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--suppress HtmlUnknownTag -->
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,391 +9,292 @@
     <script type="module" src="/src/main.ts"></script>
     <link href="/src/index.css" rel="stylesheet">
 </head>
+
 <body class="bg-base-200 text-base-content">
-<div class="flex flex-col min-h-screen bg-base-200 text-base-content">
-    <!-- Header -->
-    <header class="navbar bg-base-100 shadow-md px-4">
-        <div class="flex-1">
-            <!-- Logo -->
-            <div class="w-10 h-10 mr-4">
-                <!--suppress HtmlUnknownTarget -->
-                <img src="logo.svg" alt="Logo" class="w-full rounded-full"/>
+    <div class="flex flex-col min-h-screen bg-base-200 text-base-content">
+        <!-- Header -->
+        <header class="navbar bg-base-100 shadow-md px-4">
+            <div class="flex-1">
+                <!-- Logo -->
+                <div class="w-10 h-10 mr-4">
+                    <!--suppress HtmlUnknownTarget -->
+                    <img src="logo.svg" alt="Logo" class="w-full rounded-full" />
+                </div>
+                <!-- App Title -->
+                <h1 class="font-bold text-xl" data-localize="appTitle"></h1>
             </div>
-            <!-- App Title -->
-            <h1 class="font-bold text-xl" data-localize="appTitle"></h1>
-        </div>
-    </header>
+        </header>
 
-    <!-- Main Content -->
-    <main class="flex-grow container mx-auto px-4 py-4 space-y-4" id="settings-screen">
-        <!-- 1. Personal Data Block -->
-        <div class="card bg-base-100 shadow-md">
-            <div class="card-body">
-                <h2 class="card-title" data-localize="personalDataTitle">Personal Data</h2>
-                <div class="flex space-x-2">
-                    <label class="flex flex-col form-control max-w-xs">
-                        <div class="label">
-                            <span class="label-text" data-localize="surnameLabel">Surname:</span>
-                        </div>
-                        <input class="input input-bordered input-primary w-full max-w-xs" type="text" id="surname-input"
-                               placeholder="Doe"/>
-                    </label>
-                    <label class="flex flex-col form-control max-w-xs">
-                        <div class="label">
-                            <span class="label-text" data-localize="nameLabel">Name:</span>
-                        </div>
-                        <input class="input input-bordered input-primary w-full max-w-xs" type="text" id="name-input"
-                               placeholder="John"/>
-                    </label>
-                    <label class="flex flex-col form-control max-w-xs">
-                        <div class="label">
-                            <span class="label-text" data-localize="genderLabel">Gender:</span>
-                        </div>
-                        <select class="select select-bordered select-primary" id="gender-select">
-                            <option value="male" data-localize="male"></option>
-                            <option value="female" data-localize="female"></option>
-                        </select>
-                    </label>
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 py-4 space-y-4" id="settings-screen">
+            <!-- 1. Personal Data Block -->
+            <div class="card bg-base-100 shadow-md">
+                <div class="card-body">
+                    <h2 class="card-title" data-localize="personalDataTitle">Personal Data</h2>
+                    <div class="flex space-x-2">
+                        <label class="flex flex-col form-control max-w-xs">
+                            <div class="label">
+                                <span class="label-text" data-localize="surnameLabel">Surname:</span>
+                            </div>
+                            <input class="input input-bordered input-primary w-full max-w-xs" type="text"
+                                id="surname-input" placeholder="Doe" />
+                        </label>
+                        <label class="flex flex-col form-control max-w-xs">
+                            <div class="label">
+                                <span class="label-text" data-localize="nameLabel">Name:</span>
+                            </div>
+                            <input class="input input-bordered input-primary w-full max-w-xs" type="text"
+                                id="name-input" placeholder="John" />
+                        </label>
+                        <label class="flex flex-col form-control max-w-xs">
+                            <div class="label">
+                                <span class="label-text" data-localize="genderLabel">Gender:</span>
+                            </div>
+                            <select class="select select-bordered select-primary" id="gender-select">
+                                <option value="male" data-localize="male"></option>
+                                <option value="female" data-localize="female"></option>
+                            </select>
+                        </label>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 2. Stimulus Type (Collapsible sections) -->
-        <div class="card bg-base-100 shadow-md">
-            <div class="card-body">
-                <h2 class="card-title mb-2" data-localize="chooseTestMode"></h2>
+            <!-- 2. Stimulus Type (Collapsible sections) -->
+            <div class="card bg-base-100 shadow-md">
+                <div class="card-body">
+                    <h2 class="card-title mb-2" data-localize="chooseTestMode"></h2>
 
-                <!-- Geometric Shapes Subsection -->
-                <div
-                        tabIndex="0"
-                        class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box mb-2"
-                        id="shapes-subsection"
-                >
-                    <!-- Radio input to control the collapse -->
-                    <input type="radio" name="stimulus-type-accordion" checked="checked" class="peer"/>
+                    <!-- Geometric Shapes Subsection -->
+                    <div tabIndex="0" class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box mb-2"
+                        id="shapes-subsection">
+                        <!-- Radio input to control the collapse -->
+                        <input type="radio" name="stimulus-type-accordion" checked="checked" class="peer" />
 
-                    <!-- Subsection Title -->
-                    <div
-                            class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                            data-localize="shapesOption"
-                    >
-                        Geometrical Shapes
-                    </div>
+                        <!-- Subsection Title -->
+                        <div class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
+                            data-localize="shapesOption">
+                            Geometrical Shapes
+                        </div>
 
-                    <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
-                        <!-- 2-column layout on medium+ screens -->
-                        <div class="grid grid-cols-3 gap-4 items-start">
+                        <div
+                            class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
+                            <!-- 2-column layout on medium+ screens -->
+                            <div class="grid grid-cols-3 gap-4 items-start">
 
-                            <!-- Left Column: Shape Preview -->
-                            <div id="shape-preview"
-                                 class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
-                                <!-- Example placeholder or <svg> -->
-                            </div>
-
-                            <!-- Right Column: Label, Shape Size Slider, Exposure Time Slider, Exposure Delay Slider -->
-                            <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
-                                <!-- Shape Size Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="shape-size-slider"
-                                            id="shape-size-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="shapeSizeSliderLabel"
-                                    >
-                                        Shape Size:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="shape-size-slider"
-                                            min="20"
-                                            max="70"
-                                            step="10"
-                                            value="50"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>20</span>
-                                        <span>30</span>
-                                        <span>40</span>
-                                        <span>50</span>
-                                        <span>60</span>
-                                        <span>70</span>
-                                    </div>
+                                <!-- Left Column: Shape Preview -->
+                                <div id="shape-preview"
+                                    class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                    <!-- Example placeholder or <svg> -->
                                 </div>
-                                <!-- Exposure Time Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="shape-size-slider"
-                                            id="shapes-exposure-time-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="exposureTimeLabel"
-                                    >
-                                        Exposure Time:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="shapes-exposure-time-slider"
-                                            min="500"
-                                            max="1000"
-                                            step="50"
-                                            value="700"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>500</span>
-                                        <span>600</span>
-                                        <span>700</span>
-                                        <span>800</span>
-                                        <span>900</span>
-                                        <span>1000</span>
+
+                                <!-- Right Column: Label, Shape Size Slider, Exposure Time Slider, Exposure Delay Slider -->
+                                <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
+                                    <!-- Shape Size Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="shape-size-slider" id="shape-size-slider-label"
+                                            class="text-sm font-medium" data-localize="shapeSizeSliderLabel">
+                                            Shape Size:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full" id="shape-size-slider"
+                                            min="20" max="70" step="10" value="50" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>20</span>
+                                            <span>30</span>
+                                            <span>40</span>
+                                            <span>50</span>
+                                            <span>60</span>
+                                            <span>70</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <!-- Exposure Delay Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="shape-size-slider"
-                                            id="shapes-exposure-delay-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="exposureDelayLabel"
-                                    >
-                                        Exposure Delay:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="shapes-exposure-delay-slider"
-                                            min="500"
-                                            max="1500"
-                                            step="50"
-                                            value="500"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>500</span>
-                                        <span>750</span>
-                                        <span>1000</span>
-                                        <span>1250</span>
-                                        <span>1500</span>
+                                    <!-- Exposure Time Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="shape-size-slider" id="shapes-exposure-time-slider-label"
+                                            class="text-sm font-medium" data-localize="exposureTimeLabel">
+                                            Exposure Time:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full"
+                                            id="shapes-exposure-time-slider" min="500" max="1000" step="50"
+                                            value="700" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>500</span>
+                                            <span>600</span>
+                                            <span>700</span>
+                                            <span>800</span>
+                                            <span>900</span>
+                                            <span>1000</span>
+                                        </div>
+                                    </div>
+                                    <!-- Exposure Delay Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="shape-size-slider" id="shapes-exposure-delay-slider-label"
+                                            class="text-sm font-medium" data-localize="exposureDelayLabel">
+                                            Exposure Delay:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full"
+                                            id="shapes-exposure-delay-slider" min="500" max="1500" step="50"
+                                            value="500" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>500</span>
+                                            <span>750</span>
+                                            <span>1000</span>
+                                            <span>1250</span>
+                                            <span>1500</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Words Subsection -->
-                <div
-                        tabIndex="0"
-                        class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box mb-2"
-                        id="words-subsection"
-                >
-                    <!-- Radio input to control the collapse -->
-                    <input type="radio" name="stimulus-type-accordion" class="peer"/>
-                    <!-- Subsection Title -->
-                    <div class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                         data-localize="wordsOption">Words:
-                    </div>
-                    <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
-                        <!-- 2-column layout on medium+ screens -->
-                        <div class="grid grid-cols-3 gap-4 items-start">
+                    <!-- Words Subsection -->
+                    <div tabIndex="0" class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box mb-2"
+                        id="words-subsection">
+                        <!-- Radio input to control the collapse -->
+                        <input type="radio" name="stimulus-type-accordion" class="peer" />
+                        <!-- Subsection Title -->
+                        <div class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
+                            data-localize="wordsOption">Words:
+                        </div>
+                        <div
+                            class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
+                            <!-- 2-column layout on medium+ screens -->
+                            <div class="grid grid-cols-3 gap-4 items-start">
 
-                            <!-- Left Column: Word Preview -->
-                            <div id="word-preview"
-                                 class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
-                                <span id="word-preview-word" class="font-mono text-[2cm] leading-none text-green-600"
-                                      data-localize="wordPreviewWord">human</span>
-                            </div>
-
-                            <!-- Right Column: Label, Word Size Slider, Exposure Time Slider, Exposure Delay Slider -->
-                            <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
-                                <!-- Word Size Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="word-size-slider"
-                                            id="word-size-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="wordSizeSliderLabel"
-                                    >
-                                        Word Size:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="word-size-slider"
-                                            min="15"
-                                            max="30"
-                                            step="1"
-                                            value="20"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>15</span>
-                                        <span>20</span>
-                                        <span>25</span>
-                                        <span>30</span>
-                                    </div>
+                                <!-- Left Column: Word Preview -->
+                                <div id="word-preview"
+                                    class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                    <span id="word-preview-word" class="font-mono text-[2cm] leading-none text-blue-600"
+                                        data-localize="wordPreviewWord">human</span>
                                 </div>
-                                <!-- Exposure Time Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="word-size-slider"
-                                            id="words-exposure-time-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="exposureTimeLabel"
-                                    >
-                                        Exposure Time:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="words-exposure-time-slider"
-                                            min="500"
-                                            max="1000"
-                                            step="50"
-                                            value="700"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>500</span>
-                                        <span>600</span>
-                                        <span>700</span>
-                                        <span>800</span>
-                                        <span>900</span>
-                                        <span>1000</span>
+
+                                <!-- Right Column: Label, Word Size Slider, Exposure Time Slider, Exposure Delay Slider -->
+                                <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
+                                    <!-- Word Size Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="word-size-slider" id="word-size-slider-label"
+                                            class="text-sm font-medium" data-localize="wordSizeSliderLabel">
+                                            Word Size:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full" id="word-size-slider"
+                                            min="15" max="30" step="1" value="20" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>15</span>
+                                            <span>20</span>
+                                            <span>25</span>
+                                            <span>30</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <!-- Exposure Delay Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="word-size-slider"
-                                            id="words-exposure-delay-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="exposureDelayLabel"
-                                    >
-                                        Exposure Delay:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="words-exposure-delay-slider"
-                                            min="500"
-                                            max="1500"
-                                            step="50"
-                                            value="500"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>500</span>
-                                        <span>750</span>
-                                        <span>1000</span>
-                                        <span>1250</span>
-                                        <span>1500</span>
+                                    <!-- Exposure Time Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="word-size-slider" id="words-exposure-time-slider-label"
+                                            class="text-sm font-medium" data-localize="exposureTimeLabel">
+                                            Exposure Time:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full"
+                                            id="words-exposure-time-slider" min="500" max="1000" step="50"
+                                            value="700" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>500</span>
+                                            <span>600</span>
+                                            <span>700</span>
+                                            <span>800</span>
+                                            <span>900</span>
+                                            <span>1000</span>
+                                        </div>
+                                    </div>
+                                    <!-- Exposure Delay Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="word-size-slider" id="words-exposure-delay-slider-label"
+                                            class="text-sm font-medium" data-localize="exposureDelayLabel">
+                                            Exposure Delay:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full"
+                                            id="words-exposure-delay-slider" min="500" max="1500" step="50"
+                                            value="500" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>500</span>
+                                            <span>750</span>
+                                            <span>1000</span>
+                                            <span>1250</span>
+                                            <span>1500</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Syllables Subsection -->
-                <div
-                        tabIndex="0"
-                        class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
-                        id="syllables-subsection"
-                >
-                    <input type="radio" name="stimulus-type-accordion" class="peer"/>
-                    <div class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                         data-localize="syllablesOption">Random Syllables:
-                    </div>
-                    <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
-                        <!-- 2-column layout on medium+ screens -->
-                        <div class="grid grid-cols-3 gap-4 items-start">
+                    <!-- Syllables Subsection -->
+                    <div tabIndex="0" class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
+                        id="syllables-subsection">
+                        <input type="radio" name="stimulus-type-accordion" class="peer" />
+                        <div class="collapse-title text-2xl font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
+                            data-localize="syllablesOption">Random Syllables:
+                        </div>
+                        <div
+                            class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
+                            <!-- 2-column layout on medium+ screens -->
+                            <div class="grid grid-cols-3 gap-4 items-start">
 
-                            <!-- Left Column: Syllable Preview -->
-                            <div id="syllable-preview"
-                                 class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
-                                <span id="syllable-preview-syllable"
-                                      class="font-mono text-[2cm] leading-none text-blue-600"
-                                      data-localize="syllablePreviewSyllable">Mo</span>
-                            </div>
-
-                            <!-- Right Column: Label, Syllable Size Slider, Exposure Time Slider, Exposure Delay Slider -->
-                            <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
-                                <!-- Syllable Size Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="syllable-size-slider"
-                                            id="syllable-size-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="syllableSizeSliderLabel"
-                                    >
-                                        Syllable Size:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="syllable-size-slider"
-                                            min="15"
-                                            max="30"
-                                            step="1"
-                                            value="20"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>15</span>
-                                        <span>20</span>
-                                        <span>25</span>
-                                        <span>30</span>
-                                    </div>
+                                <!-- Left Column: Syllable Preview -->
+                                <div id="syllable-preview"
+                                    class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                    <span id="syllable-preview-syllable"
+                                        class="font-mono text-[2cm] leading-none text-red-600"
+                                        data-localize="syllablePreviewSyllable">Mo</span>
                                 </div>
-                                <!-- Exposure Time Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="syllable-size-slider"
-                                            id="syllables-exposure-time-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="exposureTimeLabel"
-                                    >
-                                        Exposure Time:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="syllables-exposure-time-slider"
-                                            min="500"
-                                            max="1000"
-                                            step="50"
-                                            value="700"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>500</span>
-                                        <span>600</span>
-                                        <span>700</span>
-                                        <span>800</span>
-                                        <span>900</span>
-                                        <span>1000</span>
+
+                                <!-- Right Column: Label, Syllable Size Slider, Exposure Time Slider, Exposure Delay Slider -->
+                                <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
+                                    <!-- Syllable Size Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="syllable-size-slider" id="syllable-size-slider-label"
+                                            class="text-sm font-medium" data-localize="syllableSizeSliderLabel">
+                                            Syllable Size:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full" id="syllable-size-slider"
+                                            min="15" max="30" step="1" value="20" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>15</span>
+                                            <span>20</span>
+                                            <span>25</span>
+                                            <span>30</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <!-- Exposure Delay Slider -->
-                                <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="syllable-size-slider"
-                                            id="syllables-exposure-delay-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="exposureDelayLabel"
-                                    >
-                                        Exposure Delay:
-                                    </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="syllables-exposure-delay-slider"
-                                            min="500"
-                                            max="1500"
-                                            step="50"
-                                            value="500"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>500</span>
-                                        <span>750</span>
-                                        <span>1000</span>
-                                        <span>1250</span>
-                                        <span>1500</span>
+                                    <!-- Exposure Time Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="syllable-size-slider" id="syllables-exposure-time-slider-label"
+                                            class="text-sm font-medium" data-localize="exposureTimeLabel">
+                                            Exposure Time:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full"
+                                            id="syllables-exposure-time-slider" min="500" max="1000" step="50"
+                                            value="700" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>500</span>
+                                            <span>600</span>
+                                            <span>700</span>
+                                            <span>800</span>
+                                            <span>900</span>
+                                            <span>1000</span>
+                                        </div>
+                                    </div>
+                                    <!-- Exposure Delay Slider -->
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label for="syllable-size-slider" id="syllables-exposure-delay-slider-label"
+                                            class="text-sm font-medium" data-localize="exposureDelayLabel">
+                                            Exposure Delay:
+                                        </label>
+                                        <input type="range" class="range range-primary w-full"
+                                            id="syllables-exposure-delay-slider" min="500" max="1500" step="50"
+                                            value="500" />
+                                        <div class="flex w-full justify-between text-xs px-2">
+                                            <span>500</span>
+                                            <span>750</span>
+                                            <span>1000</span>
+                                            <span>1250</span>
+                                            <span>1500</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -400,22 +302,22 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <!-- Footer -->
-    <footer class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
-        <div class="flex-1"></div>
-        <div class="flex space-x-2">
-            <button id="reset-settings-btn" class="btn btn-outline btn-warning" data-localize="resetSettings">
-            </button>
-            <button id="start-test-btn" class="btn btn-primary" data-localize="startTest">
-            </button>
-            <button id="save-and-start-btn" class="btn btn-success" data-localize="saveAndStart">
-            </button>
-        </div>
-    </footer>
-</div>
+        <!-- Footer -->
+        <footer class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
+            <div class="flex-1"></div>
+            <div class="flex space-x-2">
+                <button id="reset-settings-btn" class="btn btn-outline btn-warning" data-localize="resetSettings">
+                </button>
+                <button id="start-test-btn" class="btn btn-primary" data-localize="startTest">
+                </button>
+                <button id="save-and-start-btn" class="btn btn-success" data-localize="saveAndStart">
+                </button>
+            </div>
+        </footer>
+    </div>
 
 </body>
+
 </html>
