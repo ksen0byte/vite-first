@@ -1,4 +1,6 @@
 import {localize} from "./ui.ts";
+import noUiSlider, {PipsMode} from 'nouislider';
+import 'nouislider/dist/nouislider.css';
 
 export function setupSettingsScreen(containerId: string): void {
   const container = document.getElementById(containerId)!;
@@ -25,10 +27,10 @@ export function setupSettingsScreen(containerId: string): void {
   /********************************************/
   const shapeSizeSlider = document.getElementById("shape-size-slider") as HTMLInputElement;
   const shapesExposureTimeSlider = document.getElementById("shapes-exposure-time-slider") as HTMLInputElement;
-  const shapesExposureDelaySlider = document.getElementById("shapes-exposure-delay-slider") as HTMLInputElement;
+  // const shapesExposureDelaySlider = document.getElementById("shapes-exposure-delay-slider") as HTMLInputElement;
   const shapeSizeSliderLabel = document.getElementById("shape-size-slider-label") as HTMLElement;
   const shapesExposureTimeSliderLabel = document.getElementById("shapes-exposure-time-slider-label") as HTMLElement;
-  const shapesExposureDelaySliderLabel = document.getElementById("shapes-exposure-delay-slider-label") as HTMLElement;
+  // const shapesExposureDelaySliderLabel = document.getElementById("shapes-exposure-delay-slider-label") as HTMLElement;
 
   const redCircleShape = {
     name: "Red Circle",
@@ -59,12 +61,12 @@ export function setupSettingsScreen(containerId: string): void {
 
   shapeSizeSlider.addEventListener("input", () => updateSliderTitle(shapeSizeSlider, shapeSizeSliderLabel, "shapeSizeSliderLabel", "mm"));
   shapesExposureTimeSlider.addEventListener("input", () => updateSliderTitle(shapesExposureTimeSlider, shapesExposureTimeSliderLabel, "exposureTimeLabel", "ms"));
-  shapesExposureDelaySlider.addEventListener("input", () => updateSliderTitle(shapesExposureDelaySlider, shapesExposureDelaySliderLabel, "exposureDelayLabel", "ms"));
+  // shapesExposureDelaySlider.addEventListener("input", () => updateSliderTitle(shapesExposureDelaySlider, shapesExposureDelaySliderLabel, "exposureDelayLabel", "ms"));
 
   // Call it once on page load, so it shows "50 mm" initially
   updateSliderTitle(shapeSizeSlider, shapeSizeSliderLabel, "shapeSizeSliderLabel", "mm");
   updateSliderTitle(shapesExposureTimeSlider, shapesExposureTimeSliderLabel, "exposureTimeLabel", "ms");
-  updateSliderTitle(shapesExposureDelaySlider, shapesExposureDelaySliderLabel, "exposureDelayLabel", "ms");
+  // updateSliderTitle(shapesExposureDelaySlider, shapesExposureDelaySliderLabel, "exposureDelayLabel", "ms");
 
   /********************************************/
   /* 2. WORDS                                 */
@@ -113,4 +115,21 @@ export function setupSettingsScreen(containerId: string): void {
   updateSliderTitle(syllablesExposureDelaySlider, syllablesExposureDelaySliderLabel, "exposureDelayLabel", "ms");
 
 
+
+  // Double slider
+  const shapesExposureDelayDoubleSlider = document.getElementById("shapes-exposure-delay-double-slider")! as HTMLElement;
+  noUiSlider.create(shapesExposureDelayDoubleSlider, {
+    start: [750, 1250],
+    step: 50,
+    connect: true,
+    range: {
+      min: 500,
+      max: 1500,
+    },
+    pips: {
+      mode: PipsMode.Positions,
+      values: [0, 25, 50, 75, 100],
+      density: 20
+    }
+  });
 }
