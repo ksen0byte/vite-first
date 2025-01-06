@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CNS Test</title>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/main.ts" defer></script>
     <link href="/src/index.scss" rel="stylesheet">
 </head>
 <body class="bg-base-200 text-base-content">
@@ -34,22 +34,22 @@
                         <div class="label">
                             <span class="label-text" data-localize="surnameLabel">Surname:</span>
                         </div>
-                        <input class="input input-bordered w-full max-w-xs" type="text" id="surname-input"
+                        <input class="input inputCheck input-bordered w-full max-w-xs" type="text" id="surname-input"
                                placeholder="Doe"/>
                     </label>
                     <label class="flex flex-col form-control max-w-xs">
                         <div class="label">
                             <span class="label-text" data-localize="nameLabel">Name:</span>
                         </div>
-                        <input class="input input-bordered w-full max-w-xs" type="text" id="name-input"
+                        <input class="input inputCheck input-bordered w-full max-w-xs" type="text" id="name-input"
                                placeholder="John"/>
                     </label>
                     <label class="flex flex-col form-control max-w-xs">
                         <div class="label">
                             <span class="label-text" data-localize="ageLabel">Age:</span>
                         </div>
-                        <input class="input input-bordered max-w-20" type="text" id="age-input"
-                               placeholder="Age"/>
+                        <input class="input input-bordered max-w-20" type="number" id="age-input"
+                               placeholder="Age" min="1" max="100"/>
                     </label>
                     <label class="flex flex-col form-control max-w-xs">
                         <div class="label">
