@@ -85,7 +85,8 @@
 
                             <!-- Left Column: Shape Preview -->
                             <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
-                                <div id="shape-preview" class="subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                <div id="shape-preview"
+                                     class="subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
                                     <!-- Example placeholder or <svg> -->
                                 </div>
                             </div>
@@ -94,25 +95,29 @@
                             <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
                                 <!-- Shape Size Slider -->
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label id="shape-size-slider-label" class="text-sm font-medium" data-localize="shapeSizeSliderLabel">
+                                    <label id="shapes-size-slider-label" class="text-sm font-medium"
+                                           data-localize="shapeSizeSliderLabel">
                                         Shape Size:
                                     </label>
                                     <div id="shape-size-slider"></div>
                                 </div>
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label id="shapes-exposure-time-label" class="text-sm font-medium" data-localize="exposureTimeLabel">
+                                    <label id="shapes-exposure-time-label" class="text-sm font-medium"
+                                           data-localize="exposureTimeLabel">
                                         Exposure Time:
                                     </label>
                                     <div id="shapes-exposure-time-slider"></div>
                                 </div>
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label id="shapes-exposure-delay-label" class="text-sm font-medium" data-localize="exposureDelayLabel">
+                                    <label id="shapes-exposure-delay-label" class="text-sm font-medium"
+                                           data-localize="exposureDelayLabel">
                                         Exposure Delay:
                                     </label>
                                     <div id="shapes-exposure-delay-slider"></div>
                                 </div>
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label id="shapes-stimulus-count-label" class="text-sm font-medium" data-localize="stimulusCountLabel">
+                                    <label id="shapes-stimulus-count-label" class="text-sm font-medium"
+                                           data-localize="stimulusCountLabel">
                                         Number of Stimuli:
                                     </label>
                                     <div id="shapes-stimulus-count-slider"></div>
@@ -126,54 +131,63 @@
                 <!-- Words Subsection -->
                 <div
                         tabIndex="0"
-                        class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box mb-2"
+                        class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
                         id="words-subsection"
                 >
                     <!-- Radio input to control the collapse -->
                     <input type="radio" name="stimulus-type-accordion" class="peer"/>
                     <!-- Subsection Title -->
                     <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                         data-localize="wordsOption">Words:
+                         data-localize="wordsOption"
+                    >
+                        Words:
                     </div>
                     <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
                         <!-- 2-column layout on medium+ screens -->
-                        <div class="grid grid-cols-3 gap-4 items-start">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 gap-y-4 lg:gap-6 items-start m-2">
 
                             <!-- Left Column: Word Preview -->
-                            <div id="word-preview"
-                                 class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                            <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
+                                <div id="word-preview"
+                                     class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
                                 <span id="word-preview-word" class="font-mono text-[2cm] leading-none text-blue-600"
                                       data-localize="wordPreviewWord">human</span>
+                                </div>
                             </div>
 
                             <!-- Right Column: Label, Word Size Slider, Exposure Time Slider, Exposure Delay Slider -->
                             <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
                                 <!-- Word Size Slider -->
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="word-size-slider"
-                                            id="word-size-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="wordSizeSliderLabel"
-                                    >
-                                        Word Size:
+                                    <label id="words-size-slider-label" class="text-sm font-medium"
+                                           data-localize="wordSizeSliderLabel">
+                                        Shape Size:
                                     </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="word-size-slider"
-                                            min="15"
-                                            max="30"
-                                            step="1"
-                                            value="20"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>15</span>
-                                        <span>20</span>
-                                        <span>25</span>
-                                        <span>30</span>
-                                    </div>
+                                    <div id="word-size-slider"></div>
                                 </div>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label id="words-exposure-time-label" class="text-sm font-medium"
+                                           data-localize="exposureTimeLabel">
+                                        Exposure Time:
+                                    </label>
+                                    <div id="words-exposure-time-slider"></div>
+                                </div>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label id="words-exposure-delay-label" class="text-sm font-medium"
+                                           data-localize="exposureDelayLabel">
+                                        Exposure Delay:
+                                    </label>
+                                    <div id="words-exposure-delay-slider"></div>
+                                </div>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label id="words-stimulus-count-label" class="text-sm font-medium"
+                                           data-localize="stimulusCountLabel">
+                                        Number of Stimuli:
+                                    </label>
+                                    <div id="words-stimulus-count-slider"></div>
+                                </div>
+
+
                             </div>
                         </div>
                     </div>
@@ -186,48 +200,56 @@
                         id="syllables-subsection"
                 >
                     <input type="radio" name="stimulus-type-accordion" class="peer"/>
+                    <!-- Subsection Title -->
                     <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                         data-localize="syllablesOption">Random Syllables:
+                         data-localize="syllablesOption"
+                    >
+                        Random Syllables:
                     </div>
                     <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
                         <!-- 2-column layout on medium+ screens -->
-                        <div class="grid grid-cols-3 gap-4 items-start">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 gap-y-4 lg:gap-6 items-start m-2">
 
                             <!-- Left Column: Syllable Preview -->
-                            <div id="syllable-preview"
-                                 class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                            <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
+                                <div id="syllable-preview"
+                                     class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
                                 <span id="syllable-preview-syllable"
                                       class="font-mono text-[2cm] leading-none text-red-600"
                                       data-localize="syllablePreviewSyllable">Mo</span>
+                                </div>
                             </div>
 
                             <!-- Right Column: Label, Syllable Size Slider, Exposure Time Slider, Exposure Delay Slider -->
                             <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
                                 <!-- Syllable Size Slider -->
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label
-                                            for="syllable-size-slider"
-                                            id="syllable-size-slider-label"
-                                            class="text-sm font-medium"
-                                            data-localize="syllableSizeSliderLabel"
-                                    >
-                                        Syllable Size:
+                                    <label id="syllables-size-slider-label" class="text-sm font-medium"
+                                           data-localize="syllableSizeSliderLabel">
+                                        Shape Size:
                                     </label>
-                                    <input
-                                            type="range"
-                                            class="range range-primary w-full"
-                                            id="syllable-size-slider"
-                                            min="15"
-                                            max="30"
-                                            step="1"
-                                            value="20"
-                                    />
-                                    <div class="flex w-full justify-between text-xs px-2">
-                                        <span>15</span>
-                                        <span>20</span>
-                                        <span>25</span>
-                                        <span>30</span>
-                                    </div>
+                                    <div id="syllable-size-slider"></div>
+                                </div>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label id="syllables-exposure-time-label" class="text-sm font-medium"
+                                           data-localize="exposureTimeLabel">
+                                        Exposure Time:
+                                    </label>
+                                    <div id="syllables-exposure-time-slider"></div>
+                                </div>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label id="syllables-exposure-delay-label" class="text-sm font-medium"
+                                           data-localize="exposureDelayLabel">
+                                        Exposure Delay:
+                                    </label>
+                                    <div id="syllables-exposure-delay-slider"></div>
+                                </div>
+                                <div class="flex flex-col space-y-2 w-full">
+                                    <label id="syllables-stimulus-count-label" class="text-sm font-medium"
+                                           data-localize="stimulusCountLabel">
+                                        Number of Stimuli:
+                                    </label>
+                                    <div id="syllables-stimulus-count-slider"></div>
                                 </div>
                             </div>
                         </div>
