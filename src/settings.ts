@@ -9,6 +9,7 @@ export const localization: LocalizationKeys = {
   personalDataTitle: { en: "Personal Data", uk: "Персональні Дані" },
   nameLabel: { en: "Name:", uk: "Ім’я:" },
   surnameLabel: { en: "Surname:", uk: "Прізвище:" },
+  ageLabel: { en: "Age", uk: "Вік" },
   genderLabel: { en: "Gender:", uk: "Стать:" },
   male: { en: "Male", uk: "Чоловіча" },
   female: { en: "Female", uk: "Жіноча" },
