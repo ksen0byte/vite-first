@@ -131,9 +131,7 @@ export function setupSettingsScreen(containerId: string): void {
   });
 
   noUiSlider.create(wordsExposureTimeSlider, exposureTimeSliderOptions);
-
   noUiSlider.create(wordsExposureDelaySlider, exposureDelaySliderOptions);
-
   noUiSlider.create(wordsStimulusCountSlider, stimulusCountSliderOptions);
 
   wordSizeSlider.noUiSlider!.on("update", (values, _) => {
@@ -178,9 +176,7 @@ export function setupSettingsScreen(containerId: string): void {
   });
 
   noUiSlider.create(syllablesExposureTimeSlider, exposureTimeSliderOptions);
-
   noUiSlider.create(syllablesExposureDelaySlider, exposureDelaySliderOptions);
-
   noUiSlider.create(syllablesStimulusCountSlider, stimulusCountSliderOptions);
 
   syllableSizeSlider.noUiSlider!.on("update", (values, _) => {
