@@ -1,5 +1,5 @@
 import {localize} from "./ui.ts";
-import noUiSlider, { target} from 'nouislider';
+import noUiSlider, {Options, target} from 'nouislider';
 import 'nouislider/dist/nouislider.css';
 
 export function setupSettingsScreen(containerId: string): void {
@@ -24,11 +24,33 @@ export function setupSettingsScreen(containerId: string): void {
   /********************************************/
   /* 0. SLIDERS                               */
   /********************************************/
-
-  // Util
   const intFormatter = {
     to: (value: number): string => Math.round(value).toString(),
     from: (value: string): number => parseInt(value, 10),
+  };
+  const exposureTimeSliderOptions: Options = {
+    start: 700,
+    step: 50,
+    connect: "lower",
+    range: {min: 500, max: 1000},
+    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
+    format: intFormatter,
+  };
+  const exposureDelaySliderOptions: Options = {
+    start: [750, 1250],
+    step: 50,
+    connect: true,
+    range: {min: 500, max: 1500},
+    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
+    format: intFormatter,
+  };
+  const stimulusCountSliderOptions : Options= {
+    start: 50,
+    step: 2,
+    connect: "lower",
+    range: {min: 30, max: 100},
+    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
+    format: intFormatter,
   };
 
   /********************************************/
@@ -64,32 +86,9 @@ export function setupSettingsScreen(containerId: string): void {
     format: intFormatter,
   });
 
-  noUiSlider.create(shapesExposureTimeSlider, {
-    start: 700,
-    step: 50,
-    connect: "lower",
-    range: {min: 500, max: 1000},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
-
-  noUiSlider.create(shapesExposureDelaySlider, {
-    start: [750, 1250],
-    step: 50,
-    connect: true,
-    range: {min: 500, max: 1500},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
-
-  noUiSlider.create(shapesStimulusCountSlider, {
-    start: 50,
-    step: 2,
-    connect: "lower",
-    range: {min: 30, max: 100},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
+  noUiSlider.create(shapesExposureTimeSlider, exposureTimeSliderOptions);
+  noUiSlider.create(shapesExposureDelaySlider, exposureDelaySliderOptions);
+  noUiSlider.create(shapesStimulusCountSlider, stimulusCountSliderOptions);
 
   shapeSizeSlider.noUiSlider!.on("update", (values, _) => {
     const sizeLabel = document.getElementById("shapes-size-slider-label")!;
@@ -131,32 +130,11 @@ export function setupSettingsScreen(containerId: string): void {
     format: intFormatter,
   });
 
-  noUiSlider.create(wordsExposureTimeSlider, {
-    start: 700,
-    step: 50,
-    connect: "lower",
-    range: {min: 500, max: 1000},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
+  noUiSlider.create(wordsExposureTimeSlider, exposureTimeSliderOptions);
 
-  noUiSlider.create(wordsExposureDelaySlider, {
-    start: [750, 1250],
-    step: 50,
-    connect: true,
-    range: {min: 500, max: 1500},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
+  noUiSlider.create(wordsExposureDelaySlider, exposureDelaySliderOptions);
 
-  noUiSlider.create(wordsStimulusCountSlider, {
-    start: 50,
-    step: 2,
-    connect: "lower",
-    range: {min: 30, max: 100},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
+  noUiSlider.create(wordsStimulusCountSlider, stimulusCountSliderOptions);
 
   wordSizeSlider.noUiSlider!.on("update", (values, _) => {
     const sizeLabel = document.getElementById("words-size-slider-label")!;
@@ -199,32 +177,11 @@ export function setupSettingsScreen(containerId: string): void {
     format: intFormatter,
   });
 
-  noUiSlider.create(syllablesExposureTimeSlider, {
-    start: 700,
-    step: 50,
-    connect: "lower",
-    range: {min: 500, max: 1000},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
+  noUiSlider.create(syllablesExposureTimeSlider, exposureTimeSliderOptions);
 
-  noUiSlider.create(syllablesExposureDelaySlider, {
-    start: [750, 1250],
-    step: 50,
-    connect: true,
-    range: {min: 500, max: 1500},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
+  noUiSlider.create(syllablesExposureDelaySlider, exposureDelaySliderOptions);
 
-  noUiSlider.create(syllablesStimulusCountSlider, {
-    start: 50,
-    step: 2,
-    connect: "lower",
-    range: {min: 30, max: 100},
-    // pips: { mode: PipsMode.Positions, values: [0, 25, 50, 75, 100], density: 5 },
-    format: intFormatter,
-  });
+  noUiSlider.create(syllablesStimulusCountSlider, stimulusCountSliderOptions);
 
   syllableSizeSlider.noUiSlider!.on("update", (values, _) => {
     const sizeLabel = document.getElementById("syllables-size-slider-label")!;
