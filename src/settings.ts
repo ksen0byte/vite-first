@@ -16,21 +16,21 @@ export const localization: LocalizationKeys = {
   // Test mode
   chooseTestMode: {en: "Test Mode", uk: "Вид Подразника"},
   shapesOption: {en: "🔴 Geometrical Shapes", uk: "🔴 Геометричні Фігури"},
-  shapeSizeSliderLabel: { en: "Shape Size:", uk: "Розмір фігури:" },
+  shapeSizeSliderLabel: { en: "Shape Size", uk: "Розмір фігури" },
   wordsOption: {en: "🔤 Words", uk: "🔤 Слова"},
-  wordSizeSliderLabel: { en: "Word Size:", uk: "Розмір слова:" },
+  wordSizeSliderLabel: { en: "Word Size", uk: "Розмір слова" },
   wordPreviewWord: { en: "Love", uk: "Любов" },
   syllablesOption: {en: "🆎 Random Syllables", uk: "🆎 Беззмістовні Склади"},
-  syllableSizeSliderLabel: { en: "Syllable Size:", uk: "Розмір складу:" },
+  syllableSizeSliderLabel: { en: "Syllable Size", uk: "Розмір складу" },
   syllablePreviewSyllable: { en: "Mo", uk: "Ма" },
-  fontSizeSliderLabel: { en: "Font Size:", uk: "Розмір шрифту:" },
+  fontSizeSliderLabel: { en: "Font Size", uk: "Розмір шрифту" },
 
   // Test settings
   generalSettingsTitle: { en: "Test Settings", uk: "Налаштування тесту" },
-  exposureTimeLabel: { en: "Stimulus Exposure:", uk: "Експозиція подразника:" },
-  exposureDelayLabel: { en: "Stimulus Delay:", uk: "Затримка перед показом:" },
+  exposureTimeLabel: { en: "Stimulus Exposure", uk: "Експозиція подразника" },
+  exposureDelayLabel: { en: "Stimulus Exposure Delay", uk: "Затримка перед показом" },
   exposureDelayHint: { en: "Delay is picked randomly between min and max.", uk: "З цього діапазону випадково обирається затримка." },
-  stimulusCountLabel: { en: "Number of Stimuli:", uk: "Кількість подразників:" },
+  stimulusCountLabel: { en: "Number of Stimuli", uk: "Кількість подразників" },
 
   // Footer
   resetSettings: { en: "Reset Settings", uk: "Скинути налаштування" },

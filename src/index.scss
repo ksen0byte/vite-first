@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#settings-screen .noUi-target {
+  appearance: none;
+  -webkit-appearance: none;
+  @apply bg-transparent border-0 shadow-none;
+}
+
+#settings-screen .noUi-base {
+  @apply bg-base-content/10 h-full w-full;
+
+  .noUi-connects {
+    @apply rounded-none;
+  }
+
+  .noUi-connect {
+    @apply bg-secondary-content ;
+  }
+
+  .noUi-handle {
+    @apply bg-secondary shadow-md cursor-pointer;
+
+    &.noUi-active, &:hover {
+      @apply scale-125;
+    }
+  }
+
+}
