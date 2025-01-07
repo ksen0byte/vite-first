@@ -42,7 +42,7 @@
                             <span class="label-text" data-localize="nameLabel">Name:</span>
                         </div>
                         <input class="input input-bordered w-full max-w-xs" type="text" id="name-input"
-                               placeholder="John"/>
+                               placeholder="John" inputmode="text" onkeydown="return /\D/.test(event.key)" />
                     </label>
                     <label class="flex flex-col form-control max-w-xs">
                         <div class="label">
@@ -102,7 +102,7 @@
                             <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
                                 <!-- Shape Size Slider -->
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label id="shapes-size-slider-label" class="text-sm font-medium"
+                                    <label id="shape-size-slider-label" class="text-sm font-medium"
                                            data-localize="shapeSizeSliderLabel">
                                         Shape Size:
                                     </label>
@@ -166,7 +166,7 @@
                             <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
                                 <!-- Word Size Slider -->
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label id="words-size-slider-label" class="text-sm font-medium"
+                                    <label id="word-size-slider-label" class="text-sm font-medium"
                                            data-localize="wordSizeSliderLabel">
                                         Shape Size:
                                     </label>
@@ -231,7 +231,7 @@
                             <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
                                 <!-- Syllable Size Slider -->
                                 <div class="flex flex-col space-y-2 w-full">
-                                    <label id="syllables-size-slider-label" class="text-sm font-medium"
+                                    <label id="syllable-size-slider-label" class="text-sm font-medium"
                                            data-localize="syllableSizeSliderLabel">
                                         Shape Size:
                                     </label>
