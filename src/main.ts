@@ -1,5 +1,5 @@
-import {setupSettingsScreen} from "./settings-screen";
-import {setupLanguageToggle, updateLanguageUI} from "./ui";
+import {setupSettingsScreen} from "./screens/settings-screen.ts";
+import {setupLanguageToggle, updateLanguageUI} from "./localization/localization.ts";
 
 // Initialize the UI
 updateLanguageUI();

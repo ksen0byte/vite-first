@@ -1,7 +1,7 @@
-import {localize} from "./ui.ts";
 import noUiSlider, {target} from 'nouislider';
 import 'nouislider/dist/nouislider.css';
-import {SliderConfig, subsectionsConfig} from "./config/settings-screen-config.ts";
+import {SliderConfig, subsectionsConfig} from "../config/settings-screen-config.ts";
+import {localize} from "../localization/localization.ts";
 
 export function setupSettingsScreen(containerId: string): void {
   const container: HTMLElement = document.getElementById(containerId)!;
