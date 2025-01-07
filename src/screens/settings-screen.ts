@@ -1,7 +1,8 @@
 import noUiSlider, {target} from 'nouislider';
 import 'nouislider/dist/nouislider.css';
-import {SliderConfig, subsectionsConfig} from "../config/settings-screen-config.ts";
+import {inputsConfig, SliderConfig, subsectionsConfig} from "../config/settings-screen-config.ts";
 import {localize} from "../localization/localization.ts";
+import {getSliderValue} from "../util/util.ts";
 
 export function setupSettingsScreen(containerId: string): void {
   const container: HTMLElement = document.getElementById(containerId)!;
@@ -17,6 +18,7 @@ export function setupSettingsScreen(containerId: string): void {
   setupGeometricShapeSection();
   setupWordsSection();
   setupSyllablesSection();
+  setupStartButton();
 }
 
 
@@ -98,4 +100,41 @@ const setupSyllablesSection = () => {
   setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix);
   setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix);
   setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix);
+}
+
+
+const setupStartButton = () => {
+  const startTestButton = document.getElementById("start-test-btn")!;
+  startTestButton.addEventListener("click", () => {
+
+    // 1. Check test mode selection
+    const testMode = document.querySelector<HTMLInputElement>('input[name="stimulus-type-accordion"]:checked')!.dataset.subsection! as "shapes" | "words" | "syllables";
+
+    // 2. Do the validation
+    const firstName = (document.getElementById(inputsConfig.nameInputId) as HTMLInputElement).value;
+    const lastName = (document.getElementById(inputsConfig.surnameInputId) as HTMLInputElement).value;
+    const gender = (document.getElementById(inputsConfig.genderSelectId) as HTMLSelectElement).value;
+    const age = (document.getElementById(inputsConfig.ageInputId) as HTMLSelectElement).value;
+    const stimulusSize = getSliderValue(inputsConfig.sizeSliderId[testMode]) as number;
+    const exposureTime = getSliderValue(inputsConfig.exposureTimeSliderId[testMode]) as number;
+    const exposureDelay = getSliderValue(inputsConfig.exposureDelaySliderId[testMode]) as [number, number];
+    const stimulusCount = getSliderValue(inputsConfig.stimulusCountSliderId[testMode]) as number;
+
+    // 3. Gather parameters and log them
+    const parameters = {
+      firstName: firstName,
+      lastName: lastName,
+      gender: gender,
+      age: age,
+      testMode: testMode,
+      stimulusSize: stimulusSize,
+      exposureTime: exposureTime,
+      exposureDelay: exposureDelay,
+      stimulusCount: stimulusCount,
+    };
+
+    console.log("Parameters:", parameters);
+  });
+
+
 }

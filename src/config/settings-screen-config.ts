@@ -63,7 +63,7 @@ export const subsectionsConfig = {
         // pips: { mode: PipsMode.Values, values: [20, 30, 40, 50, 60, 70], density: 10 },
         format: intFormatter,
       } as Options,
-      label : {
+      label: {
         id: "syllable-size-slider-label",
         localizationKey: "syllableSizeSliderLabel",
         unit: "mm",
@@ -120,5 +120,32 @@ export const subsectionsConfig = {
       },
     } as SliderConfig
   }
+}
+
+export const inputsConfig = {
+  nameInputId: "name-input",
+  surnameInputId: "surname-input",
+  genderSelectId: "gender-select",
+  ageInputId: "age-input",
+  sizeSliderId: {
+    "shapes": subsectionsConfig.shape.sizeSlider.id,
+    "words": subsectionsConfig.word.sizeSlider.id,
+    "syllables": subsectionsConfig.syllable.sizeSlider.id,
+  },
+  exposureTimeSliderId: {
+    "shapes": "shapes-" + subsectionsConfig.general.exposureTimeSlider.id,
+    "words": "words-" + subsectionsConfig.general.exposureTimeSlider.id,
+    "syllables": "syllables-" + subsectionsConfig.general.exposureTimeSlider.id,
+  },
+  exposureDelaySliderId: {
+    "shapes": "shapes-" + subsectionsConfig.general.exposureDelaySlider.id,
+    "words": "words-" + subsectionsConfig.general.exposureDelaySlider.id,
+    "syllables": "syllables-" + subsectionsConfig.general.exposureDelaySlider.id,
+  },
+  stimulusCountSliderId: {
+    "shapes": "shapes-" + subsectionsConfig.general.stimulusCountSlider.id,
+    "words": "words-" + subsectionsConfig.general.stimulusCountSlider.id,
+    "syllables": "syllables-" + subsectionsConfig.general.stimulusCountSlider.id,
+  },
 
 }
