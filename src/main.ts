@@ -1,7 +1,8 @@
 import {setupSettingsScreen} from "./screens/settings-screen.ts";
-import {setupLanguageToggle, updateLanguageUI} from "./localization/localization.ts";
+import {updateLanguageUI} from "./localization/localization.ts";
 
 // Initialize the UI
+// setupLanguageToggle("language-toggle");
+const appContainer = document.getElementById("app")!;
+setupSettingsScreen(appContainer);
 updateLanguageUI();
-setupLanguageToggle("language-toggle");
-setupSettingsScreen("settings-screen");

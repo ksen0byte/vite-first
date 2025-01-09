@@ -149,3 +149,15 @@ export const inputsConfig = {
   },
 
 }
+
+export interface TestSettings {
+  firstName: string | null,
+  lastName: string | null,
+  gender: 'male' | 'female' | null,
+  age: number | null,
+  testMode: "shapes" | "words" | "syllables",
+  stimulusSize: number,
+  exposureTime: number,
+  exposureDelay: [number, number],
+  stimulusCount: number,
+}

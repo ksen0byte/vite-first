@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-#settings-screen .noUi-target {
+#main .noUi-target {
   appearance: none;
   -webkit-appearance: none;
   @apply bg-transparent border-0 shadow-none;
 }
 
-#settings-screen .noUi-base {
+#main .noUi-base {
   @apply bg-base-content/10 h-full w-full;
 
   .noUi-connects {

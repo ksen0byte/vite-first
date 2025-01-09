@@ -64,5 +64,15 @@ const localization: LocalizationKeys = {
   // Footer
   resetSettings: {en: "Reset Settings", uk: "Скинути налаштування"},
   startTest: {en: "Start Test", uk: "Розпочати Тест"},
+  back: {en: "Back", uk: "Назад"},
   saveAndStart: {en: "Save & Start", uk: "Зберегти та Розпочати Тест"},
+
+  // Test Type
+  selectTestType: {en: "Select Test Type", uk: "Оберіть тип тестування"},
+  testModePzmrShort: {en: "SVMR", uk: "ПЗМР"},
+  testModeRV13Short: {en: "SR1-3", uk: "РВ1-3"},
+  testModeRV23Short: {en: "SR2-3", uk: "РВ2-3"},
+  testModePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакції"},
+  testModeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
+  testModeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
 };
