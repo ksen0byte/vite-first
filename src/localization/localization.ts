@@ -2,7 +2,7 @@ import {settings} from "../config/settings.ts";
 
 const LANGUAGE_KEY = "selectedLanguage";
 // Load the language from localStorage or fall back to the default
-let currentLanguage = localStorage.getItem(LANGUAGE_KEY) || settings.defaultLanguage;
+let currentLanguage = localStorage.getItem(LANGUAGE_KEY) || settings.default.language;
 
 export function updateLanguageUI(): void {
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
@@ -27,7 +27,7 @@ type LocalizationKeys = {
 };
 
 export function localize(key: string): string {
-  return localization[key]?.[currentLanguage] || localization[key]?.[settings.defaultLanguage] || key;
+  return localization[key]?.[currentLanguage] || localization[key]?.[settings.default.language] || key;
 }
 
 const localization: LocalizationKeys = {
@@ -37,8 +37,9 @@ const localization: LocalizationKeys = {
   personalDataTitle: {en: "Personal Data", uk: "Персональні Дані"},
   nameLabel: {en: "Name:", uk: "Ім’я:"},
   surnameLabel: {en: "Surname:", uk: "Прізвище:"},
-  ageLabel: {en: "Age", uk: "Вік"},
+  ageLabel: {en: "Age:", uk: "Вік:"},
   genderLabel: {en: "Gender:", uk: "Стать:"},
+  selectGender: {en: "Select Gender", uk: "Оберіть стать"},
   male: {en: "Male", uk: "Чоловіча"},
   female: {en: "Female", uk: "Жіноча"},
 
@@ -69,10 +70,10 @@ const localization: LocalizationKeys = {
 
   // Test Type
   selectTestType: {en: "Select Test Type", uk: "Оберіть тип тестування"},
-  testModePzmrShort: {en: "SVMR", uk: "ПЗМР"},
-  testModeRV13Short: {en: "SR1-3", uk: "РВ1-3"},
-  testModeRV23Short: {en: "SR2-3", uk: "РВ2-3"},
-  testModePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакції"},
-  testModeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
-  testModeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
+  testTypePzmrShort: {en: "SVMR", uk: "ПЗМР"},
+  testTypeRV13Short: {en: "SR1-3", uk: "РВ1-3"},
+  testTypeRV23Short: {en: "SR2-3", uk: "РВ2-3"},
+  testTypePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакції"},
+  testTypeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
+  testTypeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
 };

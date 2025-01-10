@@ -107,8 +107,8 @@ export const subsectionsConfig = {
       id: "stimulus-count-slider",
       label: {
         id: "stimulus-count-label",
-        localizationKey: "exposureDelayLabel",
-        unit: "ms",
+        localizationKey: "stimulusCountLabel",
+        unit: "",
       },
       options: {
         start: 50,
@@ -150,14 +150,23 @@ export const inputsConfig = {
 
 }
 
+export type TestMode = "shapes" | "words" | "syllables";
+export type TestType = "svmr" | "sr1-3" | "sr2-3";
+export type Gender = 'male' | 'female' | null;
+export type StimulusSize = number;
+export type ExposureTime = number;
+export type ExposureDelay = [number, number];
+export type StimulusCount = number;
+
 export interface TestSettings {
   firstName: string | null,
   lastName: string | null,
-  gender: 'male' | 'female' | null,
+  gender: Gender,
   age: number | null,
-  testMode: "shapes" | "words" | "syllables",
-  stimulusSize: number,
-  exposureTime: number,
-  exposureDelay: [number, number],
-  stimulusCount: number,
+  testMode: TestMode,
+  stimulusSize: StimulusSize,
+  exposureTime: ExposureTime,
+  exposureDelay: ExposureDelay,
+  stimulusCount: StimulusCount,
+  testType?: TestType,
 }

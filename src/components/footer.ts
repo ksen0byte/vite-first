@@ -1,4 +1,4 @@
-import {setupStartButtonCallback} from "../screens/settings-screen.ts";
+import {setupResetSettingsButtonCallback, setupStartButtonCallback} from "../screens/settings-screen.ts";
 
 export function setupFooter(appContainer: HTMLElement, footerType: "settingsScreen" | "testType"): void {
   // remove old one
@@ -26,6 +26,7 @@ export function setupFooter(appContainer: HTMLElement, footerType: "settingsScre
   switch (footerType) {
     case 'settingsScreen':
       setupStartButtonCallback(appContainer, document.getElementById("start-test-btn")!);
+      setupResetSettingsButtonCallback(appContainer, document.getElementById("reset-settings-btn")!);
       break;
     case 'testType':
       break;
