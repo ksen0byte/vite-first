@@ -10,6 +10,12 @@ export function updateLanguageUI(): void {
     const key = element.dataset.localize!;
     element.textContent = localize(key);
   });
+  const localizableAddElements = document.querySelectorAll<HTMLElement>("[data-localize-add]");
+  localizableAddElements.forEach((element) => {
+    const key = element.dataset.localizeAdd!;
+    element.textContent = element.textContent + localize(key);
+  });
+
 }
 
 export function setupLanguageToggle(buttonId: string) {
@@ -43,6 +49,10 @@ const localization: LocalizationKeys = {
   male: {en: "Male", uk: "Чоловіча"},
   female: {en: "Female", uk: "Жіноча"},
 
+  // units
+  mm: {en: "mm", uk: "мм"},
+  ms: {en: "ms", uk: "мс"},
+
   // Test mode
   chooseTestMode: {en: "Test Mode", uk: "Вид Подразника"},
   shapesOption: {en: "🔴 Geometrical Shapes", uk: "🔴 Геометричні Фігури"},
@@ -58,7 +68,7 @@ const localization: LocalizationKeys = {
   // Test settings
   generalSettingsTitle: {en: "Test Settings", uk: "Налаштування тесту"},
   exposureTimeLabel: {en: "Stimulus Exposure", uk: "Експозиція подразника"},
-  exposureDelayLabel: {en: "Stimulus Exposure Delay", uk: "Затримка перед показом"},
+  exposureDelayLabel: {en: "Stimulus Exposure Delay", uk: "Затримка експозиції"},
   exposureDelayHint: {en: "Delay is picked randomly between min and max.", uk: "З цього діапазону випадково обирається затримка."},
   stimulusCountLabel: {en: "Number of Stimuli", uk: "Кількість подразників"},
 
@@ -66,6 +76,7 @@ const localization: LocalizationKeys = {
   resetSettings: {en: "Reset Settings", uk: "Скинути налаштування"},
   startTest: {en: "Start Test", uk: "Розпочати Тест"},
   back: {en: "Back", uk: "Назад"},
+  next: {en: "Next", uk: "Далі"},
   saveAndStart: {en: "Save & Start", uk: "Зберегти та Розпочати Тест"},
 
   // Test Type
@@ -76,4 +87,17 @@ const localization: LocalizationKeys = {
   testTypePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакції"},
   testTypeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
   testTypeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
+
+  // begin test screen
+  testSettingsSummaryFirstName: {en: "First Name", uk: "Ім’я"},
+  testSettingsSummaryLastName: {en: "Last Name", uk: "Прізвище"},
+  testSettingsSummaryGender: {en: "Gender", uk: "Стать"},
+  testSettingsSummaryAge: {en: "Age", uk: "Вік"},
+  testSettingsSummaryTestMode: {en: "Test Mode", uk: "Вид подразника"},
+  testSettingsSummaryStimulusSize: {en: "Stimulus Size", uk: "Розмір подразника"},
+  testSettingsSummaryExposureTime: {en: "Exposure Time", uk: "Експозиція подразника"},
+  testSettingsSummaryExposureDelay: {en: "Exposure Delay", uk: "Затримка експозиції"},
+  testSettingsSummaryStimulusCount: {en: "Stimulus Count", uk: "Кількість подразників"},
+  testSettingsSummaryTestType: {en: "Test Type", uk: "Тип тестування"},
+
 };

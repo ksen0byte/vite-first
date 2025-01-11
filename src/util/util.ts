@@ -13,3 +13,7 @@ export function getSliderValue(sliderId: string): number | ExposureDelay {
   // Convert single string to number
   return Number(value);
 }
+
+export function capitalize(str: string) {
+  return String(str).charAt(0).toUpperCase() + String(str).slice(1);
+}

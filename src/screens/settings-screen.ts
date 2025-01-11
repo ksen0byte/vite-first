@@ -226,6 +226,19 @@ function settingsScreenHTML(testSettings: TestSettings) {
         </main>`;
 }
 
+function settingsScreenFooterHTML() {
+  return `
+    <footer id="footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
+      <div class="flex-1"></div>
+      <div class="flex space-x-2">
+        <button id="reset-settings-btn" class="btn btn-outline btn-error" data-localize="resetSettings"></button>
+        <button id="start-test-btn" class="btn btn-success" data-localize="next"></button>
+      </div>
+    </footer>
+  `;
+}
+
+
 export function setupSettingsScreen(appContainer: HTMLElement, testSettings: TestSettings): void {
 
   appContainer.innerHTML = settingsScreenHTML(testSettings);
@@ -258,7 +271,14 @@ export function setupSettingsScreen(appContainer: HTMLElement, testSettings: Tes
   );
 
   // footer
-  setupFooter(appContainer, "settingsScreen");
+  setupFooter(
+    appContainer,
+    settingsScreenFooterHTML(),
+    [
+      {buttonFn: () => document.getElementById("start-test-btn")! as HTMLButtonElement, callback: () => startButtonCallback(appContainer)},
+      {buttonFn: () => document.getElementById("reset-settings-btn")! as HTMLButtonElement, callback: () => resetSettingsButtonCallback(appContainer)},
+    ]
+  );
   updateLanguageUI();
 }
 
@@ -346,9 +366,7 @@ const setupSyllablesSection = (stimulusSize?: StimulusSize, exposureTime?: Expos
 }
 
 
-export const setupStartButtonCallback = (appContainer: HTMLElement, startTestButton: HTMLElement) => {
-  startTestButton.addEventListener("click", () => {
-
+const startButtonCallback: (appContainer: HTMLElement) => void = (appContainer: HTMLElement) => {
     // 1. Check test mode selection
     const testMode = document.querySelector<HTMLInputElement>('input[name="stimulus-type-accordion"]:checked')!.dataset.subsection! as TestMode;
 
@@ -356,7 +374,8 @@ export const setupStartButtonCallback = (appContainer: HTMLElement, startTestBut
     const firstName = (document.getElementById(inputsConfig.nameInputId) as HTMLInputElement).value;
     const lastName = (document.getElementById(inputsConfig.surnameInputId) as HTMLInputElement).value;
     const gender = (document.getElementById(inputsConfig.genderSelectId) as HTMLSelectElement).value as Gender;
-    const age = Number((document.getElementById(inputsConfig.ageInputId) as HTMLSelectElement).value);
+    const ageValue = parseInt((document.getElementById(inputsConfig.ageInputId) as HTMLSelectElement).value);
+    const age = isNaN(ageValue) ? null : ageValue;
     const stimulusSize = getSliderValue(inputsConfig.sizeSliderId[testMode]) as StimulusSize;
     const exposureTime = getSliderValue(inputsConfig.exposureTimeSliderId[testMode]) as ExposureTime;
     const exposureDelay = getSliderValue(inputsConfig.exposureDelaySliderId[testMode]) as ExposureDelay;
@@ -379,11 +398,8 @@ export const setupStartButtonCallback = (appContainer: HTMLElement, startTestBut
 
     // transition to test type selection screen
     setupTestTypeSelectionScreen(appContainer, testSettings);
-  });
 }
 
-export const setupResetSettingsButtonCallback = (appContainer: HTMLElement, resetSettingsButton: HTMLElement) => {
-  resetSettingsButton.addEventListener("click", () => {
+const resetSettingsButtonCallback: (appContainer: HTMLElement) => void = (appContainer: HTMLElement) => {
     setupSettingsScreen(appContainer, defaultTestSettings);
-  });
 }
