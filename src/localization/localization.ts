@@ -52,6 +52,7 @@ const localization: LocalizationKeys = {
   // units
   mm: {en: "mm", uk: "мм"},
   ms: {en: "ms", uk: "мс"},
+  s: {en: "s", uk: "с"},
 
   // Test mode
   chooseTestMode: {en: "Test Mode", uk: "Вид Подразника"},
@@ -102,5 +103,6 @@ const localization: LocalizationKeys = {
 
   // test screen
   testScreenTestStart: {en:"Start!", uk: "Старт!"},
+  testScreenTestRetry: {en:"↻", uk: "↻"},
 
 };
