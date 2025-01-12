@@ -4,10 +4,9 @@ import {setupFooter} from "../components/footer.ts";
 import {setupSettingsScreen} from "./settings-screen.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {capitalize} from "../util/util.ts";
+import {setupTestScreen} from "./test-screen.ts";
 
 export function setupBeginTestScreen(appContainer: HTMLElement, testSettings: TestSettings) {
-  console.log("Test Screen:", testSettings);
-
   appContainer.innerHTML = beginTestScreenHTML(testSettings);
   setupHeader(appContainer);
   setupFooter(
@@ -17,7 +16,15 @@ export function setupBeginTestScreen(appContainer: HTMLElement, testSettings: Te
       {buttonFn: () => document.getElementById("test-begin-back-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer, testSettings)}
     ]
   );
+  setupStartTestButtonCallback(appContainer, testSettings);
   updateLanguageUI();
+}
+
+function setupStartTestButtonCallback(appContainer: HTMLElement, testSettings: TestSettings) {
+  const startTestButton = document.getElementById("start-test-button")! as HTMLButtonElement
+  startTestButton.addEventListener("click", () => {
+    setupTestScreen(appContainer, testSettings);
+  });
 }
 
 function beginTestScreenHTML(testSettings: TestSettings): string {

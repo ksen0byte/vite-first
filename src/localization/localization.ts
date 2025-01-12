@@ -100,4 +100,7 @@ const localization: LocalizationKeys = {
   testSettingsSummaryStimulusCount: {en: "Stimulus Count", uk: "Кількість подразників"},
   testSettingsSummaryTestType: {en: "Test Type", uk: "Тип тестування"},
 
+  // test screen
+  testScreenTestStart: {en:"Start!", uk: "Старт!"},
+
 };
