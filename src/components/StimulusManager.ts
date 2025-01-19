@@ -1,6 +1,8 @@
 import {logWithTime} from "../util/util.ts";
 import {TestSettings} from "../config/settings-screen-config.ts";
 import {getRandomShape} from "./Shapes.ts";
+import {getRandomWord} from "./Words.ts";
+import {getRandomSyllable} from "./Syllables.ts";
 
 /**
  * Handles creation, display, and clearing of stimuli.
@@ -25,10 +27,17 @@ export class StimulusManager {
 
     switch (testMode) {
       case "shapes":
-      case "syllables":
-      case "words":
         this.container.innerHTML = getRandomShape(stimulusSize);
         break;
+
+      case "words":
+        this.container.innerHTML = getRandomWord(stimulusSize);
+        break;
+
+      case "syllables":
+        this.container.innerHTML = getRandomSyllable(stimulusSize);
+        break;
+
       default:
         throw new Error(`Unsupported test mode: ${testMode}`);
     }

@@ -44,6 +44,10 @@ export class TimerManager {
     this.start();
   }
 
+  public getStartTime(): number | null {
+    return this.timerStart;
+  }
+
   /** Update the on-screen timer display based on the current timerStart. */
   private updateTimerDisplay() {
     if (this.timerStart == null) {
