@@ -105,4 +105,26 @@ const localization: LocalizationKeys = {
   testScreenTestStart: {en:"Start!", uk: "Старт!"},
   testScreenTestRetry: {en:"↻", uk: "↻"},
 
+  // stats
+  noReactionTimes: { en: "No Reaction Times", uk: "Немає результатів реакції" },
+  testResultsTitle: { en: "Test Results", uk: "Результати тесту" },
+  frequencyDistributionTitle: { en: "Frequency Distribution", uk: "Частотний Розподіл" },
+
+  statCount: { en: "Count 🧮", uk: "Кількість 🧮" },
+  statMean: { en: "μ Mean", uk: "μ Середнє" },
+  statMedian: { en: "M Median", uk: "M Медіана" },
+  statVariance: { en: "σ² Variance", uk: "σ² Дисперсія" },
+  statStdDev: { en: "σ Std Dev", uk: "σ Сер. Квадр. Відхилення" },
+  statRange: { en: "↕ Range", uk: "↕ Розмах" },
+  statP3: { en: "↗ p3", uk: "↗ p3" },
+  statP10: { en: "↗ p10", uk: "↗ p10" },
+  statP25: { en: "↗ p25", uk: "↗ p25" },
+  statP50: { en: "↗ p50", uk: "↗ p50" },
+  statP75: { en: "↗ p75", uk: "↗ p75" },
+  statP90: { en: "↗ p90", uk: "↗ p90" },
+  statP97: { en: "↗ p97", uk: "↗ p97" },
+
+  binMs: { en: "Bin (ms)", uk: "Інтервали (мс)" },
+  frequency: { en: "Frequency", uk: "Частота" },
+
 };

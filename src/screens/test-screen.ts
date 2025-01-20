@@ -7,6 +7,7 @@ import { StimulusManager } from "../components/StimulusManager.ts";
 import { StimuliCounter } from "../components/StimuliCounter.ts";
 import { TimerManager } from "../components/Timer.ts";
 import { Countdown } from "../components/Countdown.ts";
+import {setupResultsScreen} from "./results-screen.ts";
 
 export class TestScreen {
   private appContainer: HTMLElement;
@@ -206,13 +207,41 @@ export class TestScreen {
 
   /**
    * Called once the test is finished.
-   * Stops everything, removes event listeners, logs data, etc.
+   * Displays "Retry" and "Finish" buttons in place of the test content.
    */
   private onTestComplete(): void {
     this.appContainer.style.cursor = "default";
     this.stimulusManager.clearContainer();
     this.appContainer.removeEventListener("click", this.handleAppClick);
     this.timerManager.stop();
+
+    // Hide or replace the main container content
+    this.stimulusContainer.innerHTML = `
+      <div class="flex flex-col items-center space-y-4">
+        <div class="text-3xl mb-2">Test Complete!</div>
+        <div class="flex space-x-4">
+          <button id="end-retry-btn" class="btn btn-warning">Retry</button>
+          <button id="end-finish-btn" class="btn btn-success">Finish</button>
+        </div>
+      </div>
+    `;
+
+    // Wire up new buttons
+    const endRetryBtn = document.getElementById("end-retry-btn") as HTMLButtonElement;
+    const endFinishBtn = document.getElementById("end-finish-btn") as HTMLButtonElement;
+
+    // On "Retry", reset test
+    endRetryBtn.addEventListener("click", () => {
+      logWithTime("End screen Retry clicked.");
+      // Re-run handleRetry() or do a fresh TestScreen again
+      this.handleRetry();
+    });
+
+    // On "Finish", go to results screen
+    endFinishBtn.addEventListener("click", () => {
+      logWithTime("End screen Finish clicked. Showing results.");
+      setupResultsScreen(this.appContainer, this.reactionTimes);
+    });
 
     console.log("Reaction times:", this.reactionTimes);
   }
