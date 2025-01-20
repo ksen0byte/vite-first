@@ -1,19 +1,13 @@
 // results-screen.ts
 
-import {
-  mean,
-  median,
-  variance,
-  standardDeviation,
-  min as ssMin,
-  max as ssMax,
-  quantile
-} from "simple-statistics";
+import {max as ssMax, mean, median, min as ssMin, quantile, standardDeviation, variance} from "simple-statistics";
 
-import { setupHeader } from "../components/header.ts";
-import { setupFooter } from "../components/footer.ts";
-import { updateLanguageUI, localize } from "../localization/localization.ts";
-import { ReactionTimeStats } from "../stats/ReactionTimeStats.ts";
+import {setupHeader} from "../components/header.ts";
+import {setupFooter} from "../components/footer.ts";
+import { updateLanguageUI} from "../localization/localization.ts";
+import {FrequencyBin, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
+
+// TODO calculate mode of intervals p62m; replace frequency table with chart.js
 
 
 export function setupResultsScreen(
@@ -21,6 +15,7 @@ export function setupResultsScreen(
   reactionTimes: Map<number, number>
 ) {
   const data = Array.from(reactionTimes.values());
+
   if (!data.length) {
     appContainer.innerHTML = `
       <div id="results-screen" class="flex flex-col flex-grow bg-base-200 text-base-content p-4">
@@ -52,9 +47,7 @@ export function setupResultsScreen(
   const p97Val = quantile(data, 0.97);
 
   // Frequency distribution
-  const binWidth = 50; // adjust as desired
-  const bins = ReactionTimeStats.computeFrequencyDistribution(data, binWidth);
-  const modeClass = ReactionTimeStats.findModeClass(bins);
+  const bins = ReactionTimeStats.computeFrequencyDistribution(data);
 
   // Render
   appContainer.innerHTML = `
@@ -153,32 +146,21 @@ export function setupResultsScreen(
         <h3 class="text-xl font-bold mb-2" data-localize="frequencyDistributionTitle">
           Frequency Distribution
         </h3>
-        <div class="overflow-x-auto">
-          <table class="table table-xs table-zebra">
-            <thead>
-              <tr>
-                <th class="text-sm">${localize("binMs")}</th>
-                <th class="text-sm">${localize("frequency")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${
-                bins.map((bin) => {
-                  const isMode = modeClass && bin.binStart === modeClass.binStart;
-                  const rowClass = isMode ? "bg-info text-info-content" : "";
-                  return ` <tr class="${rowClass}"> <td class="text-sm">${bin.binStart} - ${bin.binEnd}</td> <td class="text-sm">${bin.frequency}</td> </tr> `;
-                }).join("")
-              }
-            </tbody>
-          </table>
+        <div>
+          <canvas id="frequencyChart"></canvas>
         </div>
       </div>
     </div>
   `;
 
   setupHeader(appContainer);
+  setupChart(document.getElementById('frequencyChart')! as HTMLCanvasElement, bins);
   setupFooter(appContainer, footerHtml(), []);
   updateLanguageUI();
+}
+
+function setupChart(canvas: HTMLCanvasElement, bins: FrequencyBin[]) {
+  ReactionTimeStats.drawHistogram(canvas, bins);
 }
 
 function footerHtml(): string {
