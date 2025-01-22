@@ -72,9 +72,10 @@ export class ReactionTimeStats {
   /**
    * Calculates the mode of the frequency distribution using interpolation.
    */
-  public static calculateMode(bins: FrequencyBin[]): number {
+  public static calculateMode(bins: FrequencyBin[]): number | null {
     if (bins.length < 3) {
-      throw new Error("At least three bins are required to calculate the mode.");
+      console.error("At least three bins are required to calculate the mode.");
+      return null;
     }
 
     // Find the modal class (bin with the highest frequency)
@@ -85,7 +86,8 @@ export class ReactionTimeStats {
 
     // Ensure there are bins before and after the modal class
     if (modeIndex <= 0 || modeIndex >= bins.length - 1) {
-      throw new Error("The modal class must not be the first or last bin.");
+      console.error("The modal class must not be the first or last bin.");
+      return null;
     }
 
     // Extract required values

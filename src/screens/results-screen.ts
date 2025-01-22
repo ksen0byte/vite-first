@@ -4,7 +4,7 @@ import {max as ssMax, mean, median, min as ssMin, quantile, standardDeviation, v
 
 import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
-import { updateLanguageUI} from "../localization/localization.ts";
+import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {FrequencyBin, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 
 export function setupResultsScreen(
@@ -77,7 +77,7 @@ export function setupResultsScreen(
         <!-- Mode -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statMode">Median</div>
-          <div class="stat-value text-lg">${modeVal.toFixed(2)}ms</div>
+          <div class="stat-value text-lg">${modeVal !== null ? modeVal.toFixed(2) + localize("ms") : "N/A"}</div>
         </div>
 
         <!-- Variance -->
