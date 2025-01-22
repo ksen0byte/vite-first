@@ -113,6 +113,7 @@ const localization: LocalizationKeys = {
   statCount: { en: "Count 🧮", uk: "Кількість 🧮" },
   statMean: { en: "μ Mean", uk: "μ Середнє" },
   statMedian: { en: "M Median", uk: "M Медіана" },
+  statMode: { en: "Mo Mode", uk: "Mo Мода" },
   statVariance: { en: "σ² Variance", uk: "σ² Дисперсія" },
   statStdDev: { en: "σ Std Dev", uk: "σ Сер. Квадр. Відхилення" },
   statRange: { en: "↕ Range", uk: "↕ Розмах" },

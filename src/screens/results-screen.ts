@@ -7,9 +7,6 @@ import {setupFooter} from "../components/footer.ts";
 import { updateLanguageUI} from "../localization/localization.ts";
 import {FrequencyBin, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 
-// TODO calculate mode of intervals p62m; replace frequency table with chart.js
-
-
 export function setupResultsScreen(
   appContainer: HTMLElement,
   reactionTimes: Map<number, number>
@@ -48,6 +45,7 @@ export function setupResultsScreen(
 
   // Frequency distribution
   const bins = ReactionTimeStats.computeFrequencyDistribution(data);
+  const modeVal = ReactionTimeStats.calculateMode(bins);
 
   // Render
   appContainer.innerHTML = `
@@ -59,37 +57,43 @@ export function setupResultsScreen(
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
 
         <!-- Count -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statCount">Count</div>
           <div class="stat-value text-lg">${count}</div>
         </div>
 
         <!-- Mean -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statMean">Mean</div>
           <div class="stat-value text-lg">${meanVal.toFixed(2)}ms</div>
         </div>
 
         <!-- Median -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statMedian">Median</div>
           <div class="stat-value text-lg">${medianVal.toFixed(2)}ms</div>
         </div>
+        
+        <!-- Mode -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statMode">Median</div>
+          <div class="stat-value text-lg">${modeVal.toFixed(2)}ms</div>
+        </div>
 
         <!-- Variance -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statVariance">Variance</div>
           <div class="stat-value text-lg">${varianceVal.toFixed(2)}</div>
         </div>
 
         <!-- Std Dev -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statStdDev">Std Dev</div>
           <div class="stat-value text-lg">${stdevVal.toFixed(2)}</div>
         </div>
 
         <!-- Range -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statRange">Range</div>
           <div class="stat-value text-lg">${rangeVal}</div>
         </div>
@@ -99,63 +103,58 @@ export function setupResultsScreen(
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
 
         <!-- p3 -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP3">p3</div>
           <div class="stat-value text-lg">${p3Val.toFixed(2)}ms</div>
         </div>
 
         <!-- p10 -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP10">p10</div>
           <div class="stat-value text-lg">${p10Val.toFixed(2)}ms</div>
         </div>
 
         <!-- p25 -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP25">p25</div>
           <div class="stat-value text-lg">${p25Val.toFixed(2)}ms</div>
         </div>
 
         <!-- p50 -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP50">p50</div>
           <div class="stat-value text-lg">${p50Val.toFixed(2)}ms</div>
         </div>
 
         <!-- p75 -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP75">p75</div>
           <div class="stat-value text-lg">${p75Val.toFixed(2)}ms</div>
         </div>
 
         <!-- p90 -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP90">p90</div>
           <div class="stat-value text-lg">${p90Val.toFixed(2)}ms</div>
         </div>
 
         <!-- p97 -->
-        <div class="stat">
+        <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP97">p97</div>
           <div class="stat-value text-lg">${p97Val.toFixed(2)}ms</div>
         </div>
       </div>
 
       <!-- Frequency Distribution Table -->
-      <div>
-        <h3 class="text-xl font-bold mb-2" data-localize="frequencyDistributionTitle">
-          Frequency Distribution
-        </h3>
-        <div>
-          <canvas id="frequencyChart"></canvas>
-        </div>
+      <div class="flex flex-grow">
+        <canvas id="frequencyChart"></canvas>
       </div>
     </div>
   `;
 
   setupHeader(appContainer);
-  setupChart(document.getElementById('frequencyChart')! as HTMLCanvasElement, bins);
   setupFooter(appContainer, footerHtml(), []);
+  setupChart(document.getElementById('frequencyChart')! as HTMLCanvasElement, bins);
   updateLanguageUI();
 }
 
