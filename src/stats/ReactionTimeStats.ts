@@ -10,17 +10,28 @@ export interface FrequencyBin {
 }
 
 export class ReactionTimeStats {
+  private readonly data: number[];
+  private readonly bins: FrequencyBin[];
+
+  /**
+   * Create a new instance with the given array of reaction times.
+   */
+  constructor(data: number[]) {
+    this.data = data;
+    this.bins = this.computeFrequencyDistribution();
+  }
+
   /**
    * Groups data into bins (classes) using Sturges' Rule, ensuring
    * that all values up to the actual max are included.
    */
-  public static computeFrequencyDistribution(data: number[]): FrequencyBin[] {
-    if (data.length === 0) return [];
+  private computeFrequencyDistribution(): FrequencyBin[] {
+    if (this.data.length === 0) return [];
 
-    const minVal = Math.min(...data);
-    const maxVal = Math.max(...data);
+    const minVal = Math.min(...this.data);
+    const maxVal = Math.max(...this.data);
 
-    const numberOfClasses = this.getNumberOfClasses(data);
+    const numberOfClasses = this.getNumberOfClasses(this.data);
     const approxBinWidth = (maxVal - minVal) / numberOfClasses;
     // Round bin width up, so we definitely cover up to maxVal
     const binWidth = Math.ceil(approxBinWidth);
@@ -44,7 +55,7 @@ export class ReactionTimeStats {
     }
 
     // Count frequency
-    data.forEach((value) => {
+    this.data.forEach((value) => {
       if (value >= binStart && value <= binEnd) {
         // Calculate which bin index this value belongs in.
         let index = Math.floor((value - binStart) / binWidth);
@@ -62,9 +73,12 @@ export class ReactionTimeStats {
   /**
    * Returns the bin with the highest frequency.
    */
-  public static findModalClass(bins: FrequencyBin[]): FrequencyBin {
-    if (!bins.length) throw new Error("Bins should not be empty");
-    return bins.reduce((best, current) =>
+  private getModalClass(): FrequencyBin | null {
+    if (!this.bins.length) {
+      console.error("Bins should not be empty");
+      return null;
+    }
+    return this.bins.reduce((best, current) =>
       current.frequency > best.frequency ? current : best
     );
   }
@@ -72,20 +86,24 @@ export class ReactionTimeStats {
   /**
    * Calculates the mode of the frequency distribution using interpolation.
    */
-  public static calculateMode(bins: FrequencyBin[]): number | null {
-    if (bins.length < 3) {
+  public getMode(): number | null {
+    if (this.bins.length < 3) {
       console.error("At least three bins are required to calculate the mode.");
       return null;
     }
 
     // Find the modal class (bin with the highest frequency)
-    const modeBin = this.findModalClass(bins);
+    const modeBin = this.getModalClass();
+    if (!modeBin) {
+      console.error("Could not calculate the modal bin.");
+      return null;
+    }
 
     // Locate the index of the modal class
-    const modeIndex = bins.findIndex(bin => bin.binStart === modeBin.binStart && bin.binEnd === modeBin.binEnd);
+    const modeIndex = this.bins.findIndex(bin => bin.binStart === modeBin.binStart && bin.binEnd === modeBin.binEnd);
 
     // Ensure there are bins before and after the modal class
-    if (modeIndex <= 0 || modeIndex >= bins.length - 1) {
+    if (modeIndex <= 0 || modeIndex >= this.bins.length - 1) {
       console.error("The modal class must not be the first or last bin.");
       return null;
     }
@@ -93,20 +111,18 @@ export class ReactionTimeStats {
     // Extract required values
     const L = modeBin.binStart; // Lower boundary of modal class
     const f1 = modeBin.frequency; // Frequency of modal class
-    const f0 = bins[modeIndex - 1].frequency; // Frequency of previous class
-    const f2 = bins[modeIndex + 1].frequency; // Frequency of next class
+    const f0 = this.bins[modeIndex - 1].frequency; // Frequency of previous class
+    const f2 = this.bins[modeIndex + 1].frequency; // Frequency of next class
     const h = modeBin.binEnd - modeBin.binStart; // Class width
 
     // Apply the mode formula
-    const mode = L + ((f1 - f0) / ((2 * f1) - f0 - f2)) * h;
-
-    return mode;
+    return L + ((f1 - f0) / ((2 * f1) - f0 - f2)) * h;
   }
 
   /**
    * Calculates the number of bins using Sturges' Rule.
    */
-  private static getNumberOfClasses(data: number[]): number {
+  private getNumberOfClasses(data: number[]): number {
     const n: number = data.length;
     if (n === 0) {
       throw new Error("Dataset cannot be empty.");
@@ -115,15 +131,41 @@ export class ReactionTimeStats {
   }
 
   /**
+   * Calculates the Functional Level of the System.
+   * Formula: ???
+   */
+  public calculateFunctionalLevel(): number {
+      return -1;
+  }
+
+  /**
+   * Calculates the Reaction Stability.
+   * Formula: ???
+   */
+  public calculateReactionStability(): number  {
+    return -1;
+  }
+
+  /**
+   * Calculates the Level of Functional Capabilities.
+   * Formula: ???
+   */
+  public calculateFunctionalCapabilities(): number {
+    return -1;
+  }
+
+
+  /**
    * Draws a histogram of bins, highlighting the highest-frequency bin in pink,
    * and labeling it as "(Highest)" in the tooltip.
    */
-  public static drawHistogram(ctx: HTMLCanvasElement, bins: FrequencyBin[]) {
-    const modeBin = this.findModalClass(bins);
+  public drawHistogram(ctx: HTMLCanvasElement) {
+    const modeBin = this.getModalClass();
 
-    const labels = bins.map((bin) => `${bin.binStart} - ${bin.binEnd}`);
-    const frequencies = bins.map((bin) => bin.frequency);
+    const labels = this.bins.map((bin) => `${bin.binStart} - ${bin.binEnd} ${localize("ms")}`);
+    const frequencies = this.bins.map((bin) => bin.frequency);
 
+    // noinspection JSUnusedGlobalSymbols
     new Chart(ctx, {
       type: "bar",
       data: {
@@ -134,7 +176,7 @@ export class ReactionTimeStats {
             data: frequencies,
             backgroundColor: (context) => {
               const index = context.dataIndex;
-              const currentBin = bins[index];
+              const currentBin = this.bins[index];
               // If this bin is the highest freq bin, color pinkish
               if (
                 modeBin &&
@@ -148,7 +190,7 @@ export class ReactionTimeStats {
             },
             borderColor: (context) => {
               const index = context.dataIndex;
-              const currentBin = bins[index];
+              const currentBin = this.bins[index];
               if (
                 modeBin &&
                 currentBin.binStart === modeBin.binStart &&
@@ -195,7 +237,7 @@ export class ReactionTimeStats {
                 // Example: "Frequency: 10" or "Frequency: 10 (Highest)"
                 const index = context.dataIndex;
                 const freq = context.parsed.y;
-                const currentBin = bins[index];
+                const currentBin = this.bins[index];
                 let labelString = `${context.dataset.label}: ${freq}`;
                 if (
                   modeBin &&

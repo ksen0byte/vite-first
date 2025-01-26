@@ -110,6 +110,9 @@ const localization: LocalizationKeys = {
   testResultsTitle: { en: "Test Results", uk: "Результати тесту" },
   frequencyDistributionTitle: { en: "Frequency Distribution", uk: "Частотний Розподіл" },
 
+  statFunctionalLevel: { en: "SFL", uk: "ФРС" },
+  statReactionStability: { en: "RS", uk: "СР" },
+  statFunctionalCapabilities: { en: "FCL", uk: "РФМ" },
   statCount: { en: "Count 🧮", uk: "Кількість 🧮" },
   statMean: { en: "μ Mean", uk: "μ Середнє" },
   statMedian: { en: "M Median", uk: "M Медіана" },

@@ -5,7 +5,7 @@ import {max as ssMax, mean, median, min as ssMin, quantile, standardDeviation, v
 import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
-import {FrequencyBin, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
+import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
@@ -35,7 +35,7 @@ export function setupResultsScreen(
 
   // For percentiles (p3, p10, p25, p50, p75, p90, p97):
   //  p50 will match medianVal above, but we’ll keep it for completeness
-  const p3Val  = quantile(data, 0.03);
+  const p3Val = quantile(data, 0.03);
   const p10Val = quantile(data, 0.10);
   const p25Val = quantile(data, 0.25);
   const p50Val = quantile(data, 0.50);
@@ -44,8 +44,12 @@ export function setupResultsScreen(
   const p97Val = quantile(data, 0.97);
 
   // Frequency distribution
-  const bins = ReactionTimeStats.computeFrequencyDistribution(data);
-  const modeVal = ReactionTimeStats.calculateMode(bins);
+  const reactionTimeStats = new ReactionTimeStats(data);
+  const modeVal = reactionTimeStats.getMode();
+
+  const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
+  const reactionStability = reactionTimeStats.calculateReactionStability();
+  const functionalCapabilities = reactionTimeStats.calculateFunctionalCapabilities();
 
   // Render
   appContainer.innerHTML = `
@@ -53,6 +57,25 @@ export function setupResultsScreen(
       <!-- Title -->
       <h2 class="text-2xl font-bold mb-4" data-localize="testResultsTitle">Test Results</h2>
 
+      <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
+        <!-- Functional Level -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statFunctionalLevel">Count</div>
+          <div class="stat-value text-lg">${functionalLevelVal ? functionalLevelVal.toFixed(2) : "N/A"}</div>
+        </div>
+        
+        <!-- Functional Level -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statReactionStability">Count</div>
+          <div class="stat-value text-lg">${reactionStability || "N/A"}</div>
+        </div>
+        
+        <!-- Functional Level -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statFunctionalCapabilities">Count</div>
+          <div class="stat-value text-lg">${functionalCapabilities || "N/A"}</div>
+        </div>
+      </div>
       <!-- First stats block (count, mean, median, variance, std dev, range) -->
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
 
@@ -146,7 +169,7 @@ export function setupResultsScreen(
       </div>
 
       <!-- Frequency Distribution Table -->
-      <div class="flex flex-grow">
+      <div class="flex flex-grow p-8">
         <canvas id="frequencyChart"></canvas>
       </div>
     </div>
@@ -154,12 +177,8 @@ export function setupResultsScreen(
 
   setupHeader(appContainer);
   setupFooter(appContainer, footerHtml(), []);
-  setupChart(document.getElementById('frequencyChart')! as HTMLCanvasElement, bins);
+  reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
   updateLanguageUI();
-}
-
-function setupChart(canvas: HTMLCanvasElement, bins: FrequencyBin[]) {
-  ReactionTimeStats.drawHistogram(canvas, bins);
 }
 
 function footerHtml(): string {
