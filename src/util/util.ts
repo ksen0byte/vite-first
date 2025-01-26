@@ -23,3 +23,20 @@ export function logWithTime(message: string): void {
   const timestamp = now.toISOString(); // Format as ISO timestamp (e.g., "2025-01-11T14:32:00.000Z")
   console.log(`[${timestamp}] ${message}`);
 }
+
+/**
+ * Generates a normally distributed random number using the Box-Muller transform.
+ * @param mean - The mean (center) of the distribution.
+ * @param stdDev - The standard deviation (spread) of the distribution.
+ * @returns A normally distributed random number.
+ */
+export function generateNormalDistribution(mean = 0, stdDev = 1) {
+  let u1 = Math.random();
+  let u2 = Math.random();
+
+  // Box-Muller transform
+  let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+
+  // Scale and shift to match the given mean and standard deviation
+  return z0 * stdDev + mean;
+}

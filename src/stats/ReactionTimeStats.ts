@@ -2,6 +2,7 @@
 
 import Chart from "chart.js/auto";
 import {localize} from "../localization/localization.ts";
+import {mean, quantile, standardDeviation} from "simple-statistics";
 
 export interface FrequencyBin {
   binStart: number;
@@ -12,6 +13,21 @@ export interface FrequencyBin {
 export class ReactionTimeStats {
   private readonly data: number[];
   private readonly bins: FrequencyBin[];
+  // Calculate stats using simple-statistics
+  public readonly count;
+  public readonly meanVal;
+  public readonly modeVal;
+  public readonly stdevVal;
+
+  // For percentiles (p3, p10, p25, p50, p75, p90, p97):
+  //  p50 will match medianVal above, but we’ll keep it for completeness
+  public readonly p3Val;
+  public readonly p10Val;
+  public readonly p25Val;
+  public readonly p50Val;
+  public readonly p75Val;
+  public readonly p90Val;
+  public readonly p97Val;
 
   /**
    * Create a new instance with the given array of reaction times.
@@ -19,6 +35,17 @@ export class ReactionTimeStats {
   constructor(data: number[]) {
     this.data = data;
     this.bins = this.computeFrequencyDistribution();
+    this.count = data.length;
+    this.meanVal = mean(data);
+    this.modeVal = this.getMode();
+    this.stdevVal = standardDeviation(data);
+    this.p3Val = quantile(data, 0.03);
+    this.p10Val = quantile(data, 0.10);
+    this.p25Val = quantile(data, 0.25);
+    this.p50Val = quantile(data, 0.50);
+    this.p75Val = quantile(data, 0.75);
+    this.p90Val = quantile(data, 0.90);
+    this.p97Val = quantile(data, 0.97);
   }
 
   /**
@@ -86,7 +113,7 @@ export class ReactionTimeStats {
   /**
    * Calculates the mode of the frequency distribution using interpolation.
    */
-  public getMode(): number | null {
+  private getMode(): number | null {
     if (this.bins.length < 3) {
       console.error("At least three bins are required to calculate the mode.");
       return null;
@@ -135,14 +162,14 @@ export class ReactionTimeStats {
    * Formula: ???
    */
   public calculateFunctionalLevel(): number {
-      return -1;
+    return -1;
   }
 
   /**
    * Calculates the Reaction Stability.
    * Formula: ???
    */
-  public calculateReactionStability(): number  {
+  public calculateReactionStability(): number {
     return -1;
   }
 
