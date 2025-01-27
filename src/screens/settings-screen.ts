@@ -17,6 +17,7 @@ import {setupTestTypeSelectionScreen} from "./test-type-selection-screen.ts";
 import {setupFooter} from "../components/footer.ts";
 import {setupHeader} from "../components/header.ts";
 import {defaultTestSettings} from "../config/settings.ts";
+import {getRandomShape} from "../components/Shapes.ts";
 
 function settingsScreenHTML(testSettings: TestSettings) {
   return `
@@ -322,20 +323,10 @@ const setupSlider = (
 }
 
 const setupGeometricShapeSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
-  const redCircleShape = {
-    name: "Red Circle",
-    svg: `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><circle cx="50" cy="50" r="40" fill="red"/></svg>`,
-  };
-
   function showRedCircle(size: number) {
     const shapePreview = document.getElementById("shape-preview") as HTMLElement;
-
     // Insert the chosen shape
-    shapePreview.innerHTML = redCircleShape.svg;
-    // Optionally scale the shape if needed:
-    const svgElement = shapePreview.querySelector("svg")!;
-    svgElement.setAttribute("width", (size / 0.8).toString() + "mm");
-    svgElement.setAttribute("height", (size / 0.8).toString() + "mm");
+    shapePreview.innerHTML = getRandomShape(size, "red", "circle");
   }
 
   const sectionPrefix = "shapes-";
