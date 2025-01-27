@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "daisyui";
 
 #main .noUi-target {
   appearance: none;
@@ -9,7 +8,7 @@
 }
 
 #main .noUi-base {
-  @apply bg-base-content/10 h-full w-full;
+  @apply bg-base-content/50 h-full w-full;
 
   .noUi-connects {
     @apply rounded-none;
