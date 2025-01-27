@@ -1,17 +1,10 @@
 // Words.ts
+import {getLocalizedVar} from "../localization/localization.ts";
+
 type WordColor = "red" | "green" | "blue";
 
 // A small sample set of words; you can expand this list
-const wordsList = [ // TODO localize
-  "love",
-  "peace",
-  "mind",
-  "time",
-  "code",
-  "dream",
-  "brain",
-  "light",
-];
+const wordsList = getLocalizedVar("randomWords");
 
 /**
  * Generates a random word, wrapped in a <span> with the specified size and color.

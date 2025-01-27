@@ -1,17 +1,10 @@
 // Syllables.ts
+import {getLocalizedVar} from "../localization/localization.ts";
+
 type SyllableColor = "red" | "green" | "blue";
 
 // Example syllable list
-const syllablesList = [ // TODO localize
-  "ma",
-  "ko",
-  "ti",
-  "ra",
-  "lo",
-  "fi",
-  "zu",
-  "be",
-];
+const syllablesList = getLocalizedVar("randomSyllables");
 
 /**
  * Generates a random syllable, wrapped in a <span> with the specified size and color.

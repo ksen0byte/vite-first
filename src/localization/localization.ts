@@ -131,3 +131,26 @@ const localization: LocalizationKeys = {
   frequency: { en: "Frequency", uk: "Частота" },
 
 };
+
+
+type LocalizationVars = { randomWords: { en: string[]; uk: string[] }; randomSyllables: { en: string[]; uk: string[] } }
+type LanguageKey = "uk" | "en"
+export function getLocalizedVar(key: keyof LocalizationVars): string[]{
+  const lang = currentLanguage as LanguageKey || settings.default.language as LanguageKey;
+  const result = localizationVars[key]?.[lang] || localizationVars[key]?.[lang];
+  if (!result) {
+    throw new Error(`Unknown language key: ${key}`);
+  }
+  return result;
+}
+
+const localizationVars: LocalizationVars = {
+  randomWords: {
+    en: ["bean", "beech", "bull", "water", "wolf", "elm", "weight", "mountain", "house", "oak", "hedgehog", "spruce", "hare", "willow", "cedar", "maple", "key", "goat", "horse", "cat", "tap", "mole", "lion", "flax", "linden", "fox", "poppy", "sword", "moss", "ball", "knife", "oats", "window", "donkey", "glasses", "feather", "belt", "bullet", "rose", "elephant", "salt", "soy", "table", "chair", "tiger",],
+    uk: ["біб", "бук", "бик", "вода", "вовк", "в'яз", "гиря", "гора", "будинок", "дуб", "їжак", "ялина", "заєць", "верба", "кедр", "клен", "ключ", "коза", "кінь", "кіт", "кран", "кріт", "лев", "льон", "липа", "лисиця", "мак", "меч", "мох", "м'яч", "ніж", "овес", "вікно", "осел", "окуляри", "перо", "пояс", "куля", "троянда", "слон", "сіль", "соя", "стіл", "стілець", "тигр",],
+  },
+  randomSyllables: {
+    en: ["ze", "te", "da", "ko", "je", "ya", "na", "ju", "hu", "si", "le", "de", "yo", "mo", "wa", "ye", "wo", "so", "ja", "tu", "hi", "me", "pi", "ro", "li", "ca", "bo", "vu", "bu", "ge", "mu", "yu", "ta", "cu", "lu", "vi", "su", "mi", "za", "po", "do", "du", "he", "se", "pa"],
+    uk: ["па", "шу", "фе", "фо", "ме", "та", "со", "ра", "ка", "гу", "хо", "жу", "жа", "по", "во", "ча", "ро", "ву", "вa", "ре", "ві", "бу", "ша", "ле", "пу", "ді", "рі", "шо", "са", "ке", "ні", "кі", "но", "ла", "мо", "га", "го", "жі", "ко", "хі", "ці", "ші", "чо", "бі", "же"],
+  }
+}

@@ -27,15 +27,15 @@ export class StimulusManager {
 
     switch (testMode) {
       case "shapes":
-        this.container.innerHTML = getRandomShape(stimulusSize);
+        this.container.innerHTML = getRandomShape(stimulusSize, "red");
         break;
 
       case "words":
-        this.container.innerHTML = getRandomWord(stimulusSize);
+        this.container.innerHTML = getRandomWord(stimulusSize, "red");
         break;
 
       case "syllables":
-        this.container.innerHTML = getRandomSyllable(stimulusSize);
+        this.container.innerHTML = getRandomSyllable(stimulusSize, "red");
         break;
 
       default:
