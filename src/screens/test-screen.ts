@@ -90,6 +90,14 @@ export class TestScreen {
             <div id="timer-display" class="text-3xl font-mono text-gray-400">0.000${localize("s")}</div>
           </div>
 
+          <!-- Center: kbd -->
+          <div>
+            <div>
+                <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonLeft">Press </span>
+                <kbd class="kbd" data-localize="testScreenTestPZMRActionButtonName">Space</kbd>
+                <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonRight"> once a stimulus appears</span></div>          
+          </div>
+
           <!-- Right side: counter -->
           <div class="flex items-center space-x-4">
             <div id="stimuli-counter" class="text-4xl font-mono text-gray-500">
