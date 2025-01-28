@@ -1,21 +1,23 @@
 // test-screen.ts
-import { TestSettings } from "../config/settings-screen-config.ts";
-import { localize, updateLanguageUI } from "../localization/localization.ts";
-import { logWithTime } from "../util/util.ts";
-import { clearAllTimeouts, scheduleTimeout } from "../util/scheduleTimeout.ts";
-import { StimulusManager } from "../components/StimulusManager.ts";
-import { StimuliCounter } from "../components/StimuliCounter.ts";
-import { TimerManager } from "../components/Timer.ts";
-import { Countdown } from "../components/Countdown.ts";
+import {TestSettings} from "../config/settings-screen-config.ts";
+import {localize, updateLanguageUI} from "../localization/localization.ts";
+import {logWithTime} from "../util/util.ts";
+import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
+import {StimulusManager} from "../components/StimulusManager.ts";
+import {StimuliCounter} from "../components/StimuliCounter.ts";
+import {TimerManager} from "../components/Timer.ts";
+import {Countdown} from "../components/Countdown.ts";
 import {setupResultsScreen} from "./results-screen.ts";
+import {setupSettingsScreen} from "./settings-screen.ts";
 
 export class TestScreen {
-  private appContainer: HTMLElement;
+  private readonly appContainer: HTMLElement;
   private readonly testSettings: TestSettings;
 
   // DOM elements
   private stimulusContainer!: HTMLElement;
   private retryButton!: HTMLButtonElement;
+  private homeButton!: HTMLButtonElement;
 
   // Managers
   private countdown!: Countdown;
@@ -28,6 +30,7 @@ export class TestScreen {
 
   // Event handler references (if you need to remove them on destroy)
   private handleAppClick!: (ev: MouseEvent) => void;
+  private handleAppKeyDown!: (ev: KeyboardEvent) => void;
 
   constructor(appContainer: HTMLElement, testSettings: TestSettings) {
     this.appContainer = appContainer;
@@ -53,6 +56,8 @@ export class TestScreen {
    */
   public destroy(): void {
     this.appContainer.removeEventListener("click", this.handleAppClick);
+    document.removeEventListener("keydown", this.handleAppKeyDown);
+    this.timerManager.stop();
     clearAllTimeouts();
   }
 
@@ -64,7 +69,16 @@ export class TestScreen {
       <div id="test-screen" class="flex flex-col flex-grow bg-black text-white">
         <!-- Top bar: retry button -->
         <div class="flex-grow-0 flex flex-row-reverse justify-between items-end p-4">
-          <button id="retry-btn" class="btn btn-ghost">${localize("testScreenTestRetry")}</button>      
+          <button id="retry-btn" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+          </button>      
+          <button id="home-btn" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+          </button>      
         </div>
         <!-- Main test content -->
         <div id="test-stimulus-container" class="flex items-center justify-center flex-grow text-8xl font-bold"></div>
@@ -93,6 +107,7 @@ export class TestScreen {
   private getElements(): void {
     this.stimulusContainer = document.getElementById("test-stimulus-container")!;
     this.retryButton = document.getElementById("retry-btn") as HTMLButtonElement;
+    this.homeButton = document.getElementById("home-btn") as HTMLButtonElement;
   }
 
   /**
@@ -107,7 +122,7 @@ export class TestScreen {
     this.countdown = new Countdown(
       this.stimulusContainer,
       ["3", "2", "1", localize("testScreenTestStart")],
-      1000,
+      500,
       () => this.runTest()
     );
   }
@@ -116,14 +131,15 @@ export class TestScreen {
    * Attach the event listeners (e.g. retry button, click for reaction times).
    */
   private attachEventListeners(): void {
-    this.retryButton.addEventListener("click", () => {
-      logWithTime("Retry button clicked. Restarting test...");
-      this.handleRetry();
-    });
+    this.retryButton.addEventListener("click", () => this.handleRetry());
+    this.homeButton.addEventListener("click", () => this.handleHome());
 
     // Reaction time click handler
     this.handleAppClick = () => this.handleAppClickFn();
     this.appContainer.addEventListener("click", this.handleAppClick);
+
+    this.handleAppKeyDown = (ev: KeyboardEvent) => this.handleAppKeyDownFn(ev);
+    document.addEventListener("keydown", this.handleAppKeyDown);
   }
 
   /**
@@ -143,7 +159,14 @@ export class TestScreen {
     this.reactionTimes.clear();
     this.stimuliCounter.reset();
     this.appContainer.addEventListener("click", this.handleAppClick);
+    document.addEventListener("keydown", this.handleAppKeyDown);
+    this.retryButton.blur();
     this.startTest();
+  }
+
+  private handleHome(): void {
+    this.destroy();
+    setupSettingsScreen(this.appContainer, this.testSettings);
   }
 
   /**
@@ -185,6 +208,20 @@ export class TestScreen {
    * Handles clicks on the app container for reaction-time measurement.
    */
   private handleAppClickFn(): void {
+    this.handleUserInput();
+  }
+
+  /**
+   * Handles [keydown] on the app container for reaction-time measurement.
+   */
+  private handleAppKeyDownFn(ev: KeyboardEvent): void {
+    // only spacebar
+    if (ev.key !== " ") return;
+
+    this.handleUserInput();
+  }
+
+  private handleUserInput() {
     // If there is a stimulus on screen and the timer is running...
     // (We track this by having a non-null start time)
     // We find the difference between now and that start time.
@@ -198,9 +235,6 @@ export class TestScreen {
     if (lastStimulusTime != null) {
       const reactionTime = Date.now() - lastStimulusTime;
       this.reactionTimes.set(currentIndex, reactionTime);
-      logWithTime(`Reaction time for stimulus #${currentIndex}: ${reactionTime}ms`);
-      logWithTime(`${this.reactionTimes}`)
-
       this.timerManager.stop();
     }
   }
@@ -212,8 +246,7 @@ export class TestScreen {
   private onTestComplete(): void {
     this.appContainer.style.cursor = "default";
     this.stimulusManager.clearContainer();
-    this.appContainer.removeEventListener("click", this.handleAppClick);
-    this.timerManager.stop();
+    this.destroy();
 
     // Hide or replace the main container content
     this.stimulusContainer.innerHTML = `

@@ -103,7 +103,6 @@ const localization: LocalizationKeys = {
 
   // test screen
   testScreenTestStart: {en:"Start!", uk: "Старт!"},
-  testScreenTestRetry: {en:"↻", uk: "↻"},
 
   // stats
   noReactionTimes: { en: "No Reaction Times", uk: "Немає результатів реакції" },
