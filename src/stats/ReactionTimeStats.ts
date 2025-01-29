@@ -251,6 +251,9 @@ export class ReactionTimeStats {
           },
         },
         plugins: {
+          legend: {
+            display: false,
+          },
           title: {
             display: true,
             text: localize("frequencyDistributionTitle"),
