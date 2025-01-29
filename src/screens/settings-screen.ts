@@ -31,28 +31,28 @@ function settingsScreenHTML(testSettings: TestSettings) {
                           <div class="label">
                               <span class="label-text" data-localize="surnameLabel">Surname:</span>
                           </div>
-                          <input class="input input-bordered w-full max-w-xs" type="text" id="surname-input"
-                                 placeholder="Doe" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.lastName ?? ''}" />
+                          <input class="input validator input-bordered w-full max-w-xs" type="text" id="surname-input"
+                                 required minlength="2" maxlength="50" placeholder="Doe" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.lastName ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
                           <div class="label">
                               <span class="label-text" data-localize="nameLabel">Name:</span>
                           </div>
-                          <input class="input input-bordered w-full max-w-xs" type="text" id="name-input"
-                                 placeholder="John" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.firstName ?? ''}" />
+                          <input class="input validator input-bordered w-full max-w-xs" type="text" id="name-input"
+                                 required minlength="2" maxlength="50" placeholder="John" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.firstName ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
                           <div class="label">
                               <span class="label-text" data-localize="ageLabel">Age:</span>
                           </div>
-                          <input class="input input-bordered max-w-20" type="text" id="age-input"
-                                 placeholder="Age" inputmode="numeric" value="${testSettings.age ?? ''}" />
+                          <input class="input validator input-bordered max-w-20" type="number" id="age-input"
+                                 required min="1" max="99" placeholder="Age" inputmode="numeric" value="${testSettings.age ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
                           <div class="label">
                               <span class="label-text" data-localize="genderLabel">Gender:</span>
                           </div>
-                          <select class="select select-bordered" id="gender-select">
+                          <select class="select validator select-bordered" id="gender-select" required>
                               <option value="" disabled ${!testSettings.gender ? 'selected' : ''} data-localize="selectGender">Select Gender</option>
                               <option value="male" ${testSettings.gender === 'male' ? 'selected' : ''} data-localize="male"></option>
                               <option value="female" ${testSettings.gender === 'female' ? 'selected' : ''} data-localize="female"></option>

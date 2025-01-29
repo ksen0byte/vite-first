@@ -42,7 +42,7 @@ const localization: LocalizationKeys = {
   appTitle: {en: "Assessment of Human CNS Functional State", uk: "Визначення функціонального стану ЦНС людини"},
   personalDataTitle: {en: "Personal Data", uk: "Персональні Дані"},
   nameLabel: {en: "Name:", uk: "Ім’я:"},
-  surnameLabel: {en: "Surname:", uk: "Прізвище:"},
+  surnameLabel: {en: "Last Name:", uk: "Прізвище:"},
   ageLabel: {en: "Age:", uk: "Вік:"},
   genderLabel: {en: "Gender:", uk: "Стать:"},
   selectGender: {en: "Select Gender", uk: "Оберіть стать"},
