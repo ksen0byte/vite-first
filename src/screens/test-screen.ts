@@ -91,11 +91,12 @@ export class TestScreen {
           </div>
 
           <!-- Center: kbd -->
-          <div>
+          <div class="hidden sm:block">
             <div>
                 <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonLeft">Press </span>
                 <kbd class="kbd" data-localize="testScreenTestPZMRActionButtonName">Space</kbd>
-                <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonRight"> once a stimulus appears</span></div>          
+                <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonRight"> once a stimulus appears</span>
+            </div>          
           </div>
 
           <!-- Right side: counter -->

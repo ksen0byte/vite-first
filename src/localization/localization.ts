@@ -103,9 +103,9 @@ const localization: LocalizationKeys = {
 
   // test screen
   testScreenTestStart: {en: "Start!", uk: "Старт!"},
-  testScreenTestPZMRActionButtonLeft: {en: "Press ", uk: "Натисніть "},
+  testScreenTestPZMRActionButtonLeft: {en: "Press", uk: "Натисніть "},
   testScreenTestPZMRActionButtonName: {en: "Space", uk: "Пробіл"},
-  testScreenTestPZMRActionButtonRight: {en: " once a stimulus appears", uk: "одразу, коли з'явиться подразник"},
+  testScreenTestPZMRActionButtonRight: {en: "once a stimulus appears", uk: "одразу, коли з'явиться подразник"},
 
   // stats
   noReactionTimes: { en: "No Reaction Times", uk: "Немає результатів реакції" },
