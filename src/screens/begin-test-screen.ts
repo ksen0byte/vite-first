@@ -70,7 +70,7 @@ function beginTestScreenHTML(testSettings: TestSettings): string {
       <!-- Main content -->
       <div class="flex flex-col items-center justify-center flex-grow px-8">
         <!-- Start button -->
-        <button id="start-test-button" class="btn btn-success btn-lg w-full max-w-md" data-localize="startTest">Start</button>
+        <button id="start-test-button" class="btn btn-success btn-xl btn-block" data-localize="startTest">Start</button>
       </div>
     </div>
   `;

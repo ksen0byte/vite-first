@@ -45,9 +45,9 @@ function mainHtml() {
   <div id="test-type-selection-screen" class="flex flex-grow flex-col items-center justify-center bg-base-200 text-base-content">
     <h2 class="text-2xl font-bold mb-8" data-localize="selectTestType">Select Test Type</h2>
     <div class="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3 w-full px-8">
-      <button id="pzmr-button" class="btn btn-primary btn-lg w-full" data-localize="testTypePzmrShort">SVMR</button>
-      <button id="rv1-3-button" class="btn btn-secondary btn-lg w-full" data-localize="testTypeRV13Short">SR1-3</button>
-      <button id="rv2-3-button" class="btn btn-accent btn-lg w-full" data-localize="testTypeRV23Short">SR2-3</button>
+      <button id="pzmr-button" class="btn btn-soft btn-primary btn-xl w-full" data-localize="testTypePzmrShort">SVMR</button>
+      <button id="rv1-3-button" disabled="disabled" class="btn btn-soft btn-secondary btn-xl w-full" data-localize="testTypeRV13Short">SR1-3</button>
+      <button id="rv2-3-button" disabled="disabled" class="btn btn-soft btn-accent btn-xl w-full" data-localize="testTypeRV23Short">SR2-3</button>
     </div>
   </div>
   `;
