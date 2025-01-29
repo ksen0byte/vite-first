@@ -55,6 +55,7 @@ export class TestScreen {
    * Clears timers, event listeners, etc.
    */
   public destroy(): void {
+    this.appContainer.style.cursor = "default";
     this.appContainer.removeEventListener("click", this.handleAppClick);
     document.removeEventListener("keydown", this.handleAppKeyDown);
     this.timerManager.stop();
@@ -253,7 +254,6 @@ export class TestScreen {
    * Displays "Retry" and "Finish" buttons in place of the test content.
    */
   private onTestComplete(): void {
-    this.appContainer.style.cursor = "default";
     this.stimulusManager.clearContainer();
     this.destroy();
 
