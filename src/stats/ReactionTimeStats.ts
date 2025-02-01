@@ -2,7 +2,7 @@
 
 import Chart from "chart.js/auto";
 import {localize} from "../localization/localization.ts";
-import {mean, quantile, standardDeviation} from "simple-statistics";
+import {cumulativeStdNormalProbability, mean, quantile, standardDeviation} from "simple-statistics";
 
 export interface FrequencyBin {
   binStart: number;
@@ -33,6 +33,7 @@ export class ReactionTimeStats {
    * Create a new instance with the given array of reaction times.
    */
   constructor(data: number[]) {
+    console.log(data.map(a => Number(a.toFixed(0))).join(", "));
     this.data = data;
     this.bins = this.computeFrequencyDistribution();
     this.count = data.length;
@@ -158,27 +159,66 @@ export class ReactionTimeStats {
   }
 
   /**
-   * Calculates the Functional Level of the System.
-   * Formula: ???
+   * 1) Functional Level
+   *    ln( (2 * sqrt(2 * ln(2) * σ * M)) )
    */
   public calculateFunctionalLevel(): number {
-    return -1;
+    if (this.modeVal == null || this.modeVal <= 0) {
+      return NaN;
+    }
+    const sigma = this.stdevVal;
+    const M = this.modeVal;
+
+    return Math.log(2 * Math.sqrt(2 * Math.log(2) * sigma * M));
   }
 
   /**
-   * Calculates the Reaction Stability.
-   * Formula: ???
+   * 2) Reaction Stability
+   *    ln( ( φ((x2 - m)/(σ * sqrt(2))) - φ((x1 - m)/(σ * sqrt(2))) ) / (4 * sqrt(2) * ln(2) * σ) )
    */
   public calculateReactionStability(): number {
-    return -1;
+    const modeBin = this.getModalClass();
+    if (!modeBin) {
+      return NaN;
+    }
+    const x1 = modeBin.binStart;
+    const x2 = modeBin.binEnd;
+    const m = this.meanVal;
+    const sigma = this.stdevVal;
+
+    const z1 = (x2 - m) / (sigma);
+    const z2 = (x1 - m) / (sigma);
+    console.log(z1)
+    console.log(z2)
+    const phiDiff = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
+
+    const denominator = 4 * Math.sqrt(2) * Math.log(2) * sigma;
+    return Math.log(phiDiff / denominator);
   }
 
   /**
-   * Calculates the Level of Functional Capabilities.
-   * Formula: ???
+   * 3) Functional Capabilities
+   *    ln( ( φ((x2 - m)/(σ * sqrt(2))) - φ((x1 - m)/(σ * sqrt(2))) ) / (4 * sqrt(2) * ln(2) * σ * m) )
    */
   public calculateFunctionalCapabilities(): number {
-    return -1;
+    const modeBin = this.getModalClass();
+    if (!modeBin) {
+      return NaN;
+    }
+    const x1 = modeBin.binStart;
+    const x2 = modeBin.binEnd;
+    const m = this.meanVal;
+    const sigma = this.stdevVal;
+    if (m <= 0) {
+      return NaN;
+    }
+
+    const z1 = (x2 - m) / (sigma);
+    const z2 = (x1 - m) / (sigma);
+    const phiDiff = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
+
+    const denominator = 4 * Math.sqrt(2) * Math.log(2) * sigma * m;
+    return Math.log(phiDiff / denominator);
   }
 
 
