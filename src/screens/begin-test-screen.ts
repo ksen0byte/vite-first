@@ -56,9 +56,9 @@ function beginTestScreenHTML(testSettings: TestSettings): string {
         <div class="text-xs bg-base-100 shadow-md rounded-lg p-4">
           <table class="table table-xs table-zebra w-full text-left">
             <tbody>
-              <tr><th class="pr-2" data-localize="testSettingsSummaryTestMode">Test Mode:</th><td class="font-mono">${capitalize(testSettings.testMode)}</td></tr>
-              <tr><th class="pr-2" data-localize="testSettingsSummaryStimulusSize">Stimulus Size:</th><td class="font-mono" data-localize-add="mm">${testSettings.stimulusSize} </td></tr>
-              <tr><th class="pr-2" data-localize="testSettingsSummaryExposureTime">Exposure Time:</th><td class="font-mono" data-localize-add="ms">${testSettings.exposureTime} </td></tr>
+              <tr><th class="pr-2" data-localize="testSettingsSummaryTestMode">Test Mode:</th><td class="font-mono">${capitalize(localize(testSettings.testMode))}</td></tr>
+              <tr><th class="pr-2" data-localize="testSettingsSummaryStimulusSize">Stimulus Size:</th><td class="font-mono">${testSettings.stimulusSize} ${localize("mm")}</td></tr>
+              <tr><th class="pr-2" data-localize="testSettingsSummaryExposureTime">Exposure Time:</th><td class="font-mono">${testSettings.exposureTime} ${localize("ms")}</td></tr>
               <tr><th class="pr-2" data-localize="testSettingsSummaryExposureDelay">Exposure Delay:</th><td class="font-mono">${exposureDelay}</td></tr>
               <tr><th class="pr-2" data-localize="testSettingsSummaryStimulusCount">Stimulus Count:</th><td class="font-mono">${testSettings.stimulusCount}</td></tr>
               <tr><th class="pr-2" data-localize="testSettingsSummaryTestType">Test Type:</th><td class="font-mono">${testType}</td></tr>

@@ -1,8 +1,5 @@
 import {settings} from "../config/settings.ts";
-
-const LANGUAGE_KEY = "selectedLanguage";
-// Load the language from localStorage or fall back to the default
-let currentLanguage = localStorage.getItem(LANGUAGE_KEY) || settings.default.language;
+import {LanguageManager} from "./LanguageManager.ts";
 
 export function updateLanguageUI(): void {
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
@@ -10,34 +7,45 @@ export function updateLanguageUI(): void {
     const key = element.dataset.localize!;
     element.textContent = localize(key);
   });
-  const localizableAddElements = document.querySelectorAll<HTMLElement>("[data-localize-add]");
-  localizableAddElements.forEach((element) => {
-    const key = element.dataset.localizeAdd!;
-    element.textContent = element.textContent + localize(key);
-  });
-
 }
-
-export function setupLanguageToggle(buttonId: string) {
-  const languageToggleButton = document.querySelector<HTMLButtonElement>(`#${buttonId}`)!;
-  languageToggleButton?.addEventListener("click", () => {
-    currentLanguage = currentLanguage === "en" ? "uk" : "en";
-    localStorage.setItem(LANGUAGE_KEY, currentLanguage);
-    updateLanguageUI();
-  });
-}
-
 
 type LocalizationKeys = {
   [key: string]: { [language: string]: string };
 };
 
 export function localize(key: string): string {
+  const currentLanguage = LanguageManager.getCurrentLanguage();
   return localization[key]?.[currentLanguage] || localization[key]?.[settings.default.language] || key;
 }
 
 const localization: LocalizationKeys = {
   switchLanguage: {en: "UA", uk: "EN"},
+  // keys for theme names
+  theme_light: {en: "Light", uk: "Світла"},
+  theme_dark: {en: "Dark", uk: "Темна"},
+  theme_cupcake: {en: "Cupcake", uk: "Пончик"},
+  theme_bumblebee: {en: "Bumblebee", uk: "Джміль"},
+  theme_emerald: {en: "Emerald", uk: "Смарагд"},
+  theme_corporate: {en: "Corporate", uk: "Корпоративна"},
+  theme_caramelatte: {en: "Caramelatte", uk: "Карамеллате"},
+  theme_retro: {en: "Retro", uk: "Ретро"},
+  theme_valentine: {en: "Valentine", uk: "Валентин"},
+  theme_halloween: {en: "Halloween", uk: "Геловін"},
+  theme_garden: {en: "Garden", uk: "Сад"},
+  theme_forest: {en: "Forest", uk: "Ліс"},
+  theme_aqua: {en: "Aqua", uk: "Вода"},
+  theme_lofi: {en: "Lofi", uk: "Лофі"},
+  theme_pastel: {en: "Pastel", uk: "Пастель"},
+  theme_dracula: {en: "Dracula", uk: "Дракула"},
+  theme_business: {en: "Business", uk: "Бізнес"},
+  theme_night: {en: "Night", uk: "Ніч"},
+  theme_coffee: {en: "Coffee", uk: "Кава"},
+  theme_winter: {en: "Winter", uk: "Зима"},
+  theme_dim: {en: "Dim", uk: "Приглушена"},
+  theme_sunset: {en: "Sunset", uk: "Захід"},
+  theme_abyss: {en: "Abyss", uk: "Безодня"},
+  themeToggle: {en: "Theme", uk: "Тема"},
+
   // settings screen
   appTitle: {en: "Assessment of Human CNS Functional State", uk: "Визначення функціонального стану ЦНС людини"},
   personalDataTitle: {en: "Personal Data", uk: "Персональні Дані"},
@@ -140,6 +148,8 @@ const localization: LocalizationKeys = {
 type LocalizationVars = { randomWords: { en: string[]; uk: string[] }; randomSyllables: { en: string[]; uk: string[] } }
 type LanguageKey = "uk" | "en"
 export function getLocalizedVar(key: keyof LocalizationVars): string[]{
+  const currentLanguage = LanguageManager.getCurrentLanguage();
+
   const lang = currentLanguage as LanguageKey || settings.default.language as LanguageKey;
   const result = localizationVars[key]?.[lang] || localizationVars[key]?.[lang];
   if (!result) {

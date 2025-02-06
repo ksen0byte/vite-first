@@ -1,5 +1,7 @@
 @use "tailwindcss" as *;
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, cupcake, bumblebee, emerald, corporate, retro, valentine, halloween, garden, forest, 'aqua', lofi, pastel, dracula, business, night, coffee, winter, dim, sunset, abyss;
+}
 
 #main .noUi-target {
   appearance: none;
