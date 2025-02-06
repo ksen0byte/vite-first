@@ -2,7 +2,7 @@ import {ExposureDelay, ExposureTime, StimulusCount, StimulusSize, TestMode, Test
 
 export const settings = {
   default: {
-    language: "en",
+    language: "uk",
     testMode: "shapes" as TestMode,
     stimulusSize: 50 as StimulusSize,
     exposureTime: 700 as ExposureTime,
