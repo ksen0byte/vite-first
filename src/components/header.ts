@@ -19,13 +19,13 @@ function headerHTML() {
         </div>
         <div class="navbar-end flex items-center space-x-4">
             <!-- Theme Toggle Button -->
-            <button class="btn btn-ghost flex items-center space-x-2" id="theme-toggle">
+            <button class="btn btn-ghost" id="theme-toggle">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008Z" /> </svg>
-                <span>${localize("themeToggle")}: ${localize(`theme_${ThemeManager.getCurrentTheme()}`)} </span>
+                <span id="theme-toggle-text"></span>
             </button>
 
             <!-- Language Toggle Button -->
-            <button class="btn btn-ghost flex items-center space-x-2" id="language-toggle">
+            <button class="btn btn-ghost flex " id="language-toggle">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802" /> </svg>
                 <span data-localize="switchLanguage"></span>
             </button>
@@ -33,7 +33,10 @@ function headerHTML() {
     </header>`;
 }
 
-const initializeTheme = () => applyTheme(ThemeManager.getCurrentTheme());
+const initializeTheme = () => {
+  applyTheme(ThemeManager.getCurrentTheme());
+  updateThemeToggleButton();
+};
 
 const toggleDaisyUITheme = () => {
   // Get the next theme
@@ -44,7 +47,16 @@ const toggleDaisyUITheme = () => {
 
   // Apply the theme
   applyTheme(nextTheme);
+  updateThemeToggleButton();
 };
+
+function updateThemeToggleButton() {
+  const theme = ThemeManager.getCurrentTheme();
+  const themeToggleText = document.querySelector('#theme-toggle-text');
+  if (themeToggleText) {
+    themeToggleText.textContent = `${localize("themeToggle")}: ${localize(`theme_${theme}`)}`;
+  }
+}
 
 function applyTheme(theme: string) {
   // Apply the theme to <html>
@@ -74,6 +86,7 @@ function setupHeaderActions() {
 
   languageToggleBtn?.addEventListener('click', () => {
     toggleLanguage();
+    updateThemeToggleButton(); // Ensure theme localization updates
   });
 
   // Ensure UI updates on load
