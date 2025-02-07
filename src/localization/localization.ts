@@ -5,7 +5,14 @@ export function updateLanguageUI(): void {
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
   localizableElements.forEach((element) => {
     const key = element.dataset.localize!;
-    element.textContent = localize(key);
+    const textContent = localize(key);
+    console.log(element);
+    console.log(element.tagName);
+    if (element.tagName === "INPUT") {
+      element.setAttribute("placeholder", textContent);
+    } else {
+      element.textContent = textContent;
+    }
   });
 }
 
@@ -48,12 +55,10 @@ const localization: LocalizationKeys = {
 
   // settings screen
   appTitle: {en: "Assessment of Human CNS Functional State", uk: "Визначення функціонального стану ЦНС людини"},
-  personalDataTitle: {en: "Personal Data", uk: "Персональні Дані"},
-  nameLabel: {en: "Name:", uk: "Ім’я:"},
-  surnameLabel: {en: "Last Name:", uk: "Прізвище:"},
-  ageLabel: {en: "Age:", uk: "Вік:"},
-  genderLabel: {en: "Gender:", uk: "Стать:"},
-  selectGender: {en: "Select Gender", uk: "Оберіть стать"},
+  nameLabel: {en: "Name", uk: "Ім’я"},
+  surnameLabel: {en: "Last Name", uk: "Прізвище"},
+  ageLabel: {en: "Age", uk: "Вік"},
+  selectGender: {en: "Gender", uk: "Стать"},
   male: {en: "Male", uk: "Чоловіча"},
   female: {en: "Female", uk: "Жіноча"},
 

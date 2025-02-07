@@ -20,38 +20,24 @@ import {defaultTestSettings} from "../config/settings.ts";
 import {getRandomShape} from "../components/Shapes.ts";
 
 function settingsScreenHTML(testSettings: TestSettings) {
-  return `
-        <main class="flex-grow container mx-auto px-4 py-4 space-y-4" id="main">
+  return `<main class="flex-grow container mx-auto px-4 py-2 space-y-2" id="main">
           <!-- 1. Personal Data Block -->
           <div class="card bg-base-100 shadow-md">
               <div class="card-body">
-                  <h2 class="card-title" data-localize="personalDataTitle">Personal Data</h2>
                   <div class="flex space-x-2">
                       <label class="flex flex-col form-control max-w-xs">
-                          <div class="label">
-                              <span class="label-text" data-localize="surnameLabel">Surname:</span>
-                          </div>
-                          <input class="input validator input-bordered w-full max-w-xs" type="text" id="surname-input"
-                                 required minlength="2" maxlength="50" placeholder="Doe" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.lastName ?? ''}" />
+                          <input class="input validator input-bordered w-full max-w-xs" type="text" id="surname-input" data-localize="surnameLabel"
+                                 required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.lastName ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
-                          <div class="label">
-                              <span class="label-text" data-localize="nameLabel">Name:</span>
-                          </div>
-                          <input class="input validator input-bordered w-full max-w-xs" type="text" id="name-input"
-                                 required minlength="2" maxlength="50" placeholder="John" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.firstName ?? ''}" />
+                          <input class="input validator input-bordered w-full max-w-xs" type="text" id="name-input" data-localize="nameLabel"
+                                 required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.firstName ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
-                          <div class="label">
-                              <span class="label-text" data-localize="ageLabel">Age:</span>
-                          </div>
-                          <input class="input validator input-bordered max-w-20" type="number" id="age-input"
+                          <input class="input validator input-bordered max-w-20" type="number" id="age-input" data-localize="ageLabel"
                                  required min="1" max="99" placeholder="Age" inputmode="numeric" value="${testSettings.age ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
-                          <div class="label">
-                              <span class="label-text" data-localize="genderLabel">Gender:</span>
-                          </div>
                           <select class="select validator select-bordered" id="gender-select" required>
                               <option value="" disabled ${!testSettings.gender ? 'selected' : ''} data-localize="selectGender">Select Gender</option>
                               <option value="male" ${testSettings.gender === 'male' ? 'selected' : ''} data-localize="male"></option>
