@@ -21,4 +21,5 @@ export const defaultTestSettings: TestSettings = {
   exposureTime: settings.default.exposureTime,
   exposureDelay: settings.default.exposureDelay,
   stimulusCount: settings.default.stimulusCount,
+  testType: 'svmr'
 };
