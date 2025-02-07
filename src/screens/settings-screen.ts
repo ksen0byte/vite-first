@@ -298,10 +298,10 @@ const setupSlider = (
     const secondValue = values[1] !== undefined ? Number(values[1]) : undefined;
 
     if (secondValue !== undefined) {
-      label.textContent = `${localize(sliderConfig.label.localizationKey)}: ${firstValue}-${secondValue} ${sliderConfig.label.unit}`;
+      label.textContent = `${localize(sliderConfig.label.localizationKey)}: ${firstValue}-${secondValue} ${localize(sliderConfig.label.unit)}`;
       onUpdate(firstValue);
     } else {
-      label.textContent = `${localize(sliderConfig.label.localizationKey)}: ${firstValue} ${sliderConfig.label.unit}`;
+      label.textContent = `${localize(sliderConfig.label.localizationKey)}: ${firstValue} ${localize(sliderConfig.label.unit)}`;
       onUpdate(firstValue, secondValue);
     }
   });
