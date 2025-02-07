@@ -369,6 +369,7 @@ const startButtonCallback: (appContainer: HTMLElement) => void = (appContainer: 
       exposureTime: exposureTime,
       exposureDelay: exposureDelay,
       stimulusCount: stimulusCount,
+      testType: 'svmr',
     };
 
     console.log("TestSettings:", testSettings);

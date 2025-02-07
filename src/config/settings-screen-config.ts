@@ -168,5 +168,5 @@ export interface TestSettings {
   exposureTime: ExposureTime,
   exposureDelay: ExposureDelay,
   stimulusCount: StimulusCount,
-  testType?: TestType,
+  testType: TestType,
 }

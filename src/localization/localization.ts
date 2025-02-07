@@ -6,8 +6,6 @@ export function updateLanguageUI(): void {
   localizableElements.forEach((element) => {
     const key = element.dataset.localize!;
     const textContent = localize(key);
-    console.log(element);
-    console.log(element.tagName);
     if (element.tagName === "INPUT") {
       element.setAttribute("placeholder", textContent);
     } else {
