@@ -46,13 +46,13 @@ export function setupResultsScreen(
         <!-- Functional Level -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statReactionStability">Count</div>
-          <div class="stat-value text-lg">${reactionStability || "N/A"}</div>
+          <div class="stat-value text-lg">${reactionStability ? reactionStability.toFixed(2) : "N/A"}</div>
         </div>
         
         <!-- Functional Level -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statFunctionalCapabilities">Count</div>
-          <div class="stat-value text-lg">${functionalCapabilities || "N/A"}</div>
+          <div class="stat-value text-lg">${functionalCapabilities ? functionalCapabilities.toFixed(2) : "N/A"}</div>
         </div>
       </div>
       <!-- First stats block (count, mean, median, variance, std dev, range) -->

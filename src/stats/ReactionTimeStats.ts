@@ -29,6 +29,8 @@ export class ReactionTimeStats {
   public readonly p90Val;
   public readonly p97Val;
 
+  private LOSKUTOVA_COEFFICIENT = 20;
+
   /**
    * Create a new instance with the given array of reaction times.
    */
@@ -188,12 +190,14 @@ export class ReactionTimeStats {
 
     const z1 = (x2 - m) / (sigma);
     const z2 = (x1 - m) / (sigma);
-    console.log(z1)
-    console.log(z2)
     const phiDiff = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
 
-    const denominator = 4 * Math.sqrt(2) * Math.log(2) * sigma;
-    return Math.log(phiDiff / denominator);
+    const denominator = 4 * Math.sqrt(2 * Math.log(2) * sigma * m);
+
+    const modalDiff = x2 - x1;
+    const coeff = this.LOSKUTOVA_COEFFICIENT / modalDiff;
+
+    return Math.abs(Math.log(phiDiff / (denominator)) / coeff);
   }
 
   /**
@@ -218,7 +222,11 @@ export class ReactionTimeStats {
     const phiDiff = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
 
     const denominator = 4 * Math.sqrt(2) * Math.log(2) * sigma * m;
-    return Math.log(phiDiff / denominator);
+
+    const modalDiff = x2 - x1;
+    const coeff = this.LOSKUTOVA_COEFFICIENT / modalDiff;
+
+    return Math.abs(Math.log(phiDiff / denominator) / coeff);
   }
 
 
