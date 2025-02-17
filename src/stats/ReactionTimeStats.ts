@@ -35,7 +35,6 @@ export class ReactionTimeStats {
    * Create a new instance with the given array of reaction times.
    */
   constructor(data: number[]) {
-    console.log(data.map(a => Number(a.toFixed(0))).join(", "));
     this.data = data;
     this.bins = this.computeFrequencyDistribution();
     this.count = data.length;
@@ -240,6 +239,13 @@ export class ReactionTimeStats {
     const labels = this.bins.map((bin) => `${bin.binStart} - ${bin.binEnd} ${localize("ms")}`);
     const frequencies = this.bins.map((bin) => bin.frequency);
 
+    const subtitle = [
+      `${localize("countLabel")}: ${this.count}`,
+      `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
+      `${localize("modeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
+      `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
+    ].join(" | ");
+
     // noinspection JSUnusedGlobalSymbols
     new Chart(ctx, {
       type: "bar",
@@ -309,6 +315,10 @@ export class ReactionTimeStats {
               size: 24,
             }
           },
+          subtitle: {
+            display: true,
+            text: subtitle,
+          },
           tooltip: {
             callbacks: {
               label: (context) => {
@@ -328,6 +338,17 @@ export class ReactionTimeStats {
               },
             },
           },
+          annotation: {
+            annotations: {
+              line1: {
+                type: 'label',
+                yMin: 20,
+                yMax: 20,
+                borderColor: 'rgb(255, 99, 132)',
+                borderWidth: 2,
+              }
+            }
+          }
         },
       },
     });

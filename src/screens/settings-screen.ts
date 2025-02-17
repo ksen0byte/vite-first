@@ -1,25 +1,15 @@
 import noUiSlider, {target} from 'nouislider';
 import 'nouislider/dist/nouislider.css';
-import {
-  ExposureDelay,
-  ExposureTime,
-  Gender,
-  inputsConfig,
-  SliderConfig, StimulusCount,
-  StimulusSize,
-  subsectionsConfig,
-  TestMode,
-  TestSettings
-} from "../config/settings-screen-config.ts";
+import {AppContext, ExposureDelay, ExposureTime, Gender, SliderConfig, StimulusCount, StimulusSize, TestMode} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {getSliderValue} from "../util/util.ts";
 import {setupTestTypeSelectionScreen} from "./test-type-selection-screen.ts";
 import {setupFooter} from "../components/footer.ts";
 import {setupHeader} from "../components/header.ts";
-import {defaultTestSettings} from "../config/settings.ts";
+import {defaultAppContext, inputsConfig, subsectionsConfig} from "../config/settings.ts";
 import {getRandomShape} from "../components/Shapes.ts";
 
-function settingsScreenHTML(testSettings: TestSettings) {
+function settingsScreenHTML(appContext: AppContext) {
   return `<main class="flex-grow container mx-auto px-4 py-2 space-y-2" id="main">
           <!-- 1. Personal Data Block -->
           <div class="card bg-base-100 shadow-md">
@@ -27,21 +17,21 @@ function settingsScreenHTML(testSettings: TestSettings) {
                   <div class="flex space-x-2">
                       <label class="flex flex-col form-control max-w-xs">
                           <input class="input validator input-bordered w-full max-w-xs" type="text" id="surname-input" data-localize="surnameLabel"
-                                 required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.lastName ?? ''}" />
+                                 required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${appContext.personalData.lastName ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
                           <input class="input validator input-bordered w-full max-w-xs" type="text" id="name-input" data-localize="nameLabel"
-                                 required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${testSettings.firstName ?? ''}" />
+                                 required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${appContext.personalData.firstName ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
                           <input class="input validator input-bordered max-w-20" type="number" id="age-input" data-localize="ageLabel"
-                                 required min="1" max="99" placeholder="Age" inputmode="numeric" value="${testSettings.age ?? ''}" />
+                                 required min="1" max="99" placeholder="Age" inputmode="numeric" value="${appContext.personalData.age ?? ''}" />
                       </label>
                       <label class="flex flex-col form-control max-w-xs">
                           <select class="select validator select-bordered" id="gender-select" required>
-                              <option value="" disabled ${!testSettings.gender ? 'selected' : ''} data-localize="selectGender">Select Gender</option>
-                              <option value="male" ${testSettings.gender === 'male' ? 'selected' : ''} data-localize="male"></option>
-                              <option value="female" ${testSettings.gender === 'female' ? 'selected' : ''} data-localize="female"></option>
+                              <option value="" disabled ${!appContext.personalData.gender ? 'selected' : ''} data-localize="selectGender">Select Gender</option>
+                              <option value="male" ${appContext.personalData.gender === 'male' ? 'selected' : ''} data-localize="male"></option>
+                              <option value="female" ${appContext.personalData.gender === 'female' ? 'selected' : ''} data-localize="female"></option>
                           </select>
                       </label>
                   </div>
@@ -51,7 +41,7 @@ function settingsScreenHTML(testSettings: TestSettings) {
           <!-- 2. Stimulus Type (Collapsible sections) -->
           <div class="card bg-base-100 shadow-md">
               <div class="card-body">
-                  <h2 class="card-title" data-localize="chooseTestMode"></h2>
+                  <h2 class="card-title" data-localize="testModeLabel"></h2>
   
                   <!-- Geometric Shapes Subsection -->
                   <div
@@ -60,7 +50,7 @@ function settingsScreenHTML(testSettings: TestSettings) {
                           id="shapes-subsection"
                   >
                       <!-- Radio input to control the collapse -->
-                      <input type="radio" name="stimulus-type-accordion" ${testSettings.testMode === 'shapes' ? 'checked="checked"' : ''} class="peer" data-subsection="shapes"/>
+                      <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'shapes' ? 'checked="checked"' : ''} class="peer" data-subsection="shapes"/>
   
                       <!-- Subsection Title -->
                       <div
@@ -114,7 +104,7 @@ function settingsScreenHTML(testSettings: TestSettings) {
                           id="words-subsection"
                   >
                       <!-- Radio input to control the collapse -->
-                      <input type="radio" name="stimulus-type-accordion" ${testSettings.testMode === 'words' ? 'checked="checked"' : ''} class="peer" data-subsection="words"/>
+                      <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'words' ? 'checked="checked"' : ''} class="peer" data-subsection="words"/>
                       <!-- Subsection Title -->
                       <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
                            data-localize="wordsOption"
@@ -164,7 +154,7 @@ function settingsScreenHTML(testSettings: TestSettings) {
                           class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
                           id="syllables-subsection"
                   >
-                      <input type="radio" name="stimulus-type-accordion" ${testSettings.testMode === 'syllables' ? 'checked="checked"' : ''} class="peer" data-subsection="syllables"/>
+                      <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'syllables' ? 'checked="checked"' : ''} class="peer" data-subsection="syllables"/>
                       <!-- Subsection Title -->
                       <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
                            data-localize="syllablesOption"
@@ -226,9 +216,9 @@ function settingsScreenFooterHTML() {
 }
 
 
-export function setupSettingsScreen(appContainer: HTMLElement, testSettings: TestSettings): void {
+export function setupSettingsScreen(appContainer: HTMLElement, appContext: AppContext): void {
 
-  appContainer.innerHTML = settingsScreenHTML(testSettings);
+  appContainer.innerHTML = settingsScreenHTML(appContext);
   setupHeader(appContainer);
 
   setupSubsectionTogglesCallback(
@@ -239,22 +229,22 @@ export function setupSettingsScreen(appContainer: HTMLElement, testSettings: Tes
     ]
   );
   setupGeometricShapeSection(
-    testSettings.testMode == "shapes" ? testSettings.stimulusSize : undefined,
-    testSettings.testMode == "shapes" ? testSettings.exposureTime : undefined,
-    testSettings.testMode == "shapes" ? testSettings.exposureDelay : undefined,
-    testSettings.testMode == "shapes" ? testSettings.stimulusCount : undefined,
+    appContext.testSettings.testMode == "shapes" ? appContext.testSettings.stimulusSize : undefined,
+    appContext.testSettings.testMode == "shapes" ? appContext.testSettings.exposureTime : undefined,
+    appContext.testSettings.testMode == "shapes" ? appContext.testSettings.exposureDelay : undefined,
+    appContext.testSettings.testMode == "shapes" ? appContext.testSettings.stimulusCount : undefined,
   );
   setupWordsSection(
-    testSettings.testMode == "words" ? testSettings.stimulusSize : undefined,
-    testSettings.testMode == "words" ? testSettings.exposureTime : undefined,
-    testSettings.testMode == "words" ? testSettings.exposureDelay : undefined,
-    testSettings.testMode == "words" ? testSettings.stimulusCount : undefined,
+    appContext.testSettings.testMode == "words" ? appContext.testSettings.stimulusSize : undefined,
+    appContext.testSettings.testMode == "words" ? appContext.testSettings.exposureTime : undefined,
+    appContext.testSettings.testMode == "words" ? appContext.testSettings.exposureDelay : undefined,
+    appContext.testSettings.testMode == "words" ? appContext.testSettings.stimulusCount : undefined,
   );
   setupSyllablesSection(
-    testSettings.testMode == "syllables" ? testSettings.stimulusSize : undefined,
-    testSettings.testMode == "syllables" ? testSettings.exposureTime : undefined,
-    testSettings.testMode == "syllables" ? testSettings.exposureDelay : undefined,
-    testSettings.testMode == "syllables" ? testSettings.stimulusCount : undefined,
+    appContext.testSettings.testMode == "syllables" ? appContext.testSettings.stimulusSize : undefined,
+    appContext.testSettings.testMode == "syllables" ? appContext.testSettings.exposureTime : undefined,
+    appContext.testSettings.testMode == "syllables" ? appContext.testSettings.exposureDelay : undefined,
+    appContext.testSettings.testMode == "syllables" ? appContext.testSettings.stimulusCount : undefined,
   );
 
   // footer
@@ -344,40 +334,43 @@ const setupSyllablesSection = (stimulusSize?: StimulusSize, exposureTime?: Expos
 
 
 const startButtonCallback: (appContainer: HTMLElement) => void = (appContainer: HTMLElement) => {
-    // 1. Check test mode selection
-    const testMode = document.querySelector<HTMLInputElement>('input[name="stimulus-type-accordion"]:checked')!.dataset.subsection! as TestMode;
+  // 1. Check test mode selection
+  const testMode = document.querySelector<HTMLInputElement>('input[name="stimulus-type-accordion"]:checked')!.dataset.subsection! as TestMode;
 
-    // 2. Do the validation
-    const firstName = (document.getElementById(inputsConfig.nameInputId) as HTMLInputElement).value;
-    const lastName = (document.getElementById(inputsConfig.surnameInputId) as HTMLInputElement).value;
-    const gender = (document.getElementById(inputsConfig.genderSelectId) as HTMLSelectElement).value as Gender;
-    const ageValue = parseInt((document.getElementById(inputsConfig.ageInputId) as HTMLSelectElement).value);
-    const age = isNaN(ageValue) ? null : ageValue;
-    const stimulusSize = getSliderValue(inputsConfig.sizeSliderId[testMode]) as StimulusSize;
-    const exposureTime = getSliderValue(inputsConfig.exposureTimeSliderId[testMode]) as ExposureTime;
-    const exposureDelay = getSliderValue(inputsConfig.exposureDelaySliderId[testMode]) as ExposureDelay;
-    const stimulusCount = getSliderValue(inputsConfig.stimulusCountSliderId[testMode]) as StimulusCount;
+  // 2. Do the validation
+  const firstName = (document.getElementById(inputsConfig.nameInputId) as HTMLInputElement).value;
+  const lastName = (document.getElementById(inputsConfig.surnameInputId) as HTMLInputElement).value;
+  const gender = (document.getElementById(inputsConfig.genderSelectId) as HTMLSelectElement).value as Gender;
+  const ageValue = parseInt((document.getElementById(inputsConfig.ageInputId) as HTMLSelectElement).value);
+  const age = Number(ageValue);
+  if (isNaN(age)) throw new Error("Invalid age: Please enter a valid number.");
+  const stimulusSize = getSliderValue(inputsConfig.sizeSliderId[testMode]) as StimulusSize;
+  const exposureTime = getSliderValue(inputsConfig.exposureTimeSliderId[testMode]) as ExposureTime;
+  const exposureDelay = getSliderValue(inputsConfig.exposureDelaySliderId[testMode]) as ExposureDelay;
+  const stimulusCount = getSliderValue(inputsConfig.stimulusCountSliderId[testMode]) as StimulusCount;
 
-    // 3. Gather parameters and log them
-    const testSettings: TestSettings = {
+  // 3. Gather parameters and log them
+  const appContext: AppContext = {
+    personalData: {
       firstName: firstName,
       lastName: lastName,
       gender: gender,
       age: age,
+    },
+    testSettings: {
       testMode: testMode,
       stimulusSize: stimulusSize,
       exposureTime: exposureTime,
       exposureDelay: exposureDelay,
       stimulusCount: stimulusCount,
-      testType: 'svmr',
-    };
+      testType: defaultAppContext.testSettings.testType || 'svmr',
+    }
+  };
 
-    console.log("TestSettings:", testSettings);
-
-    // transition to test type selection screen
-    setupTestTypeSelectionScreen(appContainer, testSettings);
+  // transition to test type selection screen
+  setupTestTypeSelectionScreen(appContainer, appContext);
 }
 
 const resetSettingsButtonCallback: (appContainer: HTMLElement) => void = (appContainer: HTMLElement) => {
-    setupSettingsScreen(appContainer, defaultTestSettings);
+  setupSettingsScreen(appContainer, defaultAppContext);
 }

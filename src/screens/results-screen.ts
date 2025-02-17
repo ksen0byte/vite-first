@@ -4,9 +4,14 @@ import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
+import {AppContext} from "../config/domain.ts";
+import {setupSettingsScreen} from "./settings-screen.ts";
+import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
+import {setupProfileScreen} from "./user-profile-screen.ts";
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
+  appContext: AppContext,
   reactionTimes: Map<number, number>
 ) {
   const data = Array.from(reactionTimes.values());
@@ -138,15 +143,60 @@ export function setupResultsScreen(
   `;
 
   setupHeader(appContainer);
-  setupFooter(appContainer, footerHtml(), []);
+  setupFooter(appContainer, footerHtml(), [
+    {buttonFn: () => document.getElementById("dont-save-and-quit-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer, appContext)},
+    {
+      buttonFn: () => document.getElementById("save-results-btn")! as HTMLButtonElement,
+      callback: async () => await saveResultsAndSetupNextScreen(appContainer, appContext, reactionTimes)
+    }
+  ]);
   reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
   updateLanguageUI();
 }
 
+async function saveResultsAndSetupNextScreen(
+  appContainer: HTMLElement,
+  appContext: AppContext,
+  reactionTimes: Map<number, number>
+) {
+  const reactionTimesArray: number[] = Array.from(reactionTimes.values());
+
+  try {
+    const user = await upsertUser({
+      firstName: appContext.personalData.firstName,
+      lastName: appContext.personalData.lastName,
+      gender: appContext.personalData.gender,
+      age: appContext.personalData.age
+    });
+    if (!user) {
+      // noinspection ExceptionCaughtLocallyJS
+      throw new Error("Error saving user");
+    }
+
+    console.log(`User saved: ${user}`);
+
+    // Save the test linked to this user
+    const testId = await saveTestRecord(user!, appContext.testSettings, reactionTimesArray);
+    console.log(`Test saved with ID: ${testId}`);
+
+    const tests = await getTestsForUser(user!.firstName, user!.lastName);
+
+    // Navigate to the user profile screen
+    setupProfileScreen(appContainer, user!, tests);
+  } catch (err) {
+    console.error("Error saving user or test record", err);
+  }
+}
+
+
 function footerHtml(): string {
   return `
     <footer id="results-screen-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
-      <!-- Additional nav or buttons if desired -->
+      <div class="flex-1"></div>
+      <div class="flex space-x-2">
+        <button id="dont-save-and-quit-btn" class="btn btn-outline btn-error" data-localize="dontSaveAndQuit"></button>
+        <button id="save-results-btn" class="btn btn-success" data-localize="saveResults"></button>
+      </div>
     </footer>
   `;
 }

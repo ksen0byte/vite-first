@@ -1,13 +1,13 @@
-import {TestSettings} from "../config/settings-screen-config.ts";
+import {AppContext} from "../config/domain.ts";
 
 export class StimuliCounter {
   private container: HTMLElement;
-  private readonly testSettings: TestSettings;
+  private readonly appContext: AppContext;
   private count: number = 0;
 
-  constructor(container: HTMLElement, testSettings: TestSettings) {
+  constructor(container: HTMLElement, appContext: AppContext) {
     this.container = container;
-    this.testSettings = testSettings;
+    this.appContext = appContext;
   }
 
   public get(): number {
@@ -16,12 +16,12 @@ export class StimuliCounter {
 
   public inc(): void {
     this.count++;
-    this.container.textContent = `${this.count}/${this.testSettings.stimulusCount}`;
+    this.container.textContent = `${this.count}/${this.appContext.testSettings.stimulusCount}`;
   }
 
   public reset(): void {
     this.count = 0;
-    this.container.textContent = `0/${this.testSettings.stimulusCount}`;
+    this.container.textContent = `0/${this.appContext.testSettings.stimulusCount}`;
   }
 
 }

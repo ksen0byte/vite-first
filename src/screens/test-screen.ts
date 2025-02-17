@@ -1,5 +1,5 @@
 // test-screen.ts
-import {TestSettings} from "../config/settings-screen-config.ts";
+import {AppContext} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
 import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
@@ -12,7 +12,7 @@ import {setupSettingsScreen} from "./settings-screen.ts";
 
 export class TestScreen {
   private readonly appContainer: HTMLElement;
-  private readonly testSettings: TestSettings;
+  private readonly appContext: AppContext;
 
   // DOM elements
   private stimulusContainer!: HTMLElement;
@@ -32,9 +32,9 @@ export class TestScreen {
   private handleAppClick!: (ev: MouseEvent) => void;
   private handleAppKeyDown!: (ev: KeyboardEvent) => void;
 
-  constructor(appContainer: HTMLElement, testSettings: TestSettings) {
+  constructor(appContainer: HTMLElement, appContext: AppContext) {
     this.appContainer = appContainer;
-    this.testSettings = testSettings;
+    this.appContext = appContext;
     this.reactionTimes = new Map();
   }
 
@@ -103,7 +103,7 @@ export class TestScreen {
           <!-- Right side: counter -->
           <div class="flex items-center space-x-4">
             <div id="stimuli-counter" class="text-4xl font-mono text-gray-500">
-              0/${this.testSettings.stimulusCount}
+              0/${this.appContext.testSettings.stimulusCount}
             </div>
           </div>
         </div>
@@ -124,9 +124,9 @@ export class TestScreen {
    * Initialize Stimulus, Timer, and Counter managers.
    */
   private createManagers(): void {
-    this.stimulusManager = new StimulusManager(this.stimulusContainer, this.testSettings);
+    this.stimulusManager = new StimulusManager(this.stimulusContainer, this.appContext);
     this.timerManager = new TimerManager(document.getElementById("timer-display")!);
-    this.stimuliCounter = new StimuliCounter(document.getElementById("stimuli-counter")!, this.testSettings);
+    this.stimuliCounter = new StimuliCounter(document.getElementById("stimuli-counter")!, this.appContext);
 
     // Configure the countdown
     this.countdown = new Countdown(
@@ -176,7 +176,7 @@ export class TestScreen {
 
   private handleHome(): void {
     this.destroy();
-    setupSettingsScreen(this.appContainer, this.testSettings);
+    setupSettingsScreen(this.appContainer, this.appContext);
   }
 
   /**
@@ -186,7 +186,7 @@ export class TestScreen {
   private runTest(): void {
     // Recursively display each stimulus in sequence.
     const displayNextStimulus = () => {
-      const totalStimuli = this.testSettings.stimulusCount;
+      const totalStimuli = this.appContext.testSettings.stimulusCount;
       if (this.stimuliCounter.get() >= totalStimuli) {
         // We are done; finalize
         this.onTestComplete();
@@ -205,7 +205,7 @@ export class TestScreen {
         this.timerManager.stop();
 
         scheduleTimeout(displayNextStimulus, this.stimulusManager.getRandomExposureDelay());
-      }, this.testSettings.exposureTime);
+      }, this.appContext.testSettings.exposureTime);
     };
 
     // Initial setup
@@ -282,7 +282,7 @@ export class TestScreen {
     // On "Finish", go to results screen
     endFinishBtn.addEventListener("click", () => {
       logWithTime("End screen Finish clicked. Showing results.");
-      setupResultsScreen(this.appContainer, this.reactionTimes);
+      setupResultsScreen(this.appContainer, this.appContext, this.reactionTimes);
     });
 
     console.log("Reaction times:", this.reactionTimes);

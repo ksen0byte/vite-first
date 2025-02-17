@@ -1,5 +1,5 @@
 import {target} from "nouislider";
-import {ExposureDelay} from "../config/settings-screen-config.ts";
+import {ExposureDelay} from "../config/domain.ts";
 
 export function getSliderValue(sliderId: string): number | ExposureDelay {
   const slider = document.getElementById(sliderId)! as target;

@@ -1,13 +1,13 @@
-import {TestSettings, TestType} from "../config/settings-screen-config.ts";
+import {AppContext, TestType} from "../config/domain.ts";
 import {setupFooter} from "../components/footer.ts";
 import {updateLanguageUI} from "../localization/localization.ts";
 import {setupHeader} from "../components/header.ts";
 import {setupBeginTestScreen} from "./begin-test-screen.ts";
 import {setupSettingsScreen} from "./settings-screen.ts";
 
-export function setupTestTypeSelectionScreen(appContainer: HTMLElement, testSettings: TestSettings) {
+export function setupTestTypeSelectionScreen(appContainer: HTMLElement, appContext: AppContext) {
   // Insert main content
-  appContainer.innerHTML = mainHtml(testSettings.testType);
+  appContainer.innerHTML = mainHtml(appContext.testSettings.testType);
 
   // Setup header and footer
   setupHeader(appContainer);
@@ -17,7 +17,7 @@ export function setupTestTypeSelectionScreen(appContainer: HTMLElement, testSett
     [
       {
         buttonFn: () => document.getElementById("test-back-btn")! as HTMLButtonElement,
-        callback: () => setupSettingsScreen(appContainer, testSettings)
+        callback: () => setupSettingsScreen(appContainer, appContext)
       }
     ]
   );
@@ -26,10 +26,10 @@ export function setupTestTypeSelectionScreen(appContainer: HTMLElement, testSett
   updateLanguageUI();
 
   // Setup event listeners for test type buttons and Next button
-  setupTestTypeButtonsCallback(appContainer, testSettings);
+  setupTestTypeButtonsCallback(appContainer, appContext);
 }
 
-function setupTestTypeButtonsCallback(appContainer: HTMLElement, testSettings: TestSettings) {
+function setupTestTypeButtonsCallback(appContainer: HTMLElement, appContext: AppContext) {
   // Get references to the test type buttons and the Next button from the DOM
   const pzmrButton = document.getElementById("pzmr-button") as HTMLButtonElement;
   const rv13Button = document.getElementById("rv1-3-button") as HTMLButtonElement;
@@ -41,29 +41,29 @@ function setupTestTypeButtonsCallback(appContainer: HTMLElement, testSettings: T
     [pzmrButton, rv13Button, rv23Button].forEach(btn => btn.classList.remove("btn-active"));
   }
 
-  // Attach event listeners to each test type button. On click, update the testSettings,
+  // Attach event listeners to each test type button. On click, update the appContext,
   // visually mark the selected button, and enable the Next button.
   pzmrButton.addEventListener("click", () => {
     clearActive();
     pzmrButton.classList.add("btn-active");
-    testSettings.testType = "svmr";
+    appContext.testSettings.testType = "svmr";
   });
 
   rv13Button.addEventListener("click", () => {
     clearActive();
     rv13Button.classList.add("btn-active");
-    testSettings.testType = "sr1-3";
+    appContext.testSettings.testType = "sr1-3";
   });
 
   rv23Button.addEventListener("click", () => {
     clearActive();
     rv23Button.classList.add("btn-active");
-    testSettings.testType = "sr2-3";
+    appContext.testSettings.testType = "sr2-3";
   });
 
   // Only proceed to the Begin Test screen if a test type has been selected.
   nextButton.addEventListener("click", () => {
-    setupBeginTestScreen(appContainer, testSettings);
+    setupBeginTestScreen(appContainer, appContext);
   });
 }
 

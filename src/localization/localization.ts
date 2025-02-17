@@ -66,7 +66,7 @@ const localization: LocalizationKeys = {
   s: {en: "s", uk: "с"},
 
   // Test mode
-  chooseTestMode: {en: "Test Mode", uk: "Вид Подразника"},
+  testModeLabel: {en: "Test Mode", uk: "Вид Подразника"},
   shapesOption: {en: "🔴 Geometrical Shapes", uk: "🔴 Геометричні Фігури"},
   shapeSizeSliderLabel: {en: "Shape Size", uk: "Розмір фігури"},
   wordsOption: {en: "🔤 Words", uk: "🔤 Слова"},
@@ -96,21 +96,21 @@ const localization: LocalizationKeys = {
   testTypePzmrShort: {en: "SVMR", uk: "ПЗМР"},
   testTypeRV13Short: {en: "SR1-3", uk: "РВ1-3"},
   testTypeRV23Short: {en: "SR2-3", uk: "РВ2-3"},
-  testTypePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакції"},
+  testTypePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакція"},
   testTypeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
   testTypeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
 
   // begin test screen
-  testSettingsSummaryFirstName: {en: "First Name", uk: "Ім’я"},
-  testSettingsSummaryLastName: {en: "Last Name", uk: "Прізвище"},
-  testSettingsSummaryGender: {en: "Gender", uk: "Стать"},
-  testSettingsSummaryAge: {en: "Age", uk: "Вік"},
-  testSettingsSummaryTestMode: {en: "Test Mode", uk: "Вид подразника"},
-  testSettingsSummaryStimulusSize: {en: "Stimulus Size", uk: "Розмір подразника"},
-  testSettingsSummaryExposureTime: {en: "Exposure Time", uk: "Експозиція подразника"},
-  testSettingsSummaryExposureDelay: {en: "Exposure Delay", uk: "Затримка експозиції"},
-  testSettingsSummaryStimulusCount: {en: "Stimulus Count", uk: "Кількість подразників"},
-  testSettingsSummaryTestType: {en: "Test Type", uk: "Тип тестування"},
+  appContextSummaryFirstName: {en: "First Name", uk: "Ім’я"},
+  appContextSummaryLastName: {en: "Last Name", uk: "Прізвище"},
+  appContextSummaryGender: {en: "Gender", uk: "Стать"},
+  appContextSummaryAge: {en: "Age", uk: "Вік"},
+  appContextSummaryTestMode: {en: "Test Mode", uk: "Вид подразника"},
+  appContextSummaryStimulusSize: {en: "Stimulus Size", uk: "Розмір подразника"},
+  appContextSummaryExposureTime: {en: "Exposure Time", uk: "Експозиція подразника"},
+  appContextSummaryExposureDelay: {en: "Exposure Delay", uk: "Затримка експозиції"},
+  appContextSummaryStimulusCount: {en: "Stimulus Count", uk: "Кількість подразників"},
+  appContextSummaryTestType: {en: "Test Type", uk: "Тип тестування"},
 
   // test screen
   testScreenTestStart: {en: "Start!", uk: "Старт!"},
@@ -124,6 +124,8 @@ const localization: LocalizationKeys = {
   noReactionTimes: { en: "No Reaction Times", uk: "Немає результатів реакції" },
   testResultsTitle: { en: "Test Results", uk: "Результати тесту" },
   frequencyDistributionTitle: { en: "Frequency Distribution", uk: "Частотний Розподіл" },
+  dontSaveAndQuit: { en: "Don't Save and Quite", uk: "Не зберігати" },
+  saveResults: { en: "Save", uk: "Зберегти" },
 
   statFunctionalLevel: { en: "SFL", uk: "ФРС" },
   statReactionStability: { en: "RS", uk: "СР" },
@@ -144,6 +146,31 @@ const localization: LocalizationKeys = {
 
   binMs: { en: "Bin (ms)", uk: "Інтервали (мс)" },
   frequency: { en: "Frequency", uk: "Частота" },
+
+  // user-profile-screen
+  // Test Card Localization
+  testCardTitle: { en: "Test", uk: "Тест" },
+  testSettingLabel: { en: "Test Setting", uk: "Налаштування Тесту" },
+  testSettingValueLabel: { en: "Value", uk: "Значення" },
+  statLabel: { en: "Stat", uk: "Статистика" },
+  valueLabel: { en: "Value", uk: "Значення" },
+  countLabel: { en: "Count", uk: "Кількість" },
+  meanLabel: { en: "Mean", uk: "Середнє" },
+  modeLabel: { en: "Mode", uk: "Мода" },
+  stdevLabel: { en: "Std. Deviation", uk: "Стандартне Відхилення" },
+  minLabel: { en: "Min", uk: "Мінімум" },
+  maxLabel: { en: "Max", uk: "Максимум" },
+  stimulusSizeLabel: { en: "Stimulus Size", uk: "Розмір Подразника" },
+  exposureDelayMinMaxLabel: { en: "Exposure Delay (min-max)", uk: "Затримка Експозиції (мін-макс)" },
+  testTypeLabel: { en: "Test Type", uk: "Тип Тесту" },
+  p3Label: { en: "P3", uk: "П3" },
+  p10Label: { en: "P10", uk: "П10" },
+  p25Label: { en: "P25", uk: "П25" },
+  medianLabel: { en: "P50 (Median)", uk: "П50 (Медіана)" },
+  p75Label: { en: "P75", uk: "П75" },
+  p90Label: { en: "P90", uk: "П90" },
+  p97Label: { en: "P97", uk: "П97" },
+
 
 };
 

@@ -1,5 +1,5 @@
 import {logWithTime} from "../util/util.ts";
-import {TestSettings} from "../config/settings-screen-config.ts";
+import {AppContext} from "../config/domain.ts";
 import {getRandomShape} from "./Shapes.ts";
 import {getRandomWord} from "./Words.ts";
 import {getRandomSyllable} from "./Syllables.ts";
@@ -9,18 +9,18 @@ import {getRandomSyllable} from "./Syllables.ts";
  */
 export class StimulusManager {
   private container: HTMLElement;
-  private readonly testSettings: TestSettings;
+  private readonly appContext: AppContext;
 
-  constructor(container: HTMLElement, testSettings: TestSettings) {
+  constructor(container: HTMLElement, appContext: AppContext) {
     this.container = container;
-    this.testSettings = testSettings;
+    this.appContext = appContext;
   }
 
   /**
    * Shows a stimulus based on the current test mode, type, and size.
    */
   public showStimulus(stimulusNumber: number): void {
-    const {stimulusSize, testMode, testType} = this.testSettings;
+    const {stimulusSize, testMode, testType} = this.appContext.testSettings;
     logWithTime(
       `Showing stimulus #${stimulusNumber}, size: ${stimulusSize}, test mode: ${testMode}, test type: ${testType}`
     );
@@ -55,7 +55,7 @@ export class StimulusManager {
    * Computes a random delay (rounded to the nearest 50ms) within the specified exposure delay range.
    */
   public getRandomExposureDelay(): number {
-    const [minDelay, maxDelay] = this.testSettings.exposureDelay;
+    const [minDelay, maxDelay] = this.appContext.testSettings.exposureDelay;
     const min = Math.ceil(minDelay / 50) * 50;
     const max = Math.floor(maxDelay / 50) * 50;
     const number = Math.floor(Math.random() * ((max - min) / 50 + 1)) * 50 + min;
