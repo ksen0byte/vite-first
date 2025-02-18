@@ -239,12 +239,7 @@ export class ReactionTimeStats {
     const labels = this.bins.map((bin) => `${bin.binStart} - ${bin.binEnd} ${localize("ms")}`);
     const frequencies = this.bins.map((bin) => bin.frequency);
 
-    const subtitle = [
-      `${localize("countLabel")}: ${this.count}`,
-      `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
-      `${localize("modeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
-      `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
-    ].join(" | ");
+    const subtitle = this.generateStatisticsSummary();
 
     // noinspection JSUnusedGlobalSymbols
     new Chart(ctx, {
@@ -338,19 +333,17 @@ export class ReactionTimeStats {
               },
             },
           },
-          annotation: {
-            annotations: {
-              line1: {
-                type: 'label',
-                yMin: 20,
-                yMax: 20,
-                borderColor: 'rgb(255, 99, 132)',
-                borderWidth: 2,
-              }
-            }
-          }
         },
       },
     });
+  }
+
+  private generateStatisticsSummary() {
+    return [
+      `${localize("countLabel")}: ${this.count}`,
+      `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
+      `${localize("modeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
+      `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
+    ].join(" | ");
   }
 }
