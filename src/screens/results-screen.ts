@@ -136,7 +136,7 @@ export function setupResultsScreen(
       </div>
 
       <!-- Frequency Distribution Table -->
-      <div class="flex flex-grow p-8">
+      <div class="flex flex-grow p-8 min-h-96">
         <canvas id="frequencyChart"></canvas>
       </div>
     </div>
@@ -182,7 +182,7 @@ async function saveResultsAndSetupNextScreen(
     const tests = await getTestsForUser(user!.firstName, user!.lastName);
 
     // Navigate to the user profile screen
-    setupProfileScreen(appContainer, user!, tests);
+    setupProfileScreen(appContainer, appContext, user!, tests);
   } catch (err) {
     console.error("Error saving user or test record", err);
   }

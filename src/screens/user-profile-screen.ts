@@ -4,9 +4,10 @@ import {setupFooter} from '../components/footer';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
-import {TestMode} from "../config/domain.ts";
+import {AppContext, TestMode} from "../config/domain.ts";
+import {setupSettingsScreen} from "./settings-screen.ts";
 
-export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]) {
+export function setupProfileScreen(appContainer: HTMLElement, appContext: AppContext, user: User, tests: TestRecord[]) {
   appContainer.innerHTML = `
     <div id="user-profile-screen" class="flex flex-col flex-grow bg-base-200 text-base-content p-4">
       <div class="flex-1 space-y-4">
@@ -18,7 +19,9 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
   `;
   setupHeader(appContainer);
 
-  setupFooter(appContainer, userProfileFooterHTML(), []);
+  setupFooter(appContainer, userProfileFooterHTML(), [
+    {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer, appContext)},
+  ]);
   renderHistograms(tests);
   updateLanguageUI();
 }
@@ -165,7 +168,7 @@ function testCardHTML(index: number, test: TestRecord): string {
         </div>
       
         <!-- Histogram -->
-        <div class="flex flex-grow p-8 min-h-screen">
+        <div class="flex flex-grow p-8 min-h-96">
           <canvas id="histogram-${index}"></canvas>
         </div>
 
@@ -178,7 +181,7 @@ function userProfileFooterHTML(): string {
   return `
     <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
       <div class="flex-1"></div>
-      <button id="back-btn" class="btn btn-outline btn-warning" data-localize="back"></button>
+      <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="main-page-btn"></button>
     </footer>
   `;
 }
@@ -198,10 +201,14 @@ function getTestModeLocalizationKey(testMode: TestMode): string {
 
 function getTestTypeLocalizationKey(testType: string): string {
   switch (testType) {
-    case "svmr": return "testTypePzmrLong";
-    case "sr1-3": return "testTypeRV13Long";
-    case "sr2-3": return "testTypeRV23Long";
-    default: throw new Error("Invalid test type");
+    case "svmr":
+      return "testTypePzmrLong";
+    case "sr1-3":
+      return "testTypeRV13Long";
+    case "sr2-3":
+      return "testTypeRV23Long";
+    default:
+      throw new Error("Invalid test type");
   }
 }
 
