@@ -9,6 +9,7 @@ import {TimerManager} from "../components/Timer.ts";
 import {Countdown} from "../components/Countdown.ts";
 import {setupResultsScreen} from "./results-screen.ts";
 import {setupSettingsScreen} from "./settings-screen.ts";
+import AppContextManager from "../config/AppContextManager.ts";
 
 export class TestScreen {
   private readonly appContainer: HTMLElement;
@@ -32,9 +33,9 @@ export class TestScreen {
   private handleAppClick!: (ev: MouseEvent) => void;
   private handleAppKeyDown!: (ev: KeyboardEvent) => void;
 
-  constructor(appContainer: HTMLElement, appContext: AppContext) {
+  constructor(appContainer: HTMLElement) {
     this.appContainer = appContainer;
-    this.appContext = appContext;
+    this.appContext = AppContextManager.getContext();
     this.reactionTimes = new Map();
   }
 
@@ -95,7 +96,7 @@ export class TestScreen {
           <div class="hidden sm:block">
             <div>
                 <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonLeft">Press </span>
-                <kbd class="kbd" data-localize="testScreenTestPZMRActionButtonName">Space</kbd>
+                <kbd data-theme="light" class="kbd" data-localize="testScreenTestPZMRActionButtonName">Space</kbd>
                 <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonRight"> once a stimulus appears</span>
             </div>          
           </div>
@@ -176,7 +177,7 @@ export class TestScreen {
 
   private handleHome(): void {
     this.destroy();
-    setupSettingsScreen(this.appContainer, this.appContext);
+    setupSettingsScreen(this.appContainer);
   }
 
   /**
@@ -267,6 +268,7 @@ export class TestScreen {
         </div>
       </div>
     `;
+    updateLanguageUI();
 
     // Wire up new buttons
     const endRetryBtn = document.getElementById("end-retry-btn") as HTMLButtonElement;
@@ -284,7 +286,5 @@ export class TestScreen {
       logWithTime("End screen Finish clicked. Showing results.");
       setupResultsScreen(this.appContainer, this.appContext, this.reactionTimes);
     });
-
-    console.log("Reaction times:", this.reactionTimes);
   }
 }

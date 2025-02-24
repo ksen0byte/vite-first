@@ -144,7 +144,7 @@ export function setupResultsScreen(
 
   setupHeader(appContainer);
   setupFooter(appContainer, footerHtml(), [
-    {buttonFn: () => document.getElementById("dont-save-and-quit-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer, appContext)},
+    {buttonFn: () => document.getElementById("dont-save-and-quit-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer)},
     {
       buttonFn: () => document.getElementById("save-results-btn")! as HTMLButtonElement,
       callback: async () => await saveResultsAndSetupNextScreen(appContainer, appContext, reactionTimes)
@@ -182,7 +182,7 @@ async function saveResultsAndSetupNextScreen(
     const tests = await getTestsForUser(user!.firstName, user!.lastName);
 
     // Navigate to the user profile screen
-    setupProfileScreen(appContainer, appContext, user!, tests);
+    setupProfileScreen(appContainer, user!, tests);
   } catch (err) {
     console.error("Error saving user or test record", err);
   }

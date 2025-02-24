@@ -28,7 +28,7 @@ export interface PersonalData {
   firstName: string;
   lastName: string;
   gender: Gender;
-  age: number;
+  age: number | null;
 }
 
 export interface TestSettings {

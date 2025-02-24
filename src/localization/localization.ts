@@ -59,6 +59,7 @@ const localization: LocalizationKeys = {
   selectGender: {en: "Gender", uk: "Стать"},
   male: {en: "Male", uk: "Чоловіча"},
   female: {en: "Female", uk: "Жіноча"},
+  allTestsBtnLabel: {en: "All Tests", uk: "Усі тести"},
 
   // units
   mm: {en: "mm", uk: "мм"},
@@ -170,7 +171,10 @@ const localization: LocalizationKeys = {
   p75Label: { en: "P75", uk: "П75" },
   p90Label: { en: "P90", uk: "П90" },
   p97Label: { en: "P97", uk: "П97" },
+  backToMainPage: { en: "Back to Main Page", uk: "На головну" },
 
+  // user-profiles-screen
+  viewProfileButton: { en: "View Profile", uk: "Відкрити профіль" }
 
 };
 

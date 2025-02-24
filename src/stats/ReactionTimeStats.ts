@@ -35,19 +35,35 @@ export class ReactionTimeStats {
    * Create a new instance with the given array of reaction times.
    */
   constructor(data: number[]) {
-    this.data = data;
+    const lowerBound = 120;
+    const upperBound = 500;
+
+    // Step 1: Remove hard outliers based on fixed range
+    let cleanedData = data.filter(value => value >= lowerBound && value <= upperBound);
+
+    // Step 2: Calculate P5 (5th percentile) and P95 (95th percentile)
+    const p5 = quantile(data, 0.05); // 5th percentile
+    const p95 = quantile(data, 0.95); // 95th percentile
+
+    // Step 3: Filter out values below P5 and above P95
+    cleanedData = data.filter(value => value >= p5 && value <= p95);
+
+    // Final cleaned data
+    this.data = cleanedData;
+
+    // Calculate statistics on cleaned data
     this.bins = this.computeFrequencyDistribution();
-    this.count = data.length;
-    this.meanVal = mean(data);
+    this.count = cleanedData.length;
+    this.meanVal = mean(cleanedData);
     this.modeVal = this.getMode();
-    this.stdevVal = standardDeviation(data);
-    this.p3Val = quantile(data, 0.03);
-    this.p10Val = quantile(data, 0.10);
-    this.p25Val = quantile(data, 0.25);
-    this.p50Val = quantile(data, 0.50);
-    this.p75Val = quantile(data, 0.75);
-    this.p90Val = quantile(data, 0.90);
-    this.p97Val = quantile(data, 0.97);
+    this.stdevVal = standardDeviation(cleanedData);
+    this.p3Val = quantile(cleanedData, 0.03);
+    this.p10Val = quantile(cleanedData, 0.10);
+    this.p25Val = quantile(cleanedData, 0.25);
+    this.p50Val = quantile(cleanedData, 0.50);
+    this.p75Val = quantile(cleanedData, 0.75);
+    this.p90Val = quantile(cleanedData, 0.90);
+    this.p97Val = quantile(cleanedData, 0.97);
   }
 
   /**

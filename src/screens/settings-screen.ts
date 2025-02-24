@@ -8,6 +8,7 @@ import {setupFooter} from "../components/footer.ts";
 import {setupHeader} from "../components/header.ts";
 import {defaultAppContext, inputsConfig, subsectionsConfig} from "../config/settings.ts";
 import {getRandomShape} from "../components/Shapes.ts";
+import AppContextManager from "../config/AppContextManager.ts";
 
 function settingsScreenHTML(appContext: AppContext) {
   return `<main class="flex-grow container mx-auto px-4 py-2 space-y-2" id="main">
@@ -216,7 +217,8 @@ function settingsScreenFooterHTML() {
 }
 
 
-export function setupSettingsScreen(appContainer: HTMLElement, appContext: AppContext): void {
+export function setupSettingsScreen(appContainer: HTMLElement): void {
+  const appContext = AppContextManager.getContext();
 
   appContainer.innerHTML = settingsScreenHTML(appContext);
   setupHeader(appContainer);
@@ -367,10 +369,13 @@ const startButtonCallback: (appContainer: HTMLElement) => void = (appContainer: 
     }
   };
 
+  AppContextManager.setContext(appContext);
+
   // transition to test type selection screen
-  setupTestTypeSelectionScreen(appContainer, appContext);
+  setupTestTypeSelectionScreen(appContainer);
 }
 
 const resetSettingsButtonCallback: (appContainer: HTMLElement) => void = (appContainer: HTMLElement) => {
-  setupSettingsScreen(appContainer, defaultAppContext);
+  AppContextManager.setContext(defaultAppContext);
+  setupSettingsScreen(appContainer);
 }

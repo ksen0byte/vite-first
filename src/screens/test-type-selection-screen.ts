@@ -4,8 +4,10 @@ import {updateLanguageUI} from "../localization/localization.ts";
 import {setupHeader} from "../components/header.ts";
 import {setupBeginTestScreen} from "./begin-test-screen.ts";
 import {setupSettingsScreen} from "./settings-screen.ts";
+import AppContextManager from "../config/AppContextManager.ts";
 
-export function setupTestTypeSelectionScreen(appContainer: HTMLElement, appContext: AppContext) {
+export function setupTestTypeSelectionScreen(appContainer: HTMLElement) {
+  const appContext = AppContextManager.getContext();
   // Insert main content
   appContainer.innerHTML = mainHtml(appContext.testSettings.testType);
 
@@ -17,7 +19,7 @@ export function setupTestTypeSelectionScreen(appContainer: HTMLElement, appConte
     [
       {
         buttonFn: () => document.getElementById("test-back-btn")! as HTMLButtonElement,
-        callback: () => setupSettingsScreen(appContainer, appContext)
+        callback: () => setupSettingsScreen(appContainer)
       }
     ]
   );
@@ -75,10 +77,10 @@ function mainHtml(testType: TestType) {
       <button id="pzmr-button" class="btn btn-soft btn-primary btn-xl w-full ${testType === "svmr" ? "btn-active" : ""}" data-localize="testTypePzmrShort">
         SVMR
       </button>
-      <button id="rv1-3-button" class="btn btn-soft btn-secondary btn-xl w-full ${testType === "sr1-3" ? "btn-active" : ""}" data-localize="testTypeRV13Short">
+      <button id="rv1-3-button" class="btn btn-soft btn-secondary btn-xl btn-disabled w-full ${testType === "sr1-3" ? "btn-active" : ""}" data-localize="testTypeRV13Short">
         SR1-3
       </button>
-      <button id="rv2-3-button" class="btn btn-soft btn-accent btn-xl w-full ${testType === "sr2-3" ? "btn-active" : ""}" data-localize="testTypeRV23Short">
+      <button id="rv2-3-button" class="btn btn-soft btn-accent btn-xl btn-disabled w-full ${testType === "sr2-3" ? "btn-active" : ""}" data-localize="testTypeRV23Short">
         SR2-3
       </button>
     </div>

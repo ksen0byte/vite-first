@@ -1,6 +1,7 @@
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {ThemeManager} from "./ThemeManager.ts";
 import {LanguageManager} from "../localization/LanguageManager.ts";
+import {UsersScreen} from "../screens/user-profiles-screen.ts";
 
 export function setupHeader(container: HTMLElement) {
   container.insertAdjacentHTML('afterbegin', headerHTML());
@@ -28,6 +29,12 @@ function headerHTML() {
             <button class="btn btn-ghost flex " id="language-toggle">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802" /> </svg>
                 <span data-localize="switchLanguage"></span>
+            </button>
+            
+            <!-- All Tests Button -->
+            <button class="btn btn-ghost flex " id="all-tests-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /> </svg>
+                <span data-localize="allTestsBtnLabel"></span>
             </button>
         </div>
     </header>`;
@@ -73,8 +80,9 @@ function applyTheme(theme: string) {
 }
 
 function setupHeaderActions() {
-  const themeToggleBtn = document.getElementById('theme-toggle');
-  const languageToggleBtn = document.getElementById('language-toggle');
+  const themeToggleBtn = document.getElementById('theme-toggle')!;
+  const languageToggleBtn = document.getElementById('language-toggle')!;
+  const allTestsBtn = document.getElementById('all-tests-btn')!;
 
   // Initialize theme on page load
   initializeTheme();
@@ -87,6 +95,11 @@ function setupHeaderActions() {
   languageToggleBtn?.addEventListener('click', () => {
     toggleLanguage();
     updateThemeToggleButton(); // Ensure theme localization updates
+  });
+
+  allTestsBtn.addEventListener('click', async () => {
+    const usersScreen = new UsersScreen(document.getElementById('app')!);
+    await usersScreen.setupScreen();
   });
 
   // Ensure UI updates on load

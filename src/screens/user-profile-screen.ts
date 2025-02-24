@@ -4,10 +4,10 @@ import {setupFooter} from '../components/footer';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
-import {AppContext, TestMode} from "../config/domain.ts";
+import {TestMode} from "../config/domain.ts";
 import {setupSettingsScreen} from "./settings-screen.ts";
 
-export function setupProfileScreen(appContainer: HTMLElement, appContext: AppContext, user: User, tests: TestRecord[]) {
+export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]) {
   appContainer.innerHTML = `
     <div id="user-profile-screen" class="flex flex-col flex-grow bg-base-200 text-base-content p-4">
       <div class="flex-1 space-y-4">
@@ -20,7 +20,7 @@ export function setupProfileScreen(appContainer: HTMLElement, appContext: AppCon
   setupHeader(appContainer);
 
   setupFooter(appContainer, userProfileFooterHTML(), [
-    {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer, appContext)},
+    {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer)},
   ]);
   renderHistograms(tests);
   updateLanguageUI();
@@ -181,7 +181,7 @@ function userProfileFooterHTML(): string {
   return `
     <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
       <div class="flex-1"></div>
-      <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="main-page-btn"></button>
+      <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="backToMainPage"></button>
     </footer>
   `;
 }

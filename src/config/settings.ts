@@ -14,10 +14,10 @@ export const settings = {
 
 export const defaultAppContext: AppContext = {
   personalData: {
-    firstName: "TestFirstName",
-    lastName: "TestLastName",
-    gender: "male",
-    age: 55,
+    firstName: "",
+    lastName: "",
+    gender: null,
+    age: null,
   },
   testSettings: {
     testMode: settings.default.testMode,

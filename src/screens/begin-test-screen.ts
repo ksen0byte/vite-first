@@ -13,17 +13,17 @@ export function setupBeginTestScreen(appContainer: HTMLElement, appContext: AppC
     appContainer,
     footerHtml(),
     [
-      {buttonFn: () => document.getElementById("test-begin-back-btn")! as HTMLButtonElement, callback: () => setupTestTypeSelectionScreen(appContainer, appContext)}
+      {buttonFn: () => document.getElementById("test-begin-back-btn")! as HTMLButtonElement, callback: () => setupTestTypeSelectionScreen(appContainer)}
     ]
   );
-  setupStartTestButtonCallback(appContainer, appContext);
+  setupStartTestButtonCallback(appContainer);
   updateLanguageUI();
 }
 
-function setupStartTestButtonCallback(appContainer: HTMLElement, appContext: AppContext) {
+function setupStartTestButtonCallback(appContainer: HTMLElement) {
   const startTestButton = document.getElementById("start-test-button")! as HTMLButtonElement
   startTestButton.addEventListener("click", () => {
-    new TestScreen(appContainer, appContext).init();
+    new TestScreen(appContainer).init();
   });
 }
 
