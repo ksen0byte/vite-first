@@ -59,7 +59,7 @@ const localization: LocalizationKeys = {
   selectGender: {en: "Gender", uk: "Стать"},
   male: {en: "Male", uk: "Чоловіча"},
   female: {en: "Female", uk: "Жіноча"},
-  allTestsBtnLabel: {en: "All Tests", uk: "Усі тести"},
+  savedTestsBtnLabel: {en: "Saved Tests", uk: "Збережені Тести"},
 
   // units
   mm: {en: "mm", uk: "мм"},

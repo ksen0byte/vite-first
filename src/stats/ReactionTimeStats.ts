@@ -2,7 +2,7 @@
 
 import Chart from "chart.js/auto";
 import {localize} from "../localization/localization.ts";
-import {cumulativeStdNormalProbability, mean, quantile, standardDeviation} from "simple-statistics";
+import {cumulativeStdNormalProbability, mean, median, medianAbsoluteDeviation, quantile, standardDeviation} from "simple-statistics";
 
 export interface FrequencyBin {
   binStart: number;
@@ -41,12 +41,8 @@ export class ReactionTimeStats {
     // Step 1: Remove hard outliers based on fixed range
     let cleanedData = data.filter(value => value >= lowerBound && value <= upperBound);
 
-    // Step 2: Calculate P5 (5th percentile) and P95 (95th percentile)
-    const p5 = quantile(data, 0.05); // 5th percentile
-    const p95 = quantile(data, 0.95); // 95th percentile
-
-    // Step 3: Filter out values below P5 and above P95
-    cleanedData = data.filter(value => value >= p5 && value <= p95);
+    // Step 2: Apply statistical outlier removal
+    cleanedData = this.removeOutliersUsingMAD(cleanedData);
 
     // Final cleaned data
     this.data = cleanedData;
@@ -64,6 +60,53 @@ export class ReactionTimeStats {
     this.p75Val = quantile(cleanedData, 0.75);
     this.p90Val = quantile(cleanedData, 0.90);
     this.p97Val = quantile(cleanedData, 0.97);
+  }
+
+
+  /**
+   * Removes extreme outliers from a dataset using the Modified Z-Score method.
+   *
+   * Method:
+   * - Calculates the median of the dataset as the center.
+   * - Computes the Median Absolute Deviation (MAD) to measure data variability.
+   * - Calculates Modified Z-Scores:
+   *   M_i = 0.6745 * (value - median) / MAD
+   * - Filters out values with a Modified Z-Score |M_i| > 3.5 (customizable threshold).
+   *
+   * Advantages:
+   * - Robust to skewed data and resistant to the influence of extreme values.
+   * - Suitable for detecting outliers in datasets with non-normal distributions.
+   *
+   * Limitations:
+   * - May perform poorly with small datasets or when MAD is zero (e.g., identical values).
+   *
+   * More information:
+   * - https://en.wikipedia.org/wiki/Median_absolute_deviation
+   * - https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
+   *
+   * @param {number[]} data - Array of numeric values to analyze.
+   * @returns {number[]} New array with outliers removed.
+   */
+  private removeOutliersUsingMAD(data: number[]): number[] {
+    // Handle small datasets: retain all data if size is too small for MAD
+    if (data.length < 5) {
+      console.warn("Dataset too small for MAD-based outlier detection.");
+      return data;
+    }
+
+    const dataMedian = median(data);
+    const mad = medianAbsoluteDeviation(data);
+
+    // Fallback if MAD is zero
+    if (mad === 0) {
+      console.warn("MAD is zero; data may contain identical values. No outliers will be removed.");
+      return data;
+    }
+
+    return data.filter(value => {
+      const modifiedZScore = (0.6745 * (value - dataMedian)) / mad;
+      return Math.abs(modifiedZScore) <= 3.5; // Retain non-outliers
+    });
   }
 
   /**
