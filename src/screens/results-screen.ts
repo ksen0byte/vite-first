@@ -4,14 +4,12 @@ import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
-import {AppContext} from "../config/domain.ts";
-import {setupSettingsScreen} from "./settings-screen.ts";
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
-import {setupProfileScreen} from "./user-profile-screen.ts";
+import AppContextManager from "../config/AppContextManager.ts";
+import Router from "../routing/router.ts";
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
-  appContext: AppContext,
   reactionTimes: Map<number, number>
 ) {
   const data = Array.from(reactionTimes.values());
@@ -144,10 +142,10 @@ export function setupResultsScreen(
 
   setupHeader(appContainer);
   setupFooter(appContainer, footerHtml(), [
-    {buttonFn: () => document.getElementById("dont-save-and-quit-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer)},
+    {buttonFn: () => document.getElementById("dont-save-and-quit-btn")! as HTMLButtonElement, callback: () => Router.navigate("/settings")},
     {
       buttonFn: () => document.getElementById("save-results-btn")! as HTMLButtonElement,
-      callback: async () => await saveResultsAndSetupNextScreen(appContainer, appContext, reactionTimes)
+      callback: async () => await saveResultsAndSetupNextScreen(reactionTimes)
     }
   ]);
   reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
@@ -155,10 +153,9 @@ export function setupResultsScreen(
 }
 
 async function saveResultsAndSetupNextScreen(
-  appContainer: HTMLElement,
-  appContext: AppContext,
   reactionTimes: Map<number, number>
 ) {
+  const appContext = AppContextManager.getContext();
   const reactionTimesArray: number[] = Array.from(reactionTimes.values());
 
   try {
@@ -182,7 +179,7 @@ async function saveResultsAndSetupNextScreen(
     const tests = await getTestsForUser(user!.firstName, user!.lastName);
 
     // Navigate to the user profile screen
-    setupProfileScreen(appContainer, user!, tests);
+    Router.navigate('/profile', {user, tests}); // Pass user and tests to profile route
   } catch (err) {
     console.error("Error saving user or test record", err);
   }

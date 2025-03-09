@@ -7,9 +7,8 @@ import {StimulusManager} from "../components/StimulusManager.ts";
 import {StimuliCounter} from "../components/StimuliCounter.ts";
 import {TimerManager} from "../components/Timer.ts";
 import {Countdown} from "../components/Countdown.ts";
-import {setupResultsScreen} from "./results-screen.ts";
-import {setupSettingsScreen} from "./settings-screen.ts";
 import AppContextManager from "../config/AppContextManager.ts";
+import Router from "../routing/router.ts";
 
 export class TestScreen {
   private readonly appContainer: HTMLElement;
@@ -42,7 +41,7 @@ export class TestScreen {
   /**
    * Set up the Test Screen UI and initialize all logic (countdown, timers, events).
    */
-  public init(): void {
+  public setupScreen(): void {
     this.renderUI();
     this.getElements();
     this.createManagers();
@@ -177,7 +176,7 @@ export class TestScreen {
 
   private handleHome(): void {
     this.destroy();
-    setupSettingsScreen(this.appContainer);
+    Router.navigate("/settings");
   }
 
   /**
@@ -284,7 +283,8 @@ export class TestScreen {
     // On "Finish", go to results screen
     endFinishBtn.addEventListener("click", () => {
       logWithTime("End screen Finish clicked. Showing results.");
-      setupResultsScreen(this.appContainer, this.appContext, this.reactionTimes);
+      const reactionTimes = this.reactionTimes;
+      Router.navigate("/results", {reactionTimes});
     });
   }
 }

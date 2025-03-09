@@ -3,28 +3,28 @@ import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {capitalize} from "../util/util.ts";
-import {TestScreen} from "./test-screen.ts";
-import {setupTestTypeSelectionScreen} from "./test-type-selection-screen.ts";
+import AppContextManager from "../config/AppContextManager.ts";
+import Router from "../routing/router.ts";
 
-export function setupBeginTestScreen(appContainer: HTMLElement, appContext: AppContext) {
+export function setupBeginTestScreen(appContainer: HTMLElement) {
+  const appContext = AppContextManager.getContext();
+
   appContainer.innerHTML = beginTestScreenHTML(appContext);
   setupHeader(appContainer);
   setupFooter(
     appContainer,
     footerHtml(),
     [
-      {buttonFn: () => document.getElementById("test-begin-back-btn")! as HTMLButtonElement, callback: () => setupTestTypeSelectionScreen(appContainer)}
+      {buttonFn: () => document.getElementById("test-begin-back-btn")! as HTMLButtonElement, callback: () => Router.navigate("/testTypeSelection")}
     ]
   );
-  setupStartTestButtonCallback(appContainer);
+  setupStartTestButtonCallback();
   updateLanguageUI();
 }
 
-function setupStartTestButtonCallback(appContainer: HTMLElement) {
+function setupStartTestButtonCallback() {
   const startTestButton = document.getElementById("start-test-button")! as HTMLButtonElement
-  startTestButton.addEventListener("click", () => {
-    new TestScreen(appContainer).init();
-  });
+  startTestButton.addEventListener("click", () => Router.navigate("/testTypeSelection"));
 }
 
 function beginTestScreenHTML(appContext: AppContext): string {

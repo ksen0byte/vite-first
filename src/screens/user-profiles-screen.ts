@@ -2,9 +2,8 @@ import {setupHeader} from '../components/header';
 import {setupFooter} from '../components/footer';
 import {localize, updateLanguageUI} from '../localization/localization';
 import {db, User} from "../db/db";
-import {setupProfileScreen} from "./user-profile-screen";
-import {setupSettingsScreen} from "./settings-screen";
 import {getAllUsers, getTestsForUser} from "../db/operations";
+import Router from "../routing/router.ts";
 
 export class UsersScreen {
   private readonly appContainer: HTMLElement;
@@ -72,7 +71,9 @@ export class UsersScreen {
       </div>
     `;
     }
-  }  /**
+  }
+
+  /**
    * Generates the HTML for a user card.
    */
   private userCardHTML(user: User): string {
@@ -134,6 +135,7 @@ export class UsersScreen {
       }
     });
   }
+
   /**
    * Adds a user dynamically to the view without re-rendering all users.
    */
@@ -203,13 +205,13 @@ export class UsersScreen {
 
     const tests = await getTestsForUser(firstName, lastName);
 
-    setupProfileScreen(this.appContainer, user, tests);
+    Router.navigate('/profile', {user, tests}); // Pass user and tests to profile route
   }
 
   /**
    * Navigates back to the main page (e.g. settings screen).
    */
   private navigateToMainPage() {
-    setupSettingsScreen(this.appContainer);
+    Router.navigate('/settings');
   }
 }

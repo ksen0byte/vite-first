@@ -1,7 +1,7 @@
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {ThemeManager} from "./ThemeManager.ts";
 import {LanguageManager} from "../localization/LanguageManager.ts";
-import {UsersScreen} from "../screens/user-profiles-screen.ts";
+import Router from "../routing/router.ts";
 
 export function setupHeader(container: HTMLElement) {
   container.insertAdjacentHTML('afterbegin', headerHTML());
@@ -12,7 +12,7 @@ function headerHTML() {
   return `
     <header class="navbar bg-base-100 shadow-md px-4">
         <div class="flex-1 flex items-center">
-            <div class="w-10 h-10 mr-4">
+            <div class="w-10 h-10 mr-4 cursor-pointer" id="logo">
                 <!--suppress HtmlUnknownTarget -->
                 <img src="logo.svg" alt="Logo" class="w-full rounded-full"/>
             </div>
@@ -80,6 +80,7 @@ function applyTheme(theme: string) {
 }
 
 function setupHeaderActions() {
+  const logo = document.getElementById('logo')!;
   const themeToggleBtn = document.getElementById('theme-toggle')!;
   const languageToggleBtn = document.getElementById('language-toggle')!;
   const allTestsBtn = document.getElementById('all-tests-btn')!;
@@ -87,10 +88,10 @@ function setupHeaderActions() {
   // Initialize theme on page load
   initializeTheme();
 
+  logo.addEventListener('click', () => Router.navigate("/settings"));
+
   // Setup event listeners for toggle buttons
-  themeToggleBtn?.addEventListener('click', () => {
-    toggleDaisyUITheme();
-  });
+  themeToggleBtn?.addEventListener('click', () => toggleDaisyUITheme());
 
   languageToggleBtn?.addEventListener('click', () => {
     toggleLanguage();
@@ -98,8 +99,7 @@ function setupHeaderActions() {
   });
 
   allTestsBtn.addEventListener('click', async () => {
-    const usersScreen = new UsersScreen(document.getElementById('app')!);
-    await usersScreen.setupScreen();
+    Router.navigate("/users");
   });
 
   // Ensure UI updates on load

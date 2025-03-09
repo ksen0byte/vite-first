@@ -5,7 +5,7 @@ import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {TestMode} from "../config/domain.ts";
-import {setupSettingsScreen} from "./settings-screen.ts";
+import Router from "../routing/router.ts";
 
 export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]) {
   appContainer.innerHTML = `
@@ -20,7 +20,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
   setupHeader(appContainer);
 
   setupFooter(appContainer, userProfileFooterHTML(), [
-    {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => setupSettingsScreen(appContainer)},
+    {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/settings")},
   ]);
   renderHistograms(tests);
   updateLanguageUI();

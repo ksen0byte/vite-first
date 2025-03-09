@@ -3,12 +3,12 @@ import 'nouislider/dist/nouislider.css';
 import {AppContext, ExposureDelay, ExposureTime, Gender, SliderConfig, StimulusCount, StimulusSize, TestMode} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {getSliderValue} from "../util/util.ts";
-import {setupTestTypeSelectionScreen} from "./test-type-selection-screen.ts";
 import {setupFooter} from "../components/footer.ts";
 import {setupHeader} from "../components/header.ts";
 import {defaultAppContext, inputsConfig, subsectionsConfig} from "../config/settings.ts";
 import {getRandomShape} from "../components/Shapes.ts";
 import AppContextManager from "../config/AppContextManager.ts";
+import Router from "../routing/router.ts";
 
 function settingsScreenHTML(appContext: AppContext) {
   return `<main class="flex-grow" id="main">
@@ -256,8 +256,8 @@ export function setupSettingsScreen(appContainer: HTMLElement): void {
     appContainer,
     settingsScreenFooterHTML(),
     [
-      {buttonFn: () => document.getElementById("start-test-btn")! as HTMLButtonElement, callback: () => startButtonCallback(appContainer)},
-      {buttonFn: () => document.getElementById("reset-settings-btn")! as HTMLButtonElement, callback: () => resetSettingsButtonCallback(appContainer)},
+      {buttonFn: () => document.getElementById("start-test-btn")! as HTMLButtonElement, callback: () => startButtonCallback()},
+      {buttonFn: () => document.getElementById("reset-settings-btn")! as HTMLButtonElement, callback: () => resetSettingsButtonCallback()},
     ]
   );
   updateLanguageUI();
@@ -337,7 +337,7 @@ const setupSyllablesSection = (stimulusSize?: StimulusSize, exposureTime?: Expos
 }
 
 
-const startButtonCallback: (appContainer: HTMLElement) => void = (appContainer: HTMLElement) => {
+const startButtonCallback: () => void = () => {
   // 1. Check test mode selection
   const testMode = document.querySelector<HTMLInputElement>('input[name="stimulus-type-accordion"]:checked')!.dataset.subsection! as TestMode;
 
@@ -380,10 +380,10 @@ const startButtonCallback: (appContainer: HTMLElement) => void = (appContainer: 
   AppContextManager.setContext(appContext);
 
   // transition to test type selection screen
-  setupTestTypeSelectionScreen(appContainer);
+  Router.navigate("/testTypeSelection");
 }
 
-const resetSettingsButtonCallback: (appContainer: HTMLElement) => void = (appContainer: HTMLElement) => {
+const resetSettingsButtonCallback: () => void = () => {
   AppContextManager.setContext(defaultAppContext);
-  setupSettingsScreen(appContainer);
+  Router.navigate("/settings");
 }

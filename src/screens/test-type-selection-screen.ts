@@ -2,9 +2,8 @@ import {AppContext, TestType} from "../config/domain.ts";
 import {setupFooter} from "../components/footer.ts";
 import {updateLanguageUI} from "../localization/localization.ts";
 import {setupHeader} from "../components/header.ts";
-import {setupBeginTestScreen} from "./begin-test-screen.ts";
-import {setupSettingsScreen} from "./settings-screen.ts";
 import AppContextManager from "../config/AppContextManager.ts";
+import Router from "../routing/router.ts";
 
 export function setupTestTypeSelectionScreen(appContainer: HTMLElement) {
   const appContext = AppContextManager.getContext();
@@ -19,7 +18,7 @@ export function setupTestTypeSelectionScreen(appContainer: HTMLElement) {
     [
       {
         buttonFn: () => document.getElementById("test-back-btn")! as HTMLButtonElement,
-        callback: () => setupSettingsScreen(appContainer)
+        callback: () => Router.navigate("/settings"),
       }
     ]
   );
@@ -28,10 +27,10 @@ export function setupTestTypeSelectionScreen(appContainer: HTMLElement) {
   updateLanguageUI();
 
   // Setup event listeners for test type buttons and Next button
-  setupTestTypeButtonsCallback(appContainer, appContext);
+  setupTestTypeButtonsCallback(appContext);
 }
 
-function setupTestTypeButtonsCallback(appContainer: HTMLElement, appContext: AppContext) {
+function setupTestTypeButtonsCallback(appContext: AppContext) {
   // Get references to the test type buttons and the Next button from the DOM
   const pzmrButton = document.getElementById("pzmr-button") as HTMLButtonElement;
   const rv13Button = document.getElementById("rv1-3-button") as HTMLButtonElement;
@@ -64,9 +63,7 @@ function setupTestTypeButtonsCallback(appContainer: HTMLElement, appContext: App
   });
 
   // Only proceed to the Begin Test screen if a test type has been selected.
-  nextButton.addEventListener("click", () => {
-    setupBeginTestScreen(appContainer, appContext);
-  });
+  nextButton.addEventListener("click", () => Router.navigate("/test"));
 }
 
 function mainHtml(testType: TestType) {
