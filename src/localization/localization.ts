@@ -174,7 +174,10 @@ const localization: LocalizationKeys = {
   backToMainPage: { en: "Back to Main Page", uk: "На головну" },
 
   // user-profiles-screen
-  viewProfileButton: { en: "View Profile", uk: "Відкрити профіль" }
+  viewProfileButton: { en: "View Profile", uk: "Відкрити профіль" },
+  deleteButton: {en: "Delete", uk: "Видалити"},
+  deleteConfirmation: {en: "Are you sure you want to delete user %s? This will also delete all associated test records.", uk: "Ви впевнені, що хочете видалити користувача %s? Це також видалить усі пов'язані записи тестів."},
+  deleteError: {en: "An error occurred during user deletion. Please try again.", uk: "Сталася помилка під час видалення користувача. Спробуйте ще раз."}
 
 };
 
