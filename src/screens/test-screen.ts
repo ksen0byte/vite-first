@@ -28,9 +28,8 @@ export class TestScreen {
   // Data
   private readonly reactionTimes: number[];
 
-  // Event handler references (if you need to remove them on destroy)
-  private handleAppClick!: (ev: MouseEvent) => void;
-  private handleAppKeyDown!: (ev: KeyboardEvent) => void;
+  // spam prevention
+  private spamPreventionConfig = {clickAllowedFromMs: 100};
 
   constructor(appContainer: HTMLElement) {
     this.appContainer = appContainer;
@@ -55,8 +54,6 @@ export class TestScreen {
    * Clears timers, event listeners, etc.
    */
   public destroy(): void {
-    this.appContainer.style.cursor = "default";
-    this.appContainer.removeEventListener("click", this.handleAppClick);
     document.removeEventListener("keydown", this.handleAppKeyDown);
     this.timerManager.stop();
     clearAllTimeouts();
@@ -132,7 +129,7 @@ export class TestScreen {
     this.countdown = new Countdown(
       this.stimulusContainer,
       ["3", "2", "1", localize("testScreenTestStart")],
-      500,
+      1000,
       () => this.runTest()
     );
   }
@@ -143,13 +140,8 @@ export class TestScreen {
   private attachEventListeners(): void {
     this.retryButton.addEventListener("click", () => this.handleRetry());
     this.homeButton.addEventListener("click", () => this.handleHome());
-
-    // Reaction time click handler
-    this.handleAppClick = () => this.handleAppClickFn();
-    this.appContainer.addEventListener("click", this.handleAppClick);
-
-    this.handleAppKeyDown = (ev: KeyboardEvent) => this.handleAppKeyDownFn(ev);
-    document.addEventListener("keydown", this.handleAppKeyDown);
+    // Listen for keydown to simulate user input
+    document.addEventListener("keydown", (e) => this.handleAppKeyDown(e) );
   }
 
   /**
@@ -168,7 +160,6 @@ export class TestScreen {
     clearAllTimeouts();
     this.reactionTimes.length = 0; // clean up array
     this.stimuliCounter.reset();
-    this.appContainer.addEventListener("click", this.handleAppClick);
     document.addEventListener("keydown", this.handleAppKeyDown);
     this.retryButton.blur();
     this.startTest();
@@ -178,6 +169,11 @@ export class TestScreen {
     this.destroy();
     Router.navigate("/settings");
   }
+
+  private handleAppKeyDown(event: KeyboardEvent): void {
+    if (event.code === "Space") this.handleUserInput();
+  }
+
 
   /**
    * Main test logic: called after the countdown finishes.
@@ -209,26 +205,8 @@ export class TestScreen {
     };
 
     // Initial setup
-    this.appContainer.style.cursor = "crosshair";
     this.stimulusManager.clearContainer();
     scheduleTimeout(displayNextStimulus, this.stimulusManager.getRandomExposureDelay());
-  }
-
-  /**
-   * Handles clicks on the app container for reaction-time measurement.
-   */
-  private handleAppClickFn(): void {
-    this.handleUserInput();
-  }
-
-  /**
-   * Handles [keydown] on the app container for reaction-time measurement.
-   */
-  private handleAppKeyDownFn(ev: KeyboardEvent): void {
-    // only spacebar
-    if (ev.key !== " ") return;
-
-    this.handleUserInput();
   }
 
   private handleUserInput() {
@@ -243,6 +221,10 @@ export class TestScreen {
     const lastStimulusTime = this.timerManager.getStartTime();
     if (lastStimulusTime != null) {
       const reactionTime = Date.now() - lastStimulusTime;
+      if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
+        console.warn(`Input ignored: Reaction time (${reactionTime}ms) is below the allowed threshold of ${this.spamPreventionConfig.clickAllowedFromMs}ms.`);
+        return;
+      }
       this.reactionTimes.push(reactionTime);
       this.timerManager.stop();
     }
