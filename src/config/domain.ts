@@ -40,7 +40,10 @@ export interface TestSettings {
   testType: TestType;
 }
 
+export type DebugMode = "debug" | "prod";
+
 export interface AppContext {
   personalData: PersonalData,
   testSettings: TestSettings,
+  debugMode: DebugMode,
 }

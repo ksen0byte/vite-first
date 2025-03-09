@@ -1,5 +1,5 @@
 // test-screen.ts
-import {AppContext} from "../config/domain.ts";
+import {AppContext, DebugMode} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
 import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
@@ -42,7 +42,7 @@ export class TestScreen {
    * Set up the Test Screen UI and initialize all logic (countdown, timers, events).
    */
   public setupScreen(): void {
-    this.renderUI();
+    this.renderUI(this.appContext.debugMode);
     this.getElements();
     this.createManagers();
     this.attachEventListeners();
@@ -65,11 +65,11 @@ export class TestScreen {
   /**
    * Builds the screen’s HTML structure.
    */
-  private renderUI(): void {
+  private renderUI(debugMode: DebugMode): void {
     this.appContainer.innerHTML = `
       <div id="test-screen" class="flex flex-col flex-grow bg-black text-white">
         <!-- Top bar: retry button -->
-        <div class="flex-grow-0 flex flex-row-reverse justify-between items-end p-4">
+        <div class="${debugMode === "prod" ? "hidden" : "" } flex-grow-0 flex flex-row-reverse justify-between items-end p-4">
           <button id="retry-btn" class="btn btn-ghost">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -85,7 +85,7 @@ export class TestScreen {
         <div id="test-stimulus-container" class="flex items-center justify-center flex-grow text-8xl font-bold"></div>
 
         <!-- Bottom bar: timer (left), counter (right) -->
-        <div class="flex-grow-0 flex justify-between items-end p-4">
+        <div class="${debugMode === "prod" ? "hidden" : "" } flex-grow-0 flex justify-between items-end p-4">
           <!-- Timer (bottom-left) -->
           <div id="timer-container">
             <div id="timer-display" class="text-3xl font-mono text-gray-400">0.000${localize("s")}</div>

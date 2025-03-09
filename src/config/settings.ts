@@ -26,7 +26,8 @@ export const defaultAppContext: AppContext = {
     exposureDelay: settings.default.exposureDelay,
     stimulusCount: settings.default.stimulusCount,
     testType: 'svmr'
-  }
+  },
+  debugMode: "prod",
 };
 
 export const subsectionsConfig = {

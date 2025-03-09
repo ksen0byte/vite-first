@@ -374,7 +374,8 @@ const startButtonCallback: () => void = () => {
       exposureDelay: exposureDelay,
       stimulusCount: stimulusCount,
       testType: defaultAppContext.testSettings.testType || 'svmr',
-    }
+    },
+    debugMode: defaultAppContext.debugMode,
   };
 
   AppContextManager.setContext(appContext);
