@@ -34,10 +34,7 @@ export class ReactionTimeStats {
   /**
    * Create a new instance with the given array of reaction times.
    */
-  constructor(data: number[]) {
-    const lowerBound = 120;
-    const upperBound = 500;
-
+  constructor(data: number[], upperBound: number = 500, lowerBound: number = 100) {
     // Step 1: Remove hard outliers based on fixed range
     let cleanedData = data.filter(value => value >= lowerBound && value <= upperBound);
 

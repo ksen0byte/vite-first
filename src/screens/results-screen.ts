@@ -27,7 +27,7 @@ export function setupResultsScreen(
   }
 
   // Frequency distribution
-  const reactionTimeStats = new ReactionTimeStats(data);
+  const reactionTimeStats = new ReactionTimeStats(data, AppContextManager.getContext().testSettings.exposureTime);
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();

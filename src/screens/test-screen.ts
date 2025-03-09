@@ -26,7 +26,7 @@ export class TestScreen {
   private stimuliCounter!: StimuliCounter;
 
   // Data
-  private readonly reactionTimes: Map<number, number>;
+  private readonly reactionTimes: number[];
 
   // Event handler references (if you need to remove them on destroy)
   private handleAppClick!: (ev: MouseEvent) => void;
@@ -35,7 +35,7 @@ export class TestScreen {
   constructor(appContainer: HTMLElement) {
     this.appContainer = appContainer;
     this.appContext = AppContextManager.getContext();
-    this.reactionTimes = new Map();
+    this.reactionTimes = [];
   }
 
   /**
@@ -166,7 +166,7 @@ export class TestScreen {
   private handleRetry(): void {
     this.timerManager.stopAndReset();
     clearAllTimeouts();
-    this.reactionTimes.clear();
+    this.reactionTimes.length = 0; // clean up array
     this.stimuliCounter.reset();
     this.appContainer.addEventListener("click", this.handleAppClick);
     document.addEventListener("keydown", this.handleAppKeyDown);
@@ -240,11 +240,10 @@ export class TestScreen {
     // we can measure how quickly the user responded.
     //
     // If the user clicked multiple times, only the first matters.
-    const currentIndex = this.stimuliCounter.get();
     const lastStimulusTime = this.timerManager.getStartTime();
     if (lastStimulusTime != null) {
       const reactionTime = Date.now() - lastStimulusTime;
-      this.reactionTimes.set(currentIndex, reactionTime);
+      this.reactionTimes.push(reactionTime);
       this.timerManager.stop();
     }
   }

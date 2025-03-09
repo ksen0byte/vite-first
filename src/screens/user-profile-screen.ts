@@ -48,7 +48,7 @@ function testCardHTML(index: number, test: TestRecord): string {
   const {testMode, stimulusSize, exposureTime, exposureDelay, stimulusCount, testType} = testSettings;
 
   // Generate statistics using ReactionTimeStats
-  const stats = new ReactionTimeStats(reactionTimes);
+  const stats = new ReactionTimeStats(reactionTimes, exposureTime);
 
   return `
     <div class="card shadow-md bg-base-100">
@@ -214,7 +214,7 @@ function getTestTypeLocalizationKey(testType: string): string {
 
 function renderHistograms(tests: TestRecord[]) {
   tests.forEach((test, index) => {
-    const stats = new ReactionTimeStats(test.reactionTimes);
+    const stats = new ReactionTimeStats(test.reactionTimes, test.testSettings.exposureTime);
     const canvasId = `histogram-${index + 1}`;
 
     stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
