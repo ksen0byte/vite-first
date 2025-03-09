@@ -1,13 +1,14 @@
-import { setupHeader } from '../components/header';
-import { setupFooter } from '../components/footer';
-import { updateLanguageUI } from '../localization/localization';
-import { User } from "../db/db";
-import { setupProfileScreen } from "./user-profile-screen";
-import { setupSettingsScreen } from "./settings-screen";
-import { getAllUsers, getTestsForUser } from "../db/operations";
+import {setupHeader} from '../components/header';
+import {setupFooter} from '../components/footer';
+import {updateLanguageUI} from '../localization/localization';
+import {User} from "../db/db";
+import {setupProfileScreen} from "./user-profile-screen";
+import {setupSettingsScreen} from "./settings-screen";
+import {getAllUsers, getTestsForUser} from "../db/operations";
 
 export class UsersScreen {
   private readonly appContainer: HTMLElement;
+  private users: User[] = []; // Cached state for users
 
   constructor(appContainer: HTMLElement) {
     this.appContainer = appContainer;
@@ -15,44 +16,60 @@ export class UsersScreen {
     // Bind methods to ensure `this` context is preserved
     this.setupScreen = this.setupScreen.bind(this);
     this.viewUserProfile = this.viewUserProfile.bind(this);
+    this.addUser = this.addUser.bind(this);
   }
 
   /**
    * Renders the Users Screen.
    */
   public async setupScreen() {
-    const users = await getAllUsers();
+    this.appContainer.innerHTML = '<p>Loading...</p>'; // Loading indicator
 
+    try {
+      this.users = await getAllUsers(); // Fetch users and cache the result
+      this.renderUsers(); // Render users
+
+      // Set up the header
+      setupHeader(this.appContainer);
+
+      // Setup the footer with `main-page-btn`
+      setupFooter(
+        this.appContainer,
+        this.usersScreenFooterHTML(),
+        [
+          {
+            buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement,
+            callback: () => this.navigateToMainPage()
+          }
+        ]
+      );
+
+      this.attachEventListeners();
+      updateLanguageUI();
+    } catch (error) {
+      console.error("Error rendering the Users screen:", error);
+      this.appContainer.innerHTML = '<p>Error loading users screen. Please try again.</p>';
+    }
+  }
+
+  /**
+   * Renders all user cards within the screen.
+   */
+  private renderUsers() {
     this.appContainer.innerHTML = `
       <div id="users-screen" class="flex flex-col flex-grow bg-base-200 text-base-content p-4">
         <div class="flex-1 space-y-4">
-            ${users.map(this.userCardHTML).join("")}
+          ${this.users.map(this.userCardHTML).join('')}
         </div>
       </div>
     `;
-
-    // Set up the header
-    setupHeader(this.appContainer);
-
-    // Setup the footer with `main-page-btn`
-    setupFooter(
-      this.appContainer,
-      this.usersScreenFooterHTML(),
-      [
-        { buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => this.navigateToMainPage() }
-      ]
-    );
-
-    this.attachEventListeners();
-
-    updateLanguageUI();
   }
 
   /**
    * Generates the HTML for a user card.
    */
   private userCardHTML(user: User): string {
-    const { firstName, lastName, gender, age } = user;
+    const {firstName, lastName, gender, age} = user;
 
     return `
       <div class="card shadow-md bg-base-100">
@@ -72,6 +89,18 @@ export class UsersScreen {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Adds a user dynamically to the view without re-rendering all users.
+   */
+  public addUser(user: User) {
+    this.users.push(user); // Update the state
+    const userHtml = this.userCardHTML(user);
+    const usersContainer = this.appContainer.querySelector('.flex-1');
+    if (usersContainer) {
+      usersContainer.insertAdjacentHTML('beforeend', userHtml);
+    }
   }
 
   /**
