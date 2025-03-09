@@ -49,7 +49,7 @@ Router.registerRoute('/profile', () => {
 });
 
 // Initialize router
-Router.initialize();
+Router.initialize(appContainer);
 Router.navigate('/settings'); // Default route
 
 updateLanguageUI();

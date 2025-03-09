@@ -1,6 +1,16 @@
 class Router {
   private static routes: { [path: string]: () => void } = {};
   private static basePath: string = import.meta.env.BASE_URL || '/vite-first/'; // Use Vite's BASE_URL
+  private static appContainer: HTMLElement;
+
+  /**
+   * Initializes the router with the ID of the main container element
+   * and sets up the event listener for handling browser navigation events.
+   */
+  public static initialize(appContainer: HTMLElement) {
+    this.appContainer = appContainer;
+    window.onpopstate = () => this.handlePopState();
+  }
 
   /**
    * Registers a route with a corresponding screen rendering function.
@@ -11,14 +21,19 @@ class Router {
   }
 
   /**
-   * Executes the rendering logic for the given path.
+   * Executes the rendering logic for the given path and performs cleanup.
    */
   public static navigate(path: string, state: any = null) {
     const fullPath = this.getFullPath(path);
 
     if (this.routes[fullPath]) {
+      this.cleanup(); // Clean up the container and remove event listeners
+
+      // Push new state into history
       history.pushState({ ...state, path: fullPath }, '', fullPath);
-      this.routes[fullPath](); // Render the corresponding screen
+
+      // Render the corresponding screen
+      this.routes[fullPath]();
     } else {
       console.error(`Route not found: ${path}`); // Handle 404
     }
@@ -31,6 +46,7 @@ class Router {
     const fullPath = window.location.pathname;
 
     if (this.routes[fullPath]) {
+      this.cleanup(); // Clean up the container and remove event listeners
       this.routes[fullPath]();
     } else {
       console.error(`Route not found: ${fullPath}`);
@@ -38,10 +54,13 @@ class Router {
   }
 
   /**
-   * Initializes the router by listening for popstate events.
+   * Cleans up by clearing the app container's contents.
+   * Automatically removes all event listeners tied to the current route's DOM elements.
    */
-  public static initialize() {
-    window.onpopstate = () => this.handlePopState();
+  private static cleanup() {
+    if (this.appContainer) {
+      this.appContainer.innerHTML = ''; // Clear all content to remove event listeners
+    }
   }
 
   /**
