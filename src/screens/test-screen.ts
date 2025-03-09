@@ -303,7 +303,7 @@ export class TestScreen {
     // Hide or replace the main container content
     this.stimulusContainer.innerHTML = `
       <div class="flex flex-col items-center space-y-4">
-        <div class="text-3xl mb-4">Test Complete!</div>
+        <div class="text-3xl mb-4" data-localize="testScreenTestCompleteMessage"></div>
         <div class="flex space-x-4">
           <button id="end-retry-btn" class="btn btn-soft sm:btn-xl btn-warning"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg><span data-localize="testScreenTestBtnRetry">Retry</span></button>
           <button id="end-finish-btn" class="btn btn-soft sm:btn-xl btn-success"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /> </svg> <span data-localize="testScreenTestBtnFinish">Finish</span></button>

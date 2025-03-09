@@ -130,6 +130,10 @@ const localization: LocalizationKeys = {
     en: "Please avoid repetitive actions as it may lead to incorrect test results. The test will be restarted.",
     uk: "Будь ласка, уникайте повторюваних дій, оскільки це може призвести до некоректних результатів тесту. Тест буде перезапущено з початку."
   },
+  testScreenTestCompleteMessage: {
+    en: "Congratulations! You have completed the test.",
+    uk: "Вітаємо! Ви завершили тест."
+  },
 
   // stats
   noReactionTimes: { en: "No Reaction Times", uk: "Немає результатів реакції" },
