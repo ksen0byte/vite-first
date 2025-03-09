@@ -25,6 +25,7 @@ export class TimerManager {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
+      this.timerStart = null;
     }
   }
 

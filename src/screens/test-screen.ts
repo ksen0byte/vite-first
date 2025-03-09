@@ -29,7 +29,9 @@ export class TestScreen {
   private readonly reactionTimes: number[];
 
   // spam prevention
-  private spamPreventionConfig = {clickAllowedFromMs: 100};
+  private spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
+  private spamInputCount: number = 0;
+  private testResetting: boolean = false; // Prevents concurrent test resets
 
   constructor(appContainer: HTMLElement) {
     this.appContainer = appContainer;
@@ -104,6 +106,14 @@ export class TestScreen {
             </div>
           </div>
         </div>
+        
+        <!-- Spam Modal -->
+        <div id="spamModal" class="modal">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg" data-localize="testScreenTestSpamModalTitle"></h3>
+            <p class="py-4" data-localize="testScreenTestSpamModalMessage"></p>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -151,16 +161,20 @@ export class TestScreen {
     this.countdown.show();
   }
 
+  private stopTest(): void {
+    this.timerManager.stopAndReset();
+    clearAllTimeouts();
+    this.reactionTimes.length = 0; // clean up array
+    this.resetSpamCounter();
+    this.stimuliCounter.reset();
+  }
+
   /**
    * Called when the user clicks “Retry”.
    * Resets all counters, timers, and clears old timeouts.
    */
   private handleRetry(): void {
-    this.timerManager.stopAndReset();
-    clearAllTimeouts();
-    this.reactionTimes.length = 0; // clean up array
-    this.stimuliCounter.reset();
-    document.addEventListener("keydown", this.handleAppKeyDown);
+    this.stopTest();
     this.retryButton.blur();
     this.startTest();
   }
@@ -199,6 +213,7 @@ export class TestScreen {
       scheduleTimeout(() => {
         this.stimulusManager.clearContainer();
         this.timerManager.stop();
+        this.resetSpamCounter();
 
         scheduleTimeout(displayNextStimulus, this.stimulusManager.getRandomExposureDelay());
       }, this.appContext.testSettings.exposureTime);
@@ -209,25 +224,72 @@ export class TestScreen {
     scheduleTimeout(displayNextStimulus, this.stimulusManager.getRandomExposureDelay());
   }
 
-  private handleUserInput() {
-    // If there is a stimulus on screen and the timer is running...
-    // (We track this by having a non-null start time)
-    // We find the difference between now and that start time.
-    //
-    // Because we store it as soon as we show the stimulus,
-    // we can measure how quickly the user responded.
-    //
-    // If the user clicked multiple times, only the first matters.
+  /**
+   * Processes user input during the stimulus-response test.
+   * Tracks the reaction time of valid inputs and enforces spam prevention rules.
+   *
+   * Workflow:
+   * - Blocks input if the test is resetting.
+   * - Increments input count (`spamInputCount`) and checks if spam is detected.
+   * - Calculates reaction time for valid inputs and stores the result.
+   *
+   * Rules:
+   * - Prevents multiple inputs for a single stimulus.
+   * - Ignores inputs below the minimum reaction time threshold.
+   * - Stops the test and shows a spam modal if spam is detected.
+   */
+  private handleUserInput(): void {
+    // Block input if test resetting is in progress
+    if (this.testResetting) return;
+
+    // Increment spam input counter
+    this.increaseSpamCounter();
+
+    // Check for spam detection
+    if (this.spamInputCount > this.spamPreventionConfig.maxInputsPerStimulus) {
+      this.testResetting = true;
+      this.stopTest();           // Stop the test
+      this.showSpamModal();      // Show spam modal
+      setTimeout(() => {
+        this.hideSpamModal();    // Hide spam modal after 5 seconds
+        this.testResetting = false;
+        this.startTest();        // Restart the test
+      }, 5000);                  // Timeout duration
+      return;                    // Exit early after spam detection
+    }
+
+    // Debug: Log the input count
+    console.log(`User input count: ${this.spamInputCount}`);
+
+    // Retrieve the start time of the current stimulus
     const lastStimulusTime = this.timerManager.getStartTime();
+
+    // If there is a valid stimulus start time, calculate the reaction time
     if (lastStimulusTime != null) {
       const reactionTime = Date.now() - lastStimulusTime;
+
+      // Ignore input if reaction time is below the allowed threshold
       if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
-        console.warn(`Input ignored: Reaction time (${reactionTime}ms) is below the allowed threshold of ${this.spamPreventionConfig.clickAllowedFromMs}ms.`);
+        console.warn(`Input ignored: Reaction time (${reactionTime}ms) is below `
+          + `the allowed threshold of ${this.spamPreventionConfig.clickAllowedFromMs}ms.`);
         return;
       }
+
+      // Record the valid reaction time and stop the timer
       this.reactionTimes.push(reactionTime);
       this.timerManager.stop();
+
+      // reset spam counter
+      this.resetSpamCounter();
     }
+  }
+
+  private increaseSpamCounter() {
+    this.spamInputCount++;
+  }
+
+  private resetSpamCounter() {
+    this.spamInputCount = 0;
   }
 
   /**
@@ -268,4 +330,13 @@ export class TestScreen {
       Router.navigate("/results", {reactionTimes});
     });
   }
+
+  private showSpamModal() {
+    document.getElementById("spamModal")?.classList.add("modal-open");
+  }
+
+  private hideSpamModal() {
+    document.getElementById("spamModal")?.classList.remove("modal-open");
+  }
+
 }

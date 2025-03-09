@@ -122,6 +122,14 @@ const localization: LocalizationKeys = {
   testScreenTestPZMRActionButtonLeft: {en: "Press", uk: "Натисніть "},
   testScreenTestPZMRActionButtonName: {en: "Space", uk: "Пробіл"},
   testScreenTestPZMRActionButtonRight: {en: "once a stimulus appears", uk: "одразу, коли з'явиться подразник"},
+  testScreenTestSpamModalTitle: {
+    en: "Attention!",
+    uk: "Увага!"
+  },
+  testScreenTestSpamModalMessage: {
+    en: "Please avoid repetitive actions as it may lead to incorrect test results. The test will be restarted.",
+    uk: "Будь ласка, уникайте повторюваних дій, оскільки це може призвести до некоректних результатів тесту. Тест буде перезапущено з початку."
+  },
 
   // stats
   noReactionTimes: { en: "No Reaction Times", uk: "Немає результатів реакції" },
