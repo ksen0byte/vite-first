@@ -12,7 +12,7 @@ function headerHTML() {
   return `
     <header class="navbar bg-base-100 shadow-md px-4">
         <div class="flex-1 flex items-center">
-            <div class="w-10 h-10 mr-4 cursor-pointer" id="logo">
+            <div class="w-10 h-10 mr-4 cursor-pointer hover:scale-110 transition-transform duration-200" id="logo">
                 <!--suppress HtmlUnknownTarget -->
                 <img src="logo.svg" alt="Logo" class="w-full rounded-full"/>
             </div>
