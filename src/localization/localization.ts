@@ -24,7 +24,9 @@ export function localize(key: string): string {
 }
 
 const localization: LocalizationKeys = {
-  switchLanguage: {en: "UA", uk: "EN"},
+  languageEN: {en: "EN", uk: "АНГЛ."}, // Localized label for "EN"
+  languageUA: {en: "UA", uk: "УКР."},  // Localized label for "UA"
+
   // keys for theme names
   theme_light: {en: "Light", uk: "Світла"},
   theme_dark: {en: "Dark", uk: "Темна"},
