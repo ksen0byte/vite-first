@@ -25,6 +25,9 @@ export class TestScreen {
   private timerManager!: TimerManager;
   private stimuliCounter!: StimuliCounter;
 
+  // event listeners
+  private handleKeyDownBound: (event: KeyboardEvent) => void;
+
   // Data
   private readonly reactionTimes: number[];
 
@@ -37,6 +40,9 @@ export class TestScreen {
     this.appContainer = appContainer;
     this.appContext = AppContextManager.getContext();
     this.reactionTimes = [];
+
+    // Store the bound reference
+    this.handleKeyDownBound = this.handleAppKeyDown.bind(this);
   }
 
   /**
@@ -56,7 +62,7 @@ export class TestScreen {
    * Clears timers, event listeners, etc.
    */
   public destroy(): void {
-    document.removeEventListener("keydown", this.handleAppKeyDown);
+    document.removeEventListener("keydown", this.handleKeyDownBound);
     this.timerManager.stop();
     clearAllTimeouts();
   }
@@ -151,7 +157,7 @@ export class TestScreen {
     this.retryButton.addEventListener("click", () => this.handleRetry());
     this.homeButton.addEventListener("click", () => this.handleHome());
     // Listen for keydown to simulate user input
-    document.addEventListener("keydown", (e) => this.handleAppKeyDown(e) );
+    document.addEventListener("keydown", this.handleKeyDownBound);
   }
 
   /**
@@ -186,6 +192,7 @@ export class TestScreen {
 
   private handleAppKeyDown(event: KeyboardEvent): void {
     if (event.code === "Space") this.handleUserInput();
+    if (event.code === "Escape") this.handleHome();
   }
 
 
