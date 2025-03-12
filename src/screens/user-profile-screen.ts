@@ -127,14 +127,6 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td>${stats.stdevVal.toFixed(2)}<span data-localize="ms"></span></td>
                 </tr>
                 <tr class="text-center">
-                  <td><strong data-localize="minLabel"></strong></td>
-                  <td>${Math.min(...reactionTimes).toFixed(2)}<span data-localize="ms"></span></td>
-                </tr>
-                <tr class="text-center">
-                  <td><strong data-localize="maxLabel"></strong></td>
-                  <td>${Math.max(...reactionTimes).toFixed(2)}<span data-localize="ms"></span></td>
-                </tr>
-                <tr class="text-center">
                   <td><strong data-localize="p3Label"></strong></td>
                   <td>${stats.p3Val.toFixed(2)}<span data-localize="ms"></span></td>
                 </tr>
