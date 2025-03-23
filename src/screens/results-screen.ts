@@ -84,6 +84,12 @@ export function setupResultsScreen(
           <div class="stat-title text-base" data-localize="statStdDev">Std Dev</div>
           <div class="stat-value text-lg">${reactionTimeStats.stdevVal.toFixed(2)}</div>
         </div>
+        
+        <!-- Coefficient of Variation -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statCV">CV</div>
+          <div class="stat-value text-lg">${reactionTimeStats.cvVal.toFixed(2)}</div>
+        </div>
 
       </div>
 

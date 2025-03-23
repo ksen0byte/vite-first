@@ -69,7 +69,7 @@ function settingsScreenHTML(appContext: AppContext) {
                                 <!-- Left Column: Shape Preview -->
                                 <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
                                     <div id="shape-preview"
-                                         class="subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                         class="subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
                                         <!-- Example placeholder or <svg> -->
                                     </div>
                                 </div>
@@ -120,7 +120,7 @@ function settingsScreenHTML(appContext: AppContext) {
                                 <!-- Left Column: Word Preview -->
                                 <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
                                     <div id="word-preview"
-                                         class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                         class="col-span-1 subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
                                     <span id="word-preview-word" class="font-mono text-[2cm] leading-none text-blue-600"
                                           data-localize="wordPreviewWord">human</span>
                                     </div>
@@ -170,7 +170,7 @@ function settingsScreenHTML(appContext: AppContext) {
                                 <!-- Left Column: Syllable Preview -->
                                 <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
                                     <div id="syllable-preview"
-                                         class="col-span-1 subsection-preview bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                         class="col-span-1 subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
                                     <span id="syllable-preview-syllable"
                                           class="font-mono text-[2cm] leading-none text-red-600"
                                           data-localize="syllablePreviewSyllable">Mo</span>

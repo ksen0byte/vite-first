@@ -30,7 +30,7 @@ export function logWithTime(message: string): void {
  * @param stdDev - The standard deviation (spread) of the distribution.
  * @returns A normally distributed random number.
  */
-export function generateNormalDistribution(mean = 0, stdDev = 1) {
+export function generateNormalDistributionNumber(mean = 0, stdDev = 1) {
   let u1 = Math.random();
   let u2 = Math.random();
 
@@ -39,4 +39,20 @@ export function generateNormalDistribution(mean = 0, stdDev = 1) {
 
   // Scale and shift to match the given mean and standard deviation
   return z0 * stdDev + mean;
+}
+
+/**
+ * Generates an array of random numbers following a normal distribution.
+ *
+ * @param {number} [mean=0] - The mean (μ) of the normal distribution.
+ * @param {number} [stdDev=1] - The standard deviation (σ) of the normal distribution.
+ * @param {number} [count=100] - The number of random numbers to generate.
+ * @return {number[]} An array of random numbers following the specified normal distribution.
+ */
+export function generateNormalDistribution(mean = 0, stdDev = 1, count = 100) {
+  const numbers: number[] = [];
+  for (let i = 0; i < count; i++) {
+    numbers.push(generateNormalDistributionNumber(mean, stdDev));
+  }
+  return numbers;
 }

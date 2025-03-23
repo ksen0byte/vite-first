@@ -18,6 +18,7 @@ export class ReactionTimeStats {
   public readonly meanVal;
   public readonly modeVal;
   public readonly stdevVal;
+  public readonly cvVal;
 
   // For percentiles (p3, p10, p25, p50, p75, p90, p97):
   //  p50 will match medianVal above, but we’ll keep it for completeness
@@ -50,6 +51,7 @@ export class ReactionTimeStats {
     this.meanVal = mean(cleanedData);
     this.modeVal = this.getMode();
     this.stdevVal = standardDeviation(cleanedData);
+    this.cvVal = this.stdevVal / this.meanVal;
     this.p3Val = quantile(cleanedData, 0.03);
     this.p10Val = quantile(cleanedData, 0.10);
     this.p25Val = quantile(cleanedData, 0.25);
@@ -400,6 +402,7 @@ export class ReactionTimeStats {
       `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
       `${localize("modeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
       `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
+      `${localize("cvLabel")}: ${this.cvVal.toFixed(2)}`,
       `${localize("statFunctionalLevel")}: ${this.calculateFunctionalLevel().toFixed(2)}`,
       `${localize("statReactionStability")}: ${this.calculateReactionStability().toFixed(2)}`,
       `${localize("statFunctionalCapabilities")}: ${this.calculateFunctionalCapabilities().toFixed(2)}`,
