@@ -400,6 +400,9 @@ export class ReactionTimeStats {
       `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
       `${localize("modeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
       `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
+      `${localize("statFunctionalLevel")}: ${this.calculateFunctionalLevel().toFixed(2)}`,
+      `${localize("statReactionStability")}: ${this.calculateReactionStability().toFixed(2)}`,
+      `${localize("statFunctionalCapabilities")}: ${this.calculateFunctionalCapabilities().toFixed(2)}`,
     ].join(" | ");
   }
 }

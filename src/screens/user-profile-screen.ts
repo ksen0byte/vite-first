@@ -32,11 +32,11 @@ function personalDataCardHtml(user: User) {
   <div class="card shadow-md bg-base-100">
     <div class="card-body">
       <div class="flex space-x-2">
-        <p><strong data-localize="surnameLabel"></strong>: <span>${lastName}</span></p>
-        <p><strong data-localize="nameLabel"></strong>: <span>${firstName}</span></p>
-        <p><strong data-localize="ageLabel"></strong>: <span>${age}</span></p>
-        <p class="${gender === "male" ? "" : "hidden"}"><strong data-localize="selectGender"></strong>: <span data-localize="male"></span></p>
-        <p class="${gender === "female" ? "" : "hidden"}"><strong data-localize="selectGender"></strong>: <span data-localize="female"></span></p>
+        <p class="text-lg"><strong data-localize="surnameLabel"></strong>: <span>${lastName}</span></p>
+        <p class="text-lg"><strong data-localize="nameLabel"></strong>: <span>${firstName}</span></p>
+        <p class="text-lg"><strong data-localize="ageLabel"></strong>: <span>${age}</span></p>
+        <p class="text-lg ${gender === "male" ? "" : "hidden"}"><strong data-localize="selectGender"></strong>: <span data-localize="male"></span></p>
+        <p class="text-lg ${gender === "female" ? "" : "hidden"}"><strong data-localize="selectGender"></strong>: <span data-localize="female"></span></p>
       </div>
     </div>
   </div>
@@ -153,6 +153,34 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <tr class="text-center">
                   <td><strong data-localize="p97Label"></strong></td>
                   <td>${stats.p97Val.toFixed(2)}<span data-localize="ms"></span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Divider -->
+          <div class="divider divider-horizontal"></div>
+          <!-- Reaction Time Advanced Statistics Table -->
+          <div class="overflow-x-auto mt-4 w-full">
+            <table class="table table-zebra table-md w-full">
+              <thead>
+                <tr class="text-center">
+                  <th data-localize="statLabel"></th>
+                  <th data-localize="valueLabel"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Table Rows Localized -->
+                <tr class="text-center">
+                  <td><strong data-localize="statFunctionalLevel"></strong></td>
+                  <td>${stats.calculateFunctionalLevel().toFixed(2)}</td>
+                </tr>
+                <tr class="text-center">
+                  <td><strong data-localize="statReactionStability"></strong></td>
+                  <td>${stats.calculateReactionStability().toFixed(2)}</td>
+                </tr>
+                <tr class="text-center">
+                  <td><strong data-localize="statFunctionalCapabilities"></strong></td>
+                  <td>${stats.calculateFunctionalCapabilities().toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
