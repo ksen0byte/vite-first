@@ -127,7 +127,7 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td>${stats.stdevVal.toFixed(2)}<span data-localize="ms"></span></td>
                 </tr>
                 <tr class="text-center">
-                  <td><strong data-localize="сvLabel"></strong></td>
+                  <td><strong data-localize="cvLabel"></strong></td>
                   <td>${stats.cvVal.toFixed(2)}</td>
                 </tr>
                 <tr class="text-center">
