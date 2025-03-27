@@ -219,8 +219,16 @@ export class ReactionTimeStats {
 
   /**
    * 1) Functional Level
-   *    ln( (2 * sqrt(2 * ln(2) * σ * M)) )
+   *    Formula: ln(2 * sqrt(2 * ln(2) * M * σ))
+   *
+   *    Where:
+   *    - ln: natural logarithm
+   *    - M: mode of the dataset
+   *    - σ: standard deviation of the dataset
+   *
+   * @returns {number} The functional level based on the given formula.
    */
+
   public calculateFunctionalLevel(): number {
     if (this.modeVal == null || this.modeVal <= 0) {
       return NaN;
@@ -233,8 +241,20 @@ export class ReactionTimeStats {
 
   /**
    * 2) Reaction Stability
-   *    ln( ( φ((x2 - m)/(σ * sqrt(2))) - φ((x1 - m)/(σ * sqrt(2))) ) / (4 * sqrt(2) * ln(2) * σ) )
+   *    Formula: ln( ( ϕ((x2 - m) / σ) - ϕ((x1 - m) / σ) ) / (4 * sqrt(2 * ln(2))) ) / coefficient
+   *
+   *    Where:
+   *    - ϕ: cumulative standard normal probability function
+   *    - x1: start of the mode bin (binStart)
+   *    - x2: end of the mode bin (binEnd)
+   *    - m: mean of the dataset (meanVal)
+   *    - σ: standard deviation of the dataset (stdevVal)
+   *    - coefficient: a scaling factor based on the modal bin width and the Loskutova coefficient
+   *    - The formula calculates reaction stability based on the probability within the modal class.
+   *
+   * @returns {number} The calculated reaction stability, normalized by the coefficient.
    */
+
   public calculateReactionStability(): number {
     const modeBin = this.getModalClass();
     if (!modeBin) {
@@ -247,19 +267,28 @@ export class ReactionTimeStats {
 
     const z1 = (x2 - m) / (sigma);
     const z2 = (x1 - m) / (sigma);
-    const phiDiff = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
+    const modalClassProbability = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
 
-    const denominator = 4 * Math.sqrt(2 * Math.log(2) * sigma * m);
+    const modalWidth = x2 - x1;
+    const coefficient = this.LOSKUTOVA_COEFFICIENT / modalWidth;
 
-    const modalDiff = x2 - x1;
-    const coeff = this.LOSKUTOVA_COEFFICIENT / modalDiff;
-
-    return Math.abs(Math.log(phiDiff / (denominator)) / coeff);
+    return Math.abs(Math.log(modalClassProbability / (4 * Math.sqrt(2 * Math.log(2))))) / coefficient;
   }
 
   /**
    * 3) Functional Capabilities
-   *    ln( ( φ((x2 - m)/(σ * sqrt(2))) - φ((x1 - m)/(σ * sqrt(2))) ) / (4 * sqrt(2) * ln(2) * σ * m) )
+   *    Formula: ln( ( ϕ((x2 - m) / σ) - ϕ((x1 - m) / σ) ) / (2 * sqrt(2 * ln(2) * σ * m)) )
+   *
+   *    Where:
+   *    - ϕ: cumulative standard normal probability function
+   *    - x1: start of the mode bin (binStart)
+   *    - x2: end of the mode bin (binEnd)
+   *    - m: mean of the dataset (meanVal)
+   *    - σ: standard deviation of the dataset (stdevVal)
+   *    - The formula calculates functional capabilities by analyzing the probability within the modal class relative to the mean and standard deviation.
+   *    - A coefficient, based on interpreting the Loskutova model, adjusts the value based on the modal bin width.
+   *
+   * @returns {number} The calculated functional capabilities, normalized by the coefficient.
    */
   public calculateFunctionalCapabilities(): number {
     const modeBin = this.getModalClass();
@@ -276,14 +305,13 @@ export class ReactionTimeStats {
 
     const z1 = (x2 - m) / (sigma);
     const z2 = (x1 - m) / (sigma);
-    const phiDiff = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
 
-    const denominator = 4 * Math.sqrt(2) * Math.log(2) * sigma * m;
+    const modalClassProbability = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
 
     const modalDiff = x2 - x1;
-    const coeff = this.LOSKUTOVA_COEFFICIENT / modalDiff;
+    const coefficient = this.LOSKUTOVA_COEFFICIENT / modalDiff;
 
-    return Math.abs(Math.log(phiDiff / denominator) / coeff);
+    return Math.abs(Math.log(modalClassProbability / (2 * Math.sqrt(2 * Math.log(2) * sigma * m))) / coefficient);
   }
 
 
