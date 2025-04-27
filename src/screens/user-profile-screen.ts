@@ -8,12 +8,13 @@ import {TestMode} from "../config/domain.ts";
 import Router from "../routing/router.ts";
 
 export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]) {
+  const sortedTests = tests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   appContainer.innerHTML = `
     <div id="user-profile-screen" class="flex flex-col flex-grow bg-base-200 text-base-content p-4">
       <div class="flex-1 space-y-4">
           ${personalDataCardHtml(user)}
           <!-- Test Cards -->
-          ${tests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((test, index, array) => testCardHTML(array.length - index, test)).join("")}
+          ${sortedTests.map((test, index, array) => testCardHTML(array.length - index, test)).join("")}
       </div>
     </div>
   `;
@@ -22,7 +23,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
   setupFooter(appContainer, userProfileFooterHTML(), [
     {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/settings")},
   ]);
-  renderHistograms(tests);
+  renderHistograms(sortedTests);
   updateLanguageUI();
 }
 
