@@ -14,7 +14,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
       <div class="flex-1 space-y-4">
           ${personalDataCardHtml(user)}
           <!-- Test Cards -->
-          ${sortedTests.map((test, index, array) => testCardHTML(array.length - index, test)).join("")}
+          ${sortedTests.map((test, index) => testCardHTML(index, test)).join("")}
       </div>
     </div>
   `;
@@ -240,7 +240,7 @@ function getTestTypeLocalizationKey(testType: string): string {
 function renderHistograms(tests: TestRecord[]) {
   tests.forEach((test, index) => {
     const stats = new ReactionTimeStats(test.reactionTimes, test.testSettings.exposureTime);
-    const canvasId = `histogram-${index + 1}`;
+    const canvasId = `histogram-${index}`;
 
     stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
   });
