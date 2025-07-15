@@ -6,55 +6,7 @@ import {User, TestRecord} from "../db/db.ts";
 import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {TestMode} from "../config/domain.ts";
 import Router from "../routing/router.ts";
-import {getAllUsers, getTestsForUser} from "../db/operations.ts";
 
-/**
- * Exports all users and their test data as a JSON file
- */
-async function exportAllUsersData() {
-  try {
-    // Get all users
-    const users = await getAllUsers();
-
-    // Create an array to store all user data with their tests
-    const exportData = [];
-
-    // For each user, get their tests and add to the export data
-    for (const user of users) {
-      const tests = await getTestsForUser(user.firstName, user.lastName);
-      exportData.push({
-        user,
-        tests
-      });
-    }
-
-    // Convert the data to a JSON string
-    const jsonData = JSON.stringify(exportData, null, 2);
-
-    // Create a blob from the JSON string
-    const blob = new Blob([jsonData], { type: 'application/json' });
-
-    // Create a URL for the blob
-    const url = URL.createObjectURL(blob);
-
-    // Create a temporary link element
-    const link = document.createElement('a');
-    link.href = url;
-    const date = new Date().toISOString().split('T')[0];
-    link.download = `users_data_${date}.json`;
-
-    // Append the link to the document, click it, and remove it
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Release the URL object
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Error exporting users data:', error);
-    alert('Error exporting users data. Please try again.');
-  }
-}
 
 export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]) {
   const sortedTests = tests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -70,7 +22,6 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
   setupHeader(appContainer);
 
   setupFooter(appContainer, userProfileFooterHTML(), [
-    {buttonFn: () => document.getElementById("export-data-btn")! as HTMLButtonElement, callback: exportAllUsersData},
     {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/settings")},
   ]);
   renderHistograms(sortedTests);
@@ -256,7 +207,6 @@ function userProfileFooterHTML(): string {
   return `
     <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
       <div class="flex-1"></div>
-      <button id="export-data-btn" class="btn btn-outline btn-primary mr-2" data-localize="exportData"></button>
       <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="backToMainPage"></button>
     </footer>
   `;

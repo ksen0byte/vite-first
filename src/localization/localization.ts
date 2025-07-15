@@ -94,6 +94,7 @@ const localization: LocalizationKeys = {
   next: {en: "Next", uk: "Далі"},
   saveAndStart: {en: "Save & Start", uk: "Зберегти та Розпочати Тест"},
   exportData: {en: "Export Data", uk: "Експорт Даних"},
+  exportAllData: {en: "Export All Users Data", uk: "Експорт Даних Всіх Користувачів"},
 
   // Test Type
   selectTestType: {en: "Select Test Type", uk: "Оберіть тип тестування"},

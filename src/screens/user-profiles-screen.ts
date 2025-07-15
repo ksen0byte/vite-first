@@ -4,6 +4,82 @@ import {localize, updateLanguageUI} from '../localization/localization';
 import {db, User} from "../db/db";
 import {getAllUsers, getTestsForUser} from "../db/operations";
 import Router from "../routing/router.ts";
+import {exportDataAsJson} from "../util/export-utils";
+
+/**
+ * Exports all users and their test data as a JSON file
+ */
+async function exportAllUsersData() {
+  try {
+    // Get all users
+    const users = await getAllUsers();
+
+    // Create an array to store all user data with their tests
+    const exportData = [];
+
+    // For each user, get their tests and add to the export data
+    for (const user of users) {
+      const tests = await getTestsForUser(user.firstName, user.lastName);
+      exportData.push({
+        user,
+        tests
+      });
+    }
+
+    // Generate filename with current date and time
+    const now = new Date();
+    const date = now.toISOString().split('T')[0];
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const timestamp = `${date}_${hours}-${minutes}`;
+    const filename = `users_data_${timestamp}.json`;
+
+    // Export the data using the utility function
+    await exportDataAsJson(exportData, filename);
+  } catch (error) {
+    console.error('Error exporting users data:', error);
+    alert('Error exporting users data. Please try again.');
+  }
+}
+
+/**
+ * Exports a specific user's data as a JSON file
+ */
+async function exportUserData(firstName: string, lastName: string) {
+  try {
+    // Get the user
+    const users = await getAllUsers();
+    const user = users.find(u => u.firstName === firstName && u.lastName === lastName);
+
+    if (!user) {
+      console.error("User not found!");
+      return;
+    }
+
+    // Get the user's tests
+    const tests = await getTestsForUser(firstName, lastName);
+
+    // Create the export data
+    const exportData = {
+      user,
+      tests
+    };
+
+    // Generate filename with current date and time
+    const now = new Date();
+    const date = now.toISOString().split('T')[0];
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const timestamp = `${date}_${hours}-${minutes}`;
+    const filename = `user_data_${firstName}_${lastName}_${timestamp}.json`;
+
+    // Export the data using the utility function
+    await exportDataAsJson(exportData, filename);
+  } catch (error) {
+    console.error('Error exporting user data:', error);
+    alert('Error exporting user data. Please try again.');
+  }
+}
 
 export class UsersScreen {
   private readonly appContainer: HTMLElement;
@@ -31,11 +107,15 @@ export class UsersScreen {
       // Set up the header
       setupHeader(this.appContainer);
 
-      // Setup the footer with `main-page-btn`
+      // Setup the footer with `main-page-btn` and `export-data-btn`
       setupFooter(
         this.appContainer,
         this.usersScreenFooterHTML(),
         [
+          {
+            buttonFn: () => document.getElementById("export-data-btn")! as HTMLButtonElement,
+            callback: exportAllUsersData
+          },
           {
             buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement,
             callback: () => this.navigateToMainPage()
@@ -85,6 +165,10 @@ export class UsersScreen {
           <div class="flex justify-between">
             <h2 class="card-title">${firstName} ${lastName}</h2>
             <div class="flex justify-between gap-x-2">
+                <button class="btn btn-sm btn-outline btn-primary export-user-btn" data-first-name="${firstName}" data-last-name="${lastName}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /> </svg>
+                  <span data-localize="exportData"></span>
+                </button>
                 <button class="btn btn-sm btn-outline btn-info view-profile-btn" data-first-name="${firstName}" data-last-name="${lastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /> </svg>
                   <span data-localize="viewProfileButton"></span>
@@ -132,6 +216,16 @@ export class UsersScreen {
         const lastName = viewButton.getAttribute('data-last-name')!;
         await this.viewUserProfile(firstName, lastName);
         return;
+      }
+
+      // Delegate the event to the export-user-btn
+      const exportButton = target.closest<HTMLButtonElement>('.export-user-btn');
+      if (exportButton) {
+        event.stopImmediatePropagation(); // Prevent duplicate or unintended event handlers
+
+        const firstName = exportButton.getAttribute('data-first-name')!;
+        const lastName = exportButton.getAttribute('data-last-name')!;
+        await exportUserData(firstName, lastName);
       }
     });
   }
@@ -187,6 +281,7 @@ export class UsersScreen {
     return `
       <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
         <div class="flex-1"></div>
+        <button id="export-data-btn" class="btn btn-outline btn-primary mr-2" data-localize="exportAllData"></button>
         <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="backToMainPage"></button>
       </footer>
     `;
