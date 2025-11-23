@@ -95,6 +95,9 @@ const localization: LocalizationKeys = {
   saveAndStart: {en: "Save & Start", uk: "Зберегти та Розпочати Тест"},
   exportData: {en: "Export Data", uk: "Експорт Даних"},
   exportAllData: {en: "Export All Users Data", uk: "Експорт Даних Всіх Користувачів"},
+  importAllData: {en: "Import Data", uk: "Імпорт Даних"},
+  importSuccess: {en: "Import completed: %u users, %t tests.", uk: "Імпорт завершено: %u користувачів, %t тестів."},
+  importError: {en: "Error importing data. Please check the file and try again.", uk: "Помилка імпорту даних. Перевірте файл і спробуйте ще раз."},
 
   // Test Type
   selectTestType: {en: "Select Test Type", uk: "Оберіть тип тестування"},

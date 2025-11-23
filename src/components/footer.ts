@@ -1,6 +1,6 @@
 export function setupFooter(appContainer: HTMLElement, footerHtml: string, buttonCallbackMap: {
   buttonFn: () => HTMLButtonElement,
-  callback: () => void
+  callback: () => void | Promise<void>
 }[]): void {
   // remove old one
   const footerElement = document.getElementById("footer");

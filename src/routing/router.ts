@@ -23,14 +23,15 @@ class Router {
   /**
    * Executes the rendering logic for the given path and performs cleanup.
    */
-  public static navigate(path: string, state: any = null) {
+  public static navigate<TState = unknown>(path: string, state?: TState) {
     const fullPath = this.getFullPath(path);
 
     if (this.routes[fullPath]) {
       this.cleanup(); // Clean up the container and remove event listeners
 
       // Push new state into history
-      history.pushState({ ...state, path: fullPath }, '', fullPath);
+      const nextState = (state ? { ...state } : {}) as TState extends object ? TState : Record<string, never>;
+      history.pushState({ ...nextState, path: fullPath }, '', fullPath);
 
       // Render the corresponding screen
       this.routes[fullPath]();

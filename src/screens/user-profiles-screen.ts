@@ -1,21 +1,24 @@
 import {setupHeader} from '../components/header';
 import {setupFooter} from '../components/footer';
 import {localize, updateLanguageUI} from '../localization/localization';
-import {db, User} from "../db/db";
-import {getAllUsers, getTestsForUser} from "../db/operations";
+import {db, User, TestRecord} from "../db/db";
+import {getAllUsers, getTestsForUser, upsertUser} from "../db/operations";
 import Router from "../routing/router.ts";
-import {exportDataAsJson} from "../util/export-utils";
+import {exportDataAsJson, readJsonFile} from "../util/export-utils";
+import {TestSettings} from "../config/domain.ts";
 
 /**
  * Exports all users and their test data as a JSON file
  */
-async function exportAllUsersData() {
+type ExportUserBundle = { user: User; tests: TestRecord[] };
+
+async function exportAllUsersData(): Promise<void> {
   try {
     // Get all users
     const users = await getAllUsers();
 
     // Create an array to store all user data with their tests
-    const exportData = [];
+    const exportData: ExportUserBundle[] = [];
 
     // For each user, get their tests and add to the export data
     for (const user of users) {
@@ -45,7 +48,7 @@ async function exportAllUsersData() {
 /**
  * Exports a specific user's data as a JSON file
  */
-async function exportUserData(firstName: string, lastName: string) {
+async function exportUserData(firstName: string, lastName: string): Promise<void> {
   try {
     // Get the user
     const users = await getAllUsers();
@@ -60,7 +63,7 @@ async function exportUserData(firstName: string, lastName: string) {
     const tests = await getTestsForUser(firstName, lastName);
 
     // Create the export data
-    const exportData = {
+    const exportData: ExportUserBundle = {
       user,
       tests
     };
@@ -115,6 +118,10 @@ export class UsersScreen {
           {
             buttonFn: () => document.getElementById("export-data-btn")! as HTMLButtonElement,
             callback: exportAllUsersData
+          },
+          {
+            buttonFn: () => document.getElementById("import-data-btn")! as HTMLButtonElement,
+            callback: () => this.importAllUsersData()
           },
           {
             buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement,
@@ -281,6 +288,7 @@ export class UsersScreen {
     return `
       <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
         <div class="flex-1"></div>
+        <button id="import-data-btn" class="btn btn-outline btn-secondary mr-2" data-localize="importAllData"></button>
         <button id="export-data-btn" class="btn btn-outline btn-primary mr-2" data-localize="exportAllData"></button>
         <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="backToMainPage"></button>
       </footer>
@@ -308,5 +316,118 @@ export class UsersScreen {
    */
   private navigateToMainPage() {
     Router.navigate('/settings');
+  }
+
+  /**
+   * Opens a file picker, reads exported JSON and imports users and tests.
+   */
+  private async importAllUsersData(): Promise<void> {
+    // Create a hidden file input for JSON files
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        type ImportedUser = {
+          firstName: string;
+          lastName: string;
+          gender?: User['gender'];
+          age?: number | null;
+        };
+        type ImportedTestRecord = {
+          testSettings: TestSettings;
+          reactionTimes: number[];
+          date?: string;
+        };
+        type ImportedBundle = { user: ImportedUser; tests: ImportedTestRecord[] };
+
+        const raw = await readJsonFile<ImportedBundle | ImportedBundle[]>(file);
+        const items: ImportedBundle[] = Array.isArray(raw) ? raw : [raw];
+
+        let importedUsers = 0;
+        let importedTests = 0;
+
+        await db.transaction('rw', db.users, db.tests, async () => {
+          for (const item of items) {
+            if (!item || typeof item !== 'object' || !item.user) continue;
+
+            const normalizedUser: User = {
+              firstName: item.user.firstName,
+              lastName: item.user.lastName,
+              gender: (item.user.gender ?? null),
+              age: item.user.age ?? null
+            };
+
+            // Upsert user, but count only if it didn't exist before
+            const existed = await db.users.get([normalizedUser.firstName, normalizedUser.lastName]);
+            await upsertUser(normalizedUser);
+            if (!existed) {
+              importedUsers += 1;
+            }
+
+            const userKey = `${normalizedUser.firstName}|${normalizedUser.lastName}`;
+            const tests: ImportedTestRecord[] = Array.isArray(item.tests) ? item.tests : [];
+
+            // Normalize tests; ignore incoming id to avoid collisions
+            const normalizedTests: Omit<TestRecord, 'id'>[] = tests
+              .filter((t): t is ImportedTestRecord => !!t && typeof t === 'object' && Array.isArray(t.reactionTimes))
+              .map((t) => ({
+                userKey,
+                testSettings: t.testSettings,
+                reactionTimes: t.reactionTimes,
+                date: (t.date ?? new Date().toISOString())
+              }));
+
+            if (normalizedTests.length > 0) {
+              // Deduplicate against existing tests for this userKey
+              const existing = await db.tests.where('userKey').equals(userKey).toArray();
+
+              const makeSig = (r: Omit<TestRecord, 'id'> | TestRecord): string =>
+                JSON.stringify({
+                  userKey: r.userKey,
+                  date: r.date,
+                  testSettings: r.testSettings,
+                  reactionTimes: r.reactionTimes
+                });
+
+              const existingSignatures = new Set<string>(existing.map(makeSig));
+
+              // Filter out tests that already exist (by signature)
+              const toAdd: Omit<TestRecord, 'id'>[] = [];
+              for (const t of normalizedTests) {
+                const sig = makeSig(t);
+                if (!existingSignatures.has(sig)) {
+                  existingSignatures.add(sig); // prevent duplicates within the same import too
+                  toAdd.push(t);
+                }
+              }
+
+              if (toAdd.length > 0) {
+                await db.tests.bulkAdd(toAdd);
+                importedTests += toAdd.length;
+              }
+            }
+          }
+        });
+
+        // Refresh UI
+        this.users = await getAllUsers();
+        this.renderUsers();
+        updateLanguageUI();
+
+        alert(localize('importSuccess')
+          .replace('%u', String(importedUsers))
+          .replace('%t', String(importedTests)));
+      } catch (e) {
+        console.error('Error importing data:', e);
+        alert(localize('importError'));
+      }
+    };
+
+    // Trigger file picker
+    input.click();
   }
 }
