@@ -91,6 +91,12 @@ export function setupResultsScreen(
           <div class="stat-value text-lg">${reactionTimeStats.cvVal.toFixed(2)}</div>
         </div>
 
+        <!-- Discretized Shannon Entropy -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statEntropy">Shannon Entropy</div>
+          <div class="stat-value text-lg">${reactionTimeStats.entropyVal.toFixed(3)} <span data-localize="bits"></span></div>
+        </div>
+
       </div>
 
       <!-- Second stats block (percentiles) -->

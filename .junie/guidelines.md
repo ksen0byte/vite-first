@@ -50,6 +50,14 @@ npm test
 
 ## Additional Development Information
 
+### Development Principles
+- Functional approach — prefer pure functions, avoid side effects, and compose functions where possible.
+- Immutability — do not mutate inputs in place; use copies and spread operators instead of in-place mutations.
+- Strong typing — leverage TypeScript’s strict typing (generics, exact types) and avoid `any`.
+
+Additionally:
+- Separate computation and presentation: keep complex calculations (e.g., statistics/metrics) in modules like `src/stats/`, and UI rendering in screens/components.
+
 ### Project Structure
 - `src/components/` - Reusable UI components
 - `src/config/` - Application configuration and domain types

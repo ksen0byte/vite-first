@@ -32,6 +32,9 @@ export class ReactionTimeStats {
 
   private LOSKUTOVA_COEFFICIENT = 20;
 
+  // Discretized Shannon Entropy (in bits)
+  public readonly entropyVal: number;
+
   /**
    * Create a new instance with the given array of reaction times.
    */
@@ -59,6 +62,9 @@ export class ReactionTimeStats {
     this.p75Val = quantile(cleanedData, 0.75);
     this.p90Val = quantile(cleanedData, 0.90);
     this.p97Val = quantile(cleanedData, 0.97);
+
+    // Calculate discretized Shannon entropy based on the histogram bins
+    this.entropyVal = this.calculateDiscretizedShannonEntropy();
   }
 
 
@@ -215,6 +221,22 @@ export class ReactionTimeStats {
       throw new Error("Dataset cannot be empty.");
     }
     return Math.ceil(Math.log2(n) + 1);
+  }
+
+  /**
+   * Calculates discretized Shannon entropy using the histogram (frequency distribution) of reaction times.
+   * Entropy H = - Σ p_i log2 p_i, where p_i are probabilities of bins.
+   * Returns 0 for empty datasets or when no variability exists.
+   */
+  public calculateDiscretizedShannonEntropy(): number {
+    const total = this.count;
+    if (!total || !this.bins.length) return 0;
+
+    return this.bins
+      .filter(bin => bin.frequency > 0)
+      .map(bin => bin.frequency / total)
+      .map(p => -p * Math.log2(p))
+      .reduce((acc, val) => acc + val, 0);
   }
 
   /**
@@ -431,6 +453,7 @@ export class ReactionTimeStats {
       `${localize("modeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
       `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
       `${localize("cvLabel")}: ${this.cvVal.toFixed(2)}`,
+      `${localize("entropyLabel")}: ${this.entropyVal.toFixed(3)} ${localize("bits")}`,
       `${localize("statFunctionalLevel")}: ${this.calculateFunctionalLevel().toFixed(2)}`,
       `${localize("statReactionStability")}: ${this.calculateReactionStability().toFixed(2)}`,
       `${localize("statFunctionalCapabilities")}: ${this.calculateFunctionalCapabilities().toFixed(2)}`,

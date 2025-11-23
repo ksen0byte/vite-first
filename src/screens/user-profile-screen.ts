@@ -133,6 +133,10 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td>${stats.cvVal.toFixed(2)}</td>
                 </tr>
                 <tr class="text-center">
+                  <td><strong data-localize="entropyLabel"></strong></td>
+                  <td>${stats.entropyVal.toFixed(3)} <span data-localize="bits"></span></td>
+                </tr>
+                <tr class="text-center">
                   <td><strong data-localize="p3Label"></strong></td>
                   <td>${stats.p3Val.toFixed(2)}<span data-localize="ms"></span></td>
                 </tr>
