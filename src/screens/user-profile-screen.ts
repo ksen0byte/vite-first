@@ -22,7 +22,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
   setupHeader(appContainer);
 
   setupFooter(appContainer, userProfileFooterHTML(), [
-    {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/settings")},
+    {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/")},
   ]);
   renderHistograms(sortedTests);
   updateLanguageUI();

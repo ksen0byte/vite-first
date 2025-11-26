@@ -34,11 +34,6 @@ function headerHTML() {
               <span class="label-text" data-localize="languageEN">EN</span>
             </label>
             
-            <!-- All Tests Button -->
-            <button class="btn btn-ghost flex " id="all-tests-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /> </svg>
-                <span data-localize="savedTestsBtnLabel"></span>
-            </button>
         </div>
     </header>`;
 }
@@ -86,12 +81,11 @@ function setupHeaderActions() {
   const logo = document.getElementById('logo')!;
   const themeToggleBtn = document.getElementById('theme-toggle')!;
   const languageToggleBtn = document.getElementById('language-toggle')!;
-  const allTestsBtn = document.getElementById('all-tests-btn')!;
 
   // Initialize theme on page load
   initializeTheme();
 
-  logo.addEventListener('click', () => Router.navigate("/settings"));
+  logo.addEventListener('click', () => Router.navigate("/"));
 
   // Setup event listeners for toggle buttons
   themeToggleBtn?.addEventListener('click', () => toggleDaisyUITheme());
@@ -99,10 +93,6 @@ function setupHeaderActions() {
   languageToggleBtn?.addEventListener('change', () => {
     toggleLanguage();
     updateThemeToggleButton(); // Ensure theme localization updates
-  });
-
-  allTestsBtn.addEventListener('click', async () => {
-    Router.navigate("/users");
   });
 
   // Ensure UI updates on load

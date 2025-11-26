@@ -1,5 +1,6 @@
 import {settings} from "../config/settings.ts";
 import {LanguageManager} from "./LanguageManager.ts";
+import katex from 'katex';
 
 export function updateLanguageUI(): void {
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
@@ -10,6 +11,23 @@ export function updateLanguageUI(): void {
       element.setAttribute("placeholder", textContent);
     } else {
       element.textContent = textContent;
+    }
+  });
+
+  const mathElements = document.querySelectorAll<HTMLElement>("[data-localize-math]");
+  mathElements.forEach((element) => {
+    const key = element.dataset.localizeMath!;
+    const latexString = localize(key);
+
+    try {
+      katex.render(latexString, element, {
+        strict: "ignore",
+        throwOnError: false,
+        displayMode: false // або true, якщо треба блоком
+      });
+    } catch (e) {
+      console.error(e);
+      element.textContent = latexString; // Fallback
     }
   });
 }
@@ -63,6 +81,22 @@ const localization: LocalizationKeys = {
   female: {en: "Female", uk: "Жіноча"},
   savedTestsBtnLabel: {en: "Saved Tests", uk: "Збережені Тести"},
 
+  // dashboard
+  dashboardHeaderTitle: {en: "Tools and Services", uk: "Інструменти та сервіси"},
+  dashboardReactionDesc: {
+    en: "Classic simple visual-motor reaction test to measure CNS functional state.",
+    uk: "Класичний тест простої зорово-моторної реакції для оцінки функціонального стану ЦНС."
+  },
+  dashboardBioAgeDesc: {
+    en: "Calculate Biological Age using a known mean reaction time.",
+    uk: "Розрахуйте біологічний вік за відомим середнім часом реакції."
+  },
+  dashboardProfilesDesc: {
+    en: "Manage user profiles and view saved tests.",
+    uk: "Керуйте профілями користувачів та переглядайте збережені тести."
+  },
+  open: {en: "Open", uk: "Відкрити"},
+
   // units
   mm: {en: "mm", uk: "мм"},
   ms: {en: "ms", uk: "мс"},
@@ -108,6 +142,68 @@ const localization: LocalizationKeys = {
   testTypeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
   testTypeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
 
+  // Biological Age calculator
+  screenBiologicalAgeCalculatorTitle: {en: "Biological Age Calculator", uk: "Калькулятор біологічного віку"},
+  labelBiologicalAgeMeanSensorimotorReactionMilliseconds: {en: "Mean Reaction Time (ms)", uk: "Середній час реакції (мс)"},
+  buttonBiologicalAgeCalculate: {en: "Calculate", uk: "Розрахувати"},
+  labelBiologicalAgeInterpretationStatus: {en: "Status", uk: "Статус"},
+  // Use full terminology, with abbreviation in parentheses for clarity
+  biologicalAgeInterpretationAccelerated: {en: "Biological age is younger than chronological", uk: "Біологічний вік менший за хронологічний"},
+  biologicalAgeInterpretationNormal: {en: "Biological and chronological ages correspond", uk: "Біологічний та хронологічний вік відповідають"},
+  biologicalAgeInterpretationDelayed: {en: "Biological age is older than chronological", uk: "Біологічний вік більший за хронологічний"},
+  errorBiologicalAgeInvalidInput: {en: "Invalid input or age out of range (7–16).", uk: "Некоректні дані або вік поза діапазоном (7–16)."},
+
+  // Biological Age: Normative table and formulas
+  headingBiologicalAgeNormativeSensorimotorValues: {en: "Normative values (ms)", uk: "Належні значення (мс)"},
+  columnNormativeSensorimotorAgeYears: {en: "Age (years)", uk: "Вік (роки)"},
+  columnNormativeSensorimotorBoysMs: {en: "Boys (ms)", uk: "Хлопчики (мс)"},
+  columnNormativeSensorimotorGirlsMs: {en: "Girls (ms)", uk: "Дівчата (мс)"},
+  // --- FORMULAS (LaTeX only) ---
+  formulaTempoOfBiologicalDevelopmentText: {
+    en: "\\text{TBD} = \\frac{\\text{SR}_{act}}{\\text{SR}_{norm}}",
+    uk: "\\text{ТБР} = \\frac{\\text{СР}_{\\text{ф}}}{\\text{СР}_{\\text{т}}}"
+  },
+  formulaBiologicalAgeText: {
+    en: "\\text{BA} = \\frac{\\text{CA}}{\\text{TBD}}",
+    uk: "\\text{БВ} = \\frac{\\text{ПВ}}{\\text{ТБР}}"
+  },
+
+  // --- HEADERS ---
+  headingBiologicalAgeFormulasUsed: { en: "Formulas Used", uk: "Використані формули" },
+  headingBiologicalAgeTempoInterpretation: { en: "Interpretation of TBD", uk: "Інтерпретація ТБР" },
+
+  // --- VARIABLE DESCRIPTIONS ---
+  // Actual SR
+  variableActualSensorimotorReaction: { en: "\\text{SR}_{act}", uk: "СР_ф" },
+  descriptionActualSensorimotorReaction: { en: "Actual Sensorimotor Reaction", uk: "Фактичне значення сенсомоторного реагування" },
+
+  // Normative SR
+  variableNormativeSensorimotorReaction: { en: "\\text{SR}_{norm}", uk: "СР_т" },
+  descriptionNormativeSensorimotorReaction: { en: "Normative Sensorimotor Reaction", uk: "Табличне належне значення сенсомоторного реагування" },
+
+  // Biological age
+  variableBiologicalAge: {en: "BA", uk: "БВ"},
+  descriptionBiologicalAge: {en: "Biological Age", uk: "Біологічний вік"},
+
+  // Tempo of Biological Development
+  variableTempoOfBiologicalDevelopment: {en: "TBD", uk: "ТБР"},
+  descriptionTempoOfBiologicalDevelopment: {en: "Tempo of Biological Development", uk: "Темп біологічного розвитку (ТБР)"},
+
+  // Child passport age
+  variableChildPassportAge: {en: "CA", uk: "ПВ"},
+  descriptionChildPassportAge: {en: "Chronological Age", uk: "Паспортний вік"},
+
+  // --- INTERPRETATION CONDITIONS (Mathematical conditions) ---
+  conditionBiologicalAgeAcceleratedDevelopment: { en: "TBD < 0.95", uk: "ТБР < 0.95" },
+  conditionBiologicalAgeNormalDevelopment: { en: "0.95 ≤ TBD ≤ 1.10", uk: "0.95 ≤ ТБР ≤ 1.10" },
+  conditionBiologicalAgeDelayedDevelopment: { en: "TBD > 1.10", uk: "ТБР > 1.10" },
+
+  // --- INTERPRETATION DESCRIPTIONS (Human readable text) ---
+  descriptionBiologicalAgeAcceleratedDevelopment: { en: "Accelerated development", uk: "Розвиток прискорений" },
+  descriptionBiologicalAgeNormalDevelopment: { en: "Normal development", uk: "Розвиток у нормі" },
+  descriptionBiologicalAgeDelayedDevelopment: { en: "Delayed development", uk: "Розвиток уповільнений" },
+
+
   // begin test screen
   appContextSummaryFirstName: {en: "First Name", uk: "Ім’я"},
   appContextSummaryLastName: {en: "Last Name", uk: "Прізвище"},
@@ -141,66 +237,69 @@ const localization: LocalizationKeys = {
   },
 
   // stats
-  noReactionTimes: { en: "No Reaction Times", uk: "Немає результатів реакції" },
-  testResultsTitle: { en: "Test Results", uk: "Результати тесту" },
-  frequencyDistributionTitle: { en: "Frequency Distribution", uk: "Частотний Розподіл" },
-  dontSaveAndQuit: { en: "Don't Save and Quite", uk: "Не зберігати" },
-  saveResults: { en: "Save", uk: "Зберегти" },
+  noReactionTimes: {en: "No Reaction Times", uk: "Немає результатів реакції"},
+  testResultsTitle: {en: "Test Results", uk: "Результати тесту"},
+  frequencyDistributionTitle: {en: "Frequency Distribution", uk: "Частотний Розподіл"},
+  dontSaveAndQuit: {en: "Don't Save and Quite", uk: "Не зберігати"},
+  saveResults: {en: "Save", uk: "Зберегти"},
 
-  statFunctionalLevel: { en: "SFL", uk: "ФРС" },
-  statReactionStability: { en: "RS", uk: "СР" },
-  statFunctionalCapabilities: { en: "FCL", uk: "РФМ" },
-  statCount: { en: "Count 🧮", uk: "Кількість 🧮" },
-  statMean: { en: "μ Mean", uk: "μ Мат. сподівання" },
-  statMode: { en: "Mo Mode", uk: "Mo Мода" },
-  statVariance: { en: "σ² Variance", uk: "σ² Дисперсія" },
-  statStdDev: { en: "σ Std Dev", uk: "σ Сер. Квадр. Відхилення" },
-  statCV: { en: "Coefficient of Variation", uk: "Коефіцієнт Варіації" },
-  statEntropy: { en: "Shannon Entropy", uk: "Ентропія Шеннона" },
-  bits: { en: "bits", uk: "біти" },
-  statRange: { en: "↕ Range", uk: "↕ Розмах" },
-  statP3: { en: "↗ p3", uk: "↗ p3" },
-  statP10: { en: "↗ p10", uk: "↗ p10" },
-  statP25: { en: "↗ p25", uk: "↗ p25" },
-  statP50: { en: "↗ p50", uk: "↗ p50" },
-  statP75: { en: "↗ p75", uk: "↗ p75" },
-  statP90: { en: "↗ p90", uk: "↗ p90" },
-  statP97: { en: "↗ p97", uk: "↗ p97" },
+  statFunctionalLevel: {en: "SFL", uk: "ФРС"},
+  statReactionStability: {en: "RS", uk: "СР"},
+  statFunctionalCapabilities: {en: "FCL", uk: "РФМ"},
+  statCount: {en: "Count 🧮", uk: "Кількість 🧮"},
+  statMean: {en: "μ Mean", uk: "μ Мат. сподівання"},
+  statMode: {en: "Mo Mode", uk: "Mo Мода"},
+  statVariance: {en: "σ² Variance", uk: "σ² Дисперсія"},
+  statStdDev: {en: "σ Std Dev", uk: "σ Сер. Квадр. Відхилення"},
+  statCV: {en: "Coefficient of Variation", uk: "Коефіцієнт Варіації"},
+  statEntropy: {en: "Shannon Entropy", uk: "Ентропія Шеннона"},
+  bits: {en: "bits", uk: "біти"},
+  statRange: {en: "↕ Range", uk: "↕ Розмах"},
+  statP3: {en: "↗ p3", uk: "↗ p3"},
+  statP10: {en: "↗ p10", uk: "↗ p10"},
+  statP25: {en: "↗ p25", uk: "↗ p25"},
+  statP50: {en: "↗ p50", uk: "↗ p50"},
+  statP75: {en: "↗ p75", uk: "↗ p75"},
+  statP90: {en: "↗ p90", uk: "↗ p90"},
+  statP97: {en: "↗ p97", uk: "↗ p97"},
 
-  binMs: { en: "Bin (ms)", uk: "Інтервали (мс)" },
-  frequency: { en: "Frequency", uk: "Частота" },
+  binMs: {en: "Bin (ms)", uk: "Інтервали (мс)"},
+  frequency: {en: "Frequency", uk: "Частота"},
 
   // user-profile-screen
   // Test Card Localization
-  testCardTitle: { en: "Test", uk: "Тест" },
-  testSettingLabel: { en: "Test Setting", uk: "Налаштування Тесту" },
-  testSettingValueLabel: { en: "Value", uk: "Значення" },
-  statLabel: { en: "Stat", uk: "Статистика" },
-  valueLabel: { en: "Value", uk: "Значення" },
-  countLabel: { en: "Count", uk: "Кількість" },
-  meanLabel: { en: "Mean", uk: "Середнє" },
-  modeLabel: { en: "Mode", uk: "Мода" },
-  stdevLabel: { en: "Std. Deviation", uk: "Стандартне Відхилення" },
-  cvLabel: { en: "Coefficient of Variation", uk: "Коефіцієнт Варіації" },
-  entropyLabel: { en: "Shannon Entropy", uk: "Ентропія Шеннона" },
-  minLabel: { en: "Min", uk: "Мінімум" },
-  maxLabel: { en: "Max", uk: "Максимум" },
-  stimulusSizeLabel: { en: "Stimulus Size", uk: "Розмір Подразника" },
-  exposureDelayMinMaxLabel: { en: "Exposure Delay (min-max)", uk: "Затримка Експозиції (мін-макс)" },
-  testTypeLabel: { en: "Test Type", uk: "Тип Тесту" },
-  p3Label: { en: "P3", uk: "П3" },
-  p10Label: { en: "P10", uk: "П10" },
-  p25Label: { en: "P25", uk: "П25" },
-  medianLabel: { en: "P50 (Median)", uk: "П50 (Медіана)" },
-  p75Label: { en: "P75", uk: "П75" },
-  p90Label: { en: "P90", uk: "П90" },
-  p97Label: { en: "P97", uk: "П97" },
-  backToMainPage: { en: "Back to Main Page", uk: "На головну" },
+  testCardTitle: {en: "Test", uk: "Тест"},
+  testSettingLabel: {en: "Test Setting", uk: "Налаштування Тесту"},
+  testSettingValueLabel: {en: "Value", uk: "Значення"},
+  statLabel: {en: "Stat", uk: "Статистика"},
+  valueLabel: {en: "Value", uk: "Значення"},
+  countLabel: {en: "Count", uk: "Кількість"},
+  meanLabel: {en: "Mean", uk: "Середнє"},
+  modeLabel: {en: "Mode", uk: "Мода"},
+  stdevLabel: {en: "Std. Deviation", uk: "Стандартне Відхилення"},
+  cvLabel: {en: "Coefficient of Variation", uk: "Коефіцієнт Варіації"},
+  entropyLabel: {en: "Shannon Entropy", uk: "Ентропія Шеннона"},
+  minLabel: {en: "Min", uk: "Мінімум"},
+  maxLabel: {en: "Max", uk: "Максимум"},
+  stimulusSizeLabel: {en: "Stimulus Size", uk: "Розмір Подразника"},
+  exposureDelayMinMaxLabel: {en: "Exposure Delay (min-max)", uk: "Затримка Експозиції (мін-макс)"},
+  testTypeLabel: {en: "Test Type", uk: "Тип Тесту"},
+  p3Label: {en: "P3", uk: "П3"},
+  p10Label: {en: "P10", uk: "П10"},
+  p25Label: {en: "P25", uk: "П25"},
+  medianLabel: {en: "P50 (Median)", uk: "П50 (Медіана)"},
+  p75Label: {en: "P75", uk: "П75"},
+  p90Label: {en: "P90", uk: "П90"},
+  p97Label: {en: "P97", uk: "П97"},
+  backToMainPage: {en: "Back to Main Page", uk: "На головну"},
 
   // user-profiles-screen
-  viewProfileButton: { en: "View Profile", uk: "Відкрити профіль" },
+  viewProfileButton: {en: "View Profile", uk: "Відкрити профіль"},
   deleteButton: {en: "Delete", uk: "Видалити"},
-  deleteConfirmation: {en: "Are you sure you want to delete user %s? This will also delete all associated test records.", uk: "Ви впевнені, що хочете видалити користувача %s? Це також видалить усі пов'язані записи тестів."},
+  deleteConfirmation: {
+    en: "Are you sure you want to delete user %s? This will also delete all associated test records.",
+    uk: "Ви впевнені, що хочете видалити користувача %s? Це також видалить усі пов'язані записи тестів."
+  },
   deleteError: {en: "An error occurred during user deletion. Please try again.", uk: "Сталася помилка під час видалення користувача. Спробуйте ще раз."}
 
 };
@@ -208,7 +307,8 @@ const localization: LocalizationKeys = {
 
 type LocalizationVars = { randomWords: { en: string[]; uk: string[] }; randomSyllables: { en: string[]; uk: string[] } }
 type LanguageKey = "uk" | "en"
-export function getLocalizedVar(key: keyof LocalizationVars): string[]{
+
+export function getLocalizedVar(key: keyof LocalizationVars): string[] {
   const currentLanguage = LanguageManager.getCurrentLanguage();
 
   const lang = currentLanguage as LanguageKey || settings.default.language as LanguageKey;

@@ -312,10 +312,10 @@ export class UsersScreen {
   }
 
   /**
-   * Navigates back to the main page (e.g. settings screen).
+   * Navigates back to the main page (e.g. dashboard screen).
    */
   private navigateToMainPage() {
-    Router.navigate('/settings');
+    Router.navigate('/');
   }
 
   /**

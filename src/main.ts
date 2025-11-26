@@ -1,3 +1,4 @@
+import 'katex/dist/katex.min.css';
 import {updateLanguageUI} from "./localization/localization.ts";
 import {setupSettingsScreen} from "./screens/settings-screen.ts";
 import {TestScreen} from "./screens/test-screen.ts";
@@ -7,14 +8,18 @@ import {setupResultsScreen} from "./screens/results-screen.ts";
 import {UsersScreen} from "./screens/user-profiles-screen.ts";
 import Router from "./routing/router.ts";
 import {setupProfileScreen} from "./screens/user-profile-screen.ts";
+import {setupDashboardScreen} from "./features/dashboard/dashboard-screen.ts";
+import {setupBioAgeCalculatorScreen} from "./features/biological-age/screens/bio-age-calculator-screen.ts";
 
 const appContainer = document.getElementById('app')! as HTMLElement;
 
 // Register routes
+Router.registerRoute('/', () => setupDashboardScreen(appContainer));
 Router.registerRoute('/settings', () => setupSettingsScreen(appContainer));
 Router.registerRoute('/testTypeSelection', () => setupTestTypeSelectionScreen(appContainer));
 Router.registerRoute('/beginTest', () => setupBeginTestScreen(appContainer));
 Router.registerRoute('/test', () => new TestScreen(appContainer).setupScreen());
+Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(appContainer));
 Router.registerRoute('/users', async () => {
   appContainer.innerHTML = '<p>Loading...</p>';
   try {
@@ -50,6 +55,6 @@ Router.registerRoute('/profile', () => {
 
 // Initialize router
 Router.initialize(appContainer);
-Router.navigate('/settings'); // Default route
+Router.navigate('/'); // Default route: Dashboard
 
 updateLanguageUI();

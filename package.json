@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
+    "@types/katex": "^0.16.7",
     "daisyui": "^5.0.0",
     "postcss-cli": "^11.0.0",
     "sass": "^1.83.1",
@@ -20,6 +21,7 @@
   "dependencies": {
     "chart.js": "^4.4.7",
     "dexie": "^4.0.11",
+    "katex": "^0.16.25",
     "nouislider": "^15.8.1",
     "postcss": "^8.4.49",
     "simple-statistics": "^7.8.7"
