@@ -4,7 +4,7 @@ import { updateLanguageUI } from "../../localization/localization.ts";
 
 export function setupDashboardScreen(appContainer: HTMLElement) {
   appContainer.innerHTML = `
-    <div class="min-h-screen bg-base-200 flex flex-col">
+    <div class="bg-base-200 flex flex-col">
       <div id="dashboard-content" class="container mx-auto p-4 flex-grow">
         <h1 class="text-3xl font-bold mb-6 text-center" data-localize="dashboardHeaderTitle">Tools and Services</h1>
         
