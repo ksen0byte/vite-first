@@ -123,7 +123,10 @@
    npm run build
    npm run preview
    ```
-
+4. **Згенерувати CSV-файл**
+   ```bash
+   npm run stats -- .\users_data_2026-01-30_17-30-data.json output.csv
+   ```
 ---
 
 ## 5. Висновок
