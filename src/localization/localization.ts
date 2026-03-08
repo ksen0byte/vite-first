@@ -263,6 +263,9 @@ const localization: LocalizationKeys = {
   statP90: {en: "↗ p90", uk: "↗ p90"},
   statP97: {en: "↗ p97", uk: "↗ p97"},
 
+  usePregeneratedDelay: {en: "Use pregenerated exposure delays", uk: "Використовувати заздалегідь визначені затримки експозиції"},
+  usePregeneratedStimuli: {en: "Use pregenerated stimulus sequence", uk: "Використовувати заздалегідь визначену послідовність стимулів"},
+
   binMs: {en: "Bin (ms)", uk: "Інтервали (мс)"},
   frequency: {en: "Frequency", uk: "Частота"},
 

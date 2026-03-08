@@ -1,6 +1,7 @@
 // src/domain/test-state.ts
 
 import { TestSettings } from "../config/domain";
+import { EXPOSITION_DELAY_SEQUENCE, getStimulusFromSequence } from "./stimulus-sequences";
 
 export type TestState =
   | IdleState
@@ -82,7 +83,10 @@ export const toFinished = (reactionTimes: Map<number, number>): FinishedState =>
 
 // Domain logic helpers
 
-export function getNextDelay(settings: TestSettings): number {
+export function getNextDelay(settings: TestSettings, stimulusIndex: number): number {
+  if (settings.usePregenerated.exposureDelay) {
+    return getStimulusFromSequence(EXPOSITION_DELAY_SEQUENCE, stimulusIndex);
+  }
   const [min, max] = settings.exposureDelay;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }

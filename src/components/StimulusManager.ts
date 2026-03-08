@@ -1,8 +1,17 @@
 import {logWithTime} from "../util/util.ts";
 import {AppContext} from "../config/domain.ts";
-import {getRandomShape} from "./Shapes.ts";
-import {getRandomWord} from "./Words.ts";
-import {getRandomSyllable} from "./Syllables.ts";
+import {getRandomShape, getShapeSvg} from "./Shapes.ts";
+import {getRandomWord, getWordHtml} from "./Words.ts";
+import {getRandomSyllable, getSyllableHtml} from "./Syllables.ts";
+import {
+  FIGURE_SEQUENCE,
+  WORD_SEQUENCE_EN,
+  WORD_SEQUENCE_UA,
+  SYLLABLE_SEQUENCE_EN,
+  SYLLABLE_SEQUENCE_UA,
+  getStimulusFromSequence
+} from "../domain/stimulus-sequences.ts";
+import {LanguageManager} from "../localization/LanguageManager.ts";
 
 /**
  * Handles creation, display, and clearing of stimuli.
@@ -19,23 +28,42 @@ export class StimulusManager {
   /**
    * Shows a stimulus based on the current test mode, type, and size.
    */
-  public showStimulus(stimulusNumber: number): void {
-    const {stimulusSize, testMode, testType} = this.appContext.testSettings;
+  public showStimulus(stimulusIndex: number): void {
+    const {stimulusSize, testMode, testType, usePregenerated} = this.appContext.testSettings;
     logWithTime(
-      `Showing stimulus #${stimulusNumber}, size: ${stimulusSize}, test mode: ${testMode}, test type: ${testType}`
+      `Showing stimulus #${stimulusIndex + 1}, size: ${stimulusSize}, test mode: ${testMode}, test type: ${testType}, pregenerated: ${usePregenerated.stimuli}`
     );
 
     switch (testMode) {
       case "shapes":
-        this.container.innerHTML = getRandomShape(stimulusSize, "red");
+        if (usePregenerated.stimuli) {
+          const shape = getStimulusFromSequence(FIGURE_SEQUENCE, stimulusIndex);
+          this.container.innerHTML = getShapeSvg(stimulusSize, "red", shape);
+        } else {
+          this.container.innerHTML = getRandomShape(stimulusSize, "red");
+        }
         break;
 
       case "words":
-        this.container.innerHTML = getRandomWord(stimulusSize, "red");
+        if (usePregenerated.stimuli) {
+          const currentLang = LanguageManager.getCurrentLanguage();
+          const wordSequence = currentLang === "en" ? WORD_SEQUENCE_EN : WORD_SEQUENCE_UA;
+          const word = getStimulusFromSequence(wordSequence, stimulusIndex);
+          this.container.innerHTML = getWordHtml(word, stimulusSize, "red");
+        } else {
+          this.container.innerHTML = getRandomWord(stimulusSize, "red");
+        }
         break;
 
       case "syllables":
-        this.container.innerHTML = getRandomSyllable(stimulusSize, "red");
+        if (usePregenerated.stimuli) {
+          const currentLang = LanguageManager.getCurrentLanguage();
+          const syllableSequence = currentLang === "en" ? SYLLABLE_SEQUENCE_EN : SYLLABLE_SEQUENCE_UA;
+          const syllable = getStimulusFromSequence(syllableSequence, stimulusIndex);
+          this.container.innerHTML = getSyllableHtml(syllable, stimulusSize, "red");
+        } else {
+          this.container.innerHTML = getRandomSyllable(stimulusSize, "red");
+        }
         break;
 
       default:
@@ -49,17 +77,5 @@ export class StimulusManager {
   public clearContainer(): void {
     logWithTime("Hiding stimulus");
     this.container.innerHTML = "";
-  }
-
-  /**
-   * Computes a random delay (rounded to the nearest 50ms) within the specified exposure delay range.
-   */
-  public getRandomExposureDelay(): number {
-    const [minDelay, maxDelay] = this.appContext.testSettings.exposureDelay;
-    const min = Math.ceil(minDelay / 50) * 50;
-    const max = Math.floor(maxDelay / 50) * 50;
-    const number = Math.floor(Math.random() * ((max - min) / 50 + 1)) * 50 + min;
-    logWithTime(`Delay: ${number}`);
-    return number;
   }
 }

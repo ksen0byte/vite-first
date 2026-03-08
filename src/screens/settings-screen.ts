@@ -93,7 +93,22 @@ function settingsScreenHTML(appContext: AppContext) {
                                         <label id="shapes-stimulus-count-label" class="text-sm font-medium"></label>
                                         <div id="shapes-stimulus-count-slider"></div>
                                     </div>
-    
+                                    <!-- Use Pregenerated Delays Checkbox -->
+                                    <div class="flex flex-col 2xl:flex-row w-full gap-4">
+                                        <div class="flex flex-col space-y-2 flex-1">
+                                            <label class="label cursor-pointer justify-start gap-3">
+                                                <input type="checkbox" id="shapes-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
+                                                <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
+                                            </label>
+                                        </div>
+                                    
+                                        <div class="flex flex-col space-y-2 flex-1">
+                                            <label class="label cursor-pointer justify-start gap-3">
+                                                <input type="checkbox" id="shapes-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
+                                                <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -145,6 +160,22 @@ function settingsScreenHTML(appContext: AppContext) {
                                         <label id="words-stimulus-count-label" class="text-sm font-medium"></label>
                                         <div id="words-stimulus-count-slider"></div>
                                     </div>
+                                    <!-- Use Pregenerated Delays Checkbox -->
+                                    <div class="flex flex-col 2xl:flex-row w-full gap-4">
+                                        <div class="flex flex-col space-y-2 flex-1">
+                                            <label class="label cursor-pointer justify-start gap-3">
+                                                <input type="checkbox" id="words-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
+                                                <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
+                                            </label>
+                                        </div>
+                                    
+                                        <div class="flex flex-col space-y-2 flex-1">
+                                            <label class="label cursor-pointer justify-start gap-3">
+                                                <input type="checkbox" id="words-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
+                                                <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -195,6 +226,22 @@ function settingsScreenHTML(appContext: AppContext) {
                                     <div class="flex flex-col space-y-2 w-full">
                                         <label id="syllables-stimulus-count-label" class="text-sm font-medium"></label>
                                         <div id="syllables-stimulus-count-slider"></div>
+                                    </div>
+                                    <!-- Use Pregenerated Delays Checkbox -->
+                                    <div class="flex flex-col 2xl:flex-row w-full gap-4">
+                                        <div class="flex flex-col space-y-2 flex-1">
+                                            <label class="label cursor-pointer justify-start gap-3">
+                                                <input type="checkbox" id="syllables-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
+                                                <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
+                                            </label>
+                                        </div>
+                                    
+                                        <div class="flex flex-col space-y-2 flex-1">
+                                            <label class="label cursor-pointer justify-start gap-3">
+                                                <input type="checkbox" id="syllables-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
+                                                <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -302,6 +349,29 @@ const setupSlider = (
 
 }
 
+const setupCheckboxSliderToggle = (checkboxId: string, sliderId: string) => {
+  const checkbox = document.getElementById(checkboxId) as HTMLInputElement;
+  const slider = document.getElementById(sliderId) as target;
+
+  const toggleSlider = (disabled: boolean) => {
+    if (disabled) {
+      slider.setAttribute("disabled", "true");
+      slider.classList.add("opacity-50", "cursor-not-allowed");
+    } else {
+      slider.removeAttribute("disabled");
+      slider.classList.remove("opacity-50", "cursor-not-allowed");
+    }
+  };
+
+  // Set initial state
+  toggleSlider(checkbox.checked);
+
+  // Add event listener
+  checkbox.addEventListener("change", () => {
+    toggleSlider(checkbox.checked);
+  });
+}
+
 const setupGeometricShapeSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
   function showRedCircle(size: number) {
     const shapePreview = document.getElementById("shape-preview") as HTMLElement;
@@ -314,6 +384,9 @@ const setupGeometricShapeSection = (stimulusSize?: StimulusSize, exposureTime?: 
   setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
   setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
   setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
+
+  // Setup checkbox handler for delay slider
+  setupCheckboxSliderToggle("shapes-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
 }
 
 const setupWordsSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
@@ -324,6 +397,9 @@ const setupWordsSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureT
   setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
   setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
   setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
+
+  // Setup checkbox handler for delay slider
+  setupCheckboxSliderToggle("words-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
 }
 
 const setupSyllablesSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
@@ -334,6 +410,9 @@ const setupSyllablesSection = (stimulusSize?: StimulusSize, exposureTime?: Expos
   setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
   setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
   setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
+
+  // Setup checkbox handler for delay slider
+  setupCheckboxSliderToggle("syllables-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
 }
 
 
@@ -363,6 +442,10 @@ const startButtonCallback: () => void = () => {
   const lastName = (document.getElementById(inputsConfig.surnameInputId) as HTMLInputElement).value;
   const gender = (document.getElementById(inputsConfig.genderSelectId) as HTMLSelectElement).value as Gender;
 
+  // Get checkbox states
+  const usePregeneratedDelay = (document.getElementById(`${testMode}-use-pregenerated-delay`) as HTMLInputElement).checked;
+  const usePregeneratedStimuli = (document.getElementById(`${testMode}-use-pregenerated-stimuli`) as HTMLInputElement).checked;
+
   // 3. Gather parameters and log them
   const appContext: AppContext = {
     personalData: {
@@ -378,6 +461,10 @@ const startButtonCallback: () => void = () => {
       exposureDelay: exposureDelay,
       stimulusCount: stimulusCount,
       testType: defaultAppContext.testSettings.testType || 'svmr',
+      usePregenerated: {
+        exposureDelay: usePregeneratedDelay,
+        stimuli: usePregeneratedStimuli,
+      }
     },
     debugMode: defaultAppContext.debugMode,
   };

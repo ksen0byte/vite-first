@@ -38,6 +38,10 @@ export interface TestSettings {
   readonly exposureDelay: ExposureDelay;
   readonly stimulusCount: StimulusCount;
   readonly testType: TestType;
+  readonly usePregenerated: {
+    readonly exposureDelay: boolean;
+    readonly stimuli: boolean;
+  };
 }
 
 export type DebugMode = "debug" | "prod";

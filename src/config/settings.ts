@@ -25,7 +25,11 @@ export const defaultAppContext: AppContext = {
     exposureTime: settings.default.exposureTime,
     exposureDelay: settings.default.exposureDelay,
     stimulusCount: settings.default.stimulusCount,
-    testType: 'svmr'
+    testType: 'svmr',
+    usePregenerated: {
+      exposureDelay: true,
+      stimuli: true,
+    }
   },
   debugMode: "prod",
 };

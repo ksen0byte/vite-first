@@ -227,7 +227,7 @@ export class TestScreen {
       return;
     }
 
-    const delay = getNextDelay(this.appContext.testSettings);
+    const delay = getNextDelay(this.appContext.testSettings, index);
     this.transitionTo(toDelayed(index, delay, Date.now()));
 
     scheduleTimeout(() => {
@@ -237,7 +237,7 @@ export class TestScreen {
 
   private showStimulus(index: number): void {
     this.stimuliCounter.set(index + 1);
-    this.stimulusManager.showStimulus(index + 1);
+    this.stimulusManager.showStimulus(index);
     this.timerManager.restart();
     this.transitionTo(toShowingStimulus(index, Date.now(), "red"));
 
@@ -315,7 +315,7 @@ export class TestScreen {
       this.handleRetry();
     });
 
-    // On "Finish", go to results screen
+    // On "Finish", go to the results screen
     endFinishBtn.addEventListener("click", () => {
       logWithTime("End screen Finish clicked. Showing results.");
       Router.navigate("/results", { reactionTimes: this.reactionTimes });

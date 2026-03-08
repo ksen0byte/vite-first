@@ -19,6 +19,6 @@ export function getRandomSyllable(size: number, color?: SyllableColor): string {
   return getSyllableHtml(randomSyllable, size, chosenColor);
 }
 
-function getSyllableHtml(syllable: string, size: number, color: SyllableColor): string {
+export function getSyllableHtml(syllable: string, size: number, color: SyllableColor): string {
   return `<span class="font-mono text-[${size}mm] leading-none text-${color}-600">${syllable}</span>`;
 }

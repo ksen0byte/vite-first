@@ -10,8 +10,8 @@ export function getRandomShape(size: number, color?: ShapeColor, shape?: ShapeTy
   return getShapeSvg(size, chosenColor, chosenShape);
 }
 
-/** Return an SVG string for a given shape, color, and size. */
-function getShapeSvg(size: number, color: ShapeColor, shape: ShapeType): string {
+/** Return an SVG string for a specific shape, color, and size. */
+export function getShapeSvg(size: number, color: ShapeColor, shape: ShapeType): string {
   switch (shape) {
     case "circle":
       return `<svg width="${size}mm" height="${size}mm" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="${color}" stroke-width="4"/></svg>`;

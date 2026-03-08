@@ -19,6 +19,6 @@ export function getRandomWord(size: number, color?: WordColor): string {
   return getWordHtml(randomWord, size, chosenColor);
 }
 
-function getWordHtml(word: string, size: number, color: WordColor): string {
+export function getWordHtml(word: string, size: number, color: WordColor): string {
   return `<span class="font-mono text-[${size}mm] leading-none text-${color}-600">${word}</span>`;
 }
