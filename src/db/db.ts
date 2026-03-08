@@ -6,8 +6,8 @@ import {TestSettings} from "../config/domain.ts";
 export interface User {
   firstName: string;
   lastName: string;
-  gender: 'male' | 'female' | null;
-  age: number | null;
+  gender: 'male' | 'female';
+  age: number;
 }
 
 // Each test record for a user

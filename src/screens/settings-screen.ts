@@ -27,7 +27,7 @@ function settingsScreenHTML(appContext: AppContext) {
                         </label>
                         <label class="flex flex-col form-control max-w-xs">
                             <input class="input validator input-bordered max-w-20" type="number" id="age-input" data-localize="ageLabel"
-                                   required min="10" max="99" placeholder="Age" inputmode="numeric" value="${appContext.personalData.age ?? ''}" />
+                                   required min="10" max="99" placeholder="Age" inputmode="numeric" value="${appContext.personalData.age === 0 ? '' : appContext.personalData.age}" />
                         </label>
                         <label class="flex flex-col form-control max-w-xs">
                             <select class="select validator select-bordered" id="gender-select" required>

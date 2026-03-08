@@ -16,8 +16,8 @@ export const defaultAppContext: AppContext = {
   personalData: {
     firstName: "",
     lastName: "",
-    gender: null,
-    age: null,
+    gender: 'male',
+    age: 0,
   },
   testSettings: {
     testMode: settings.default.testMode,

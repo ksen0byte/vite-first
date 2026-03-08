@@ -355,8 +355,8 @@ export class UsersScreen {
         type ImportedUser = {
           firstName: string;
           lastName: string;
-          gender?: User['gender'];
-          age?: number | null;
+          gender: User['gender'];
+          age: number;
         };
         type ImportedTestRecord = {
           testSettings: TestSettings;
@@ -384,8 +384,8 @@ export class UsersScreen {
             const normalizedUser: User = {
               firstName: item.user.firstName,
               lastName: item.user.lastName,
-              gender: (item.user.gender ?? null),
-              age: item.user.age ?? null
+              gender: item.user.gender,
+              age: item.user.age
             };
 
             // Upsert user, but count only if it didn't exist before
