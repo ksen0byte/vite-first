@@ -17,33 +17,33 @@ export interface SliderConfig {
 
 export type TestMode = "shapes" | "words" | "syllables";
 export type TestType = "svmr" | "sr1-3" | "sr2-3";
-export type Gender = 'male' | 'female' | null;
+export type Gender = 'male' | 'female';
 export type StimulusSize = number;
 export type ExposureTime = number;
-export type ExposureDelay = [number, number];
+export type ExposureDelay = readonly [number, number];
 export type StimulusCount = number;
 
 
 export interface PersonalData {
-  firstName: string;
-  lastName: string;
-  gender: Gender;
-  age: number | null;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly gender: Gender;
+  readonly age: number;
 }
 
 export interface TestSettings {
-  testMode: TestMode;
-  stimulusSize: StimulusSize;
-  exposureTime: ExposureTime;
-  exposureDelay: ExposureDelay;
-  stimulusCount: StimulusCount;
-  testType: TestType;
+  readonly testMode: TestMode;
+  readonly stimulusSize: StimulusSize;
+  readonly exposureTime: ExposureTime;
+  readonly exposureDelay: ExposureDelay;
+  readonly stimulusCount: StimulusCount;
+  readonly testType: TestType;
 }
 
 export type DebugMode = "debug" | "prod";
 
 export interface AppContext {
-  personalData: PersonalData,
-  testSettings: TestSettings,
-  debugMode: DebugMode,
+  readonly personalData: PersonalData,
+  readonly testSettings: TestSettings,
+  readonly debugMode: DebugMode,
 }

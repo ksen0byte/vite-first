@@ -7,7 +7,7 @@ export function getSliderValue(sliderId: string): number | ExposureDelay {
   // Check if the value is an array
   if (Array.isArray(value)) {
     // Convert array of strings to array of numbers
-    return value.map(Number) as ExposureDelay;
+    return (value.map(Number) as unknown) as ExposureDelay;
   }
 
   // Convert single string to number
@@ -31,11 +31,11 @@ export function logWithTime(message: string): void {
  * @returns A normally distributed random number.
  */
 export function generateNormalDistributionNumber(mean = 0, stdDev = 1) {
-  let u1 = Math.random();
-  let u2 = Math.random();
+  const u1 = Math.random();
+  const u2 = Math.random();
 
   // Box-Muller transform
-  let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+  const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 
   // Scale and shift to match the given mean and standard deviation
   return z0 * stdDev + mean;

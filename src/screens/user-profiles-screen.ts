@@ -14,15 +14,17 @@ type ExportUserBundle = { user: User; tests: TestRecord[] };
 
 async function exportAllUsersData(): Promise<void> {
   try {
-    // Get all users
-    const users = await getAllUsers();
+    const usersResult = await getAllUsers();
+    if (usersResult._tag === 'Failure') {
+      throw usersResult.error;
+    }
+    const users = usersResult.value;
 
-    // Create an array to store all user data with their tests
     const exportData: ExportUserBundle[] = [];
 
-    // For each user, get their tests and add to the export data
     for (const user of users) {
-      const tests = await getTestsForUser(user.firstName, user.lastName);
+      const testsResult = await getTestsForUser(user.firstName, user.lastName);
+      const tests = testsResult._tag === 'Success' ? testsResult.value : [];
       exportData.push({
         user,
         tests
@@ -38,7 +40,10 @@ async function exportAllUsersData(): Promise<void> {
     const filename = `users_data_${timestamp}.json`;
 
     // Export the data using the utility function
-    await exportDataAsJson(exportData, filename);
+    const result = await exportDataAsJson(exportData, filename);
+    if (result._tag === 'Failure') {
+      alert(result.error);
+    }
   } catch (error) {
     console.error('Error exporting users data:', error);
     alert('Error exporting users data. Please try again.');
@@ -50,19 +55,21 @@ async function exportAllUsersData(): Promise<void> {
  */
 async function exportUserData(firstName: string, lastName: string): Promise<void> {
   try {
-    // Get the user
-    const users = await getAllUsers();
-    const user = users.find(u => u.firstName === firstName && u.lastName === lastName);
+    const usersResult = await getAllUsers();
+    if (usersResult._tag === 'Failure') {
+      console.error("Error fetching users:", usersResult.error);
+      return;
+    }
+    const user = usersResult.value.find(u => u.firstName === firstName && u.lastName === lastName);
 
     if (!user) {
       console.error("User not found!");
       return;
     }
 
-    // Get the user's tests
-    const tests = await getTestsForUser(firstName, lastName);
+    const testsResult = await getTestsForUser(firstName, lastName);
+    const tests = testsResult._tag === 'Success' ? testsResult.value : [];
 
-    // Create the export data
     const exportData: ExportUserBundle = {
       user,
       tests
@@ -77,7 +84,10 @@ async function exportUserData(firstName: string, lastName: string): Promise<void
     const filename = `user_data_${firstName}_${lastName}_${timestamp}.json`;
 
     // Export the data using the utility function
-    await exportDataAsJson(exportData, filename);
+    const result = await exportDataAsJson(exportData, filename);
+    if (result._tag === 'Failure') {
+      alert(result.error);
+    }
   } catch (error) {
     console.error('Error exporting user data:', error);
     alert('Error exporting user data. Please try again.');
@@ -104,7 +114,11 @@ export class UsersScreen {
     this.appContainer.innerHTML = '<p>Loading...</p>'; // Loading indicator
 
     try {
-      this.users = await getAllUsers(); // Fetch users and cache the result
+      const result = await getAllUsers(); // Fetch users and cache the result
+      if (result._tag === 'Failure') {
+        throw result.error;
+      }
+      this.users = result.value;
       this.renderUsers(); // Render users
 
       // Set up the header
@@ -299,14 +313,21 @@ export class UsersScreen {
    * Handles navigation to the user's profile.
    */
   public async viewUserProfile(firstName: string, lastName: string): Promise<void> {
-    const user = (await getAllUsers()).find(u => u.firstName === firstName && u.lastName === lastName);
+    const usersResult = await getAllUsers();
+    if (usersResult._tag === 'Failure') {
+      console.error("Error fetching users:", usersResult.error);
+      return;
+    }
+    const users = usersResult.value;
+    const user = users.find(u => u.firstName === firstName && u.lastName === lastName);
 
     if (!user) {
       console.error("User not found!");
       return;
     }
 
-    const tests = await getTestsForUser(firstName, lastName);
+    const testsResult = await getTestsForUser(firstName, lastName);
+    const tests = testsResult._tag === 'Success' ? testsResult.value : [];
 
     Router.navigate('/profile', {user, tests}); // Pass user and tests to profile route
   }
@@ -344,7 +365,13 @@ export class UsersScreen {
         };
         type ImportedBundle = { user: ImportedUser; tests: ImportedTestRecord[] };
 
-        const raw = await readJsonFile<ImportedBundle | ImportedBundle[]>(file);
+        const readResult = await readJsonFile<ImportedBundle | ImportedBundle[]>(file);
+        if (readResult._tag === 'Failure') {
+          console.error('Error reading file:', readResult.error);
+          alert(localize('importError'));
+          return;
+        }
+        const raw = readResult.value;
         const items: ImportedBundle[] = Array.isArray(raw) ? raw : [raw];
 
         let importedUsers = 0;
@@ -414,7 +441,10 @@ export class UsersScreen {
         });
 
         // Refresh UI
-        this.users = await getAllUsers();
+        const usersResult = await getAllUsers();
+        if (usersResult._tag === 'Success') {
+          this.users = usersResult.value;
+        }
         this.renderUsers();
         updateLanguageUI();
 

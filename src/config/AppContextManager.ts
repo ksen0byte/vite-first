@@ -14,8 +14,8 @@ class AppContextManager {
     return this.instance;
   }
 
-  public static setContext(newContext: Partial<AppContext>) {
-    this.instance = {...this.instance, ...newContext};
+  public static setContext(newContext: AppContext) {
+    this.instance = newContext;
   }
 }
 

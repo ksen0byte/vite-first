@@ -14,9 +14,13 @@ export class StimuliCounter {
     return this.count;
   }
 
-  public inc(): void {
-    this.count++;
+  public set(count: number): void {
+    this.count = count;
     this.container.textContent = `${this.count}/${this.appContext.testSettings.stimulusCount}`;
+  }
+
+  public inc(): void {
+    this.set(this.count + 1);
   }
 
   public reset(): void {

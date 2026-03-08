@@ -30,7 +30,7 @@ export function setupTestTypeSelectionScreen(appContainer: HTMLElement) {
   setupTestTypeButtonsCallback(appContext);
 }
 
-function setupTestTypeButtonsCallback(appContext: AppContext) {
+function setupTestTypeButtonsCallback(_appContext: AppContext) {
   // Get references to the test type buttons and the Next button from the DOM
   const pzmrButton = document.getElementById("pzmr-button") as HTMLButtonElement;
   const rv13Button = document.getElementById("rv1-3-button") as HTMLButtonElement;
@@ -47,19 +47,31 @@ function setupTestTypeButtonsCallback(appContext: AppContext) {
   pzmrButton.addEventListener("click", () => {
     clearActive();
     pzmrButton.classList.add("btn-active");
-    appContext.testSettings.testType = "svmr";
+    const current = AppContextManager.getContext();
+    AppContextManager.setContext({
+      ...current,
+      testSettings: { ...current.testSettings, testType: "svmr" }
+    });
   });
 
   rv13Button.addEventListener("click", () => {
     clearActive();
     rv13Button.classList.add("btn-active");
-    appContext.testSettings.testType = "sr1-3";
+    const current = AppContextManager.getContext();
+    AppContextManager.setContext({
+      ...current,
+      testSettings: { ...current.testSettings, testType: "sr1-3" }
+    });
   });
 
   rv23Button.addEventListener("click", () => {
     clearActive();
     rv23Button.classList.add("btn-active");
-    appContext.testSettings.testType = "sr2-3";
+    const current = AppContextManager.getContext();
+    AppContextManager.setContext({
+      ...current,
+      testSettings: { ...current.testSettings, testType: "sr2-3" }
+    });
   });
 
   // Only proceed to the Begin Test screen if a test type has been selected.

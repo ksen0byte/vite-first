@@ -1,14 +1,24 @@
 // test-screen.ts
-import {AppContext, DebugMode} from "../config/domain.ts";
-import {localize, updateLanguageUI} from "../localization/localization.ts";
-import {logWithTime} from "../util/util.ts";
-import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
-import {StimulusManager} from "../components/StimulusManager.ts";
-import {StimuliCounter} from "../components/StimuliCounter.ts";
-import {TimerManager} from "../components/Timer.ts";
-import {Countdown} from "../components/Countdown.ts";
+import { AppContext, DebugMode } from "../config/domain.ts";
+import { localize, updateLanguageUI } from "../localization/localization.ts";
+import { logWithTime } from "../util/util.ts";
+import { clearAllTimeouts, scheduleTimeout } from "../util/scheduleTimeout.ts";
+import { StimulusManager } from "../components/StimulusManager.ts";
+import { StimuliCounter } from "../components/StimuliCounter.ts";
+import { TimerManager } from "../components/Timer.ts";
+import { Countdown } from "../components/Countdown.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
+import {
+  TestState,
+  toIdle,
+  toCountingDown,
+  toDelayed,
+  toShowingStimulus,
+  toSpamDetected,
+  toFinished,
+  getNextDelay
+} from "../domain/test-state.ts";
 
 export class TestScreen {
   private readonly appContainer: HTMLElement;
@@ -26,20 +36,19 @@ export class TestScreen {
   private stimuliCounter!: StimuliCounter;
 
   // event listeners
-  private handleKeyDownBound: (event: KeyboardEvent) => void;
+  private readonly handleKeyDownBound: (event: KeyboardEvent) => void;
 
-  // Data
-  private readonly reactionTimes: number[];
+  // State
+  private state: TestState = toIdle();
+  private reactionTimes: Map<number, number> = new Map();
 
   // spam prevention
-  private spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
+  private readonly spamPreventionConfig = { clickAllowedFromMs: 100, maxInputsPerStimulus: 3 };
   private spamInputCount: number = 0;
-  private testResetting: boolean = false; // Prevents concurrent test resets
 
   constructor(appContainer: HTMLElement) {
     this.appContainer = appContainer;
     this.appContext = AppContextManager.getContext();
-    this.reactionTimes = [];
 
     // Store the bound reference
     this.handleKeyDownBound = this.handleAppKeyDown.bind(this);
@@ -65,6 +74,11 @@ export class TestScreen {
     document.removeEventListener("keydown", this.handleKeyDownBound);
     this.timerManager.stop();
     clearAllTimeouts();
+  }
+
+  private transitionTo(newState: TestState): void {
+    this.state = newState;
+    console.log(`Transitioned to state: ${newState._tag}`);
   }
 
   /**
@@ -152,7 +166,7 @@ export class TestScreen {
   }
 
   /**
-   * Attach the event listeners (e.g. retry button, click for reaction times).
+   * Attach the event listeners (e.g., retry button, click for reaction times).
    */
   private attachEventListeners(): void {
     this.retryButton.addEventListener("click", () => this.handleRetry());
@@ -165,14 +179,15 @@ export class TestScreen {
    * Start the countdown to begin the actual test sequence.
    */
   private startTest(): void {
+    this.transitionTo(toCountingDown(3));
     this.countdown.show();
   }
 
   private stopTest(): void {
     this.timerManager.stopAndReset();
     clearAllTimeouts();
-    this.reactionTimes.length = 0; // clean up array
-    this.resetSpamCounter();
+    this.reactionTimes.clear();
+    this.spamInputCount = 0;
     this.stimuliCounter.reset();
   }
 
@@ -196,119 +211,89 @@ export class TestScreen {
     if (event.code === "Escape") this.handleHome();
   }
 
-
   /**
    * Main test logic: called after the countdown finishes.
    * Repeatedly displays stimuli, tracks reaction times, and completes on finishing all stimuli.
    */
   private runTest(): void {
-    // Recursively display each stimulus in sequence.
-    const displayNextStimulus = () => {
-      const totalStimuli = this.appContext.testSettings.stimulusCount;
-      if (this.stimuliCounter.get() >= totalStimuli) {
-        // We are done; finalize
-        this.onTestComplete();
-        return;
-      }
-
-      this.stimuliCounter.inc();
-      this.stimulusManager.showStimulus(this.stimuliCounter.get());
-
-      // Timer: restart from 0
-      this.timerManager.restart();
-
-      // Hide stimulus after exposureTime, then apply random delay, then show next.
-      scheduleTimeout(() => {
-        this.stimulusManager.clearContainer();
-        this.timerManager.stop();
-        this.resetSpamCounter();
-
-        scheduleTimeout(displayNextStimulus, this.stimulusManager.getRandomExposureDelay());
-      }, this.appContext.testSettings.exposureTime);
-    };
-
-    // Initial setup
     this.stimulusManager.clearContainer();
-    scheduleTimeout(displayNextStimulus, this.stimulusManager.getRandomExposureDelay());
+    this.scheduleNextStimulus(0);
   }
 
-  /**
-   * Processes user input during the stimulus-response test.
-   * Tracks the reaction time of valid inputs and enforces spam prevention rules.
-   *
-   * Workflow:
-   * - Blocks input if the test is resetting.
-   * - Increments input count (`spamInputCount`) and checks if spam is detected.
-   * - Calculates reaction time for valid inputs and stores the result.
-   *
-   * Rules:
-   * - Prevents multiple inputs for a single stimulus.
-   * - Ignores inputs below the minimum reaction time threshold.
-   * - Stops the test and shows a spam modal if spam is detected.
-   */
-  private handleUserInput(): void {
-    // Block input if test resetting is in progress
-    if (this.testResetting) return;
-
-    // Increment spam input counter
-    this.increaseSpamCounter();
-
-    // Check for spam detection
-    if (this.spamInputCount > this.spamPreventionConfig.maxInputsPerStimulus) {
-      this.testResetting = true;
-      this.stopTest();           // Stop the test
-      this.showSpamModal();      // Show spam modal
-      setTimeout(() => {
-        this.hideSpamModal();    // Hide spam modal after 5 seconds
-        this.testResetting = false;
-        this.startTest();        // Restart the test
-      }, 5000);                  // Timeout duration
-      return;                    // Exit early after spam detection
+  private scheduleNextStimulus(index: number): void {
+    const totalStimuli = this.appContext.testSettings.stimulusCount;
+    if (index >= totalStimuli) {
+      this.onTestComplete();
+      return;
     }
 
-    // Debug: Log the input count
-    console.log(`User input count: ${this.spamInputCount}`);
+    const delay = getNextDelay(this.appContext.testSettings);
+    this.transitionTo(toDelayed(index, delay, Date.now()));
 
-    // Retrieve the start time of the current stimulus
-    const lastStimulusTime = this.timerManager.getStartTime();
+    scheduleTimeout(() => {
+      this.showStimulus(index);
+    }, delay);
+  }
 
-    // If there is a valid stimulus start time, calculate the reaction time
-    if (lastStimulusTime != null) {
-      const reactionTime = Date.now() - lastStimulusTime;
+  private showStimulus(index: number): void {
+    this.stimuliCounter.set(index + 1);
+    this.stimulusManager.showStimulus(index + 1);
+    this.timerManager.restart();
+    this.transitionTo(toShowingStimulus(index, Date.now(), "red"));
 
-      // Ignore input if reaction time is below the allowed threshold
+    scheduleTimeout(() => {
+      this.onStimulusTimeout(index);
+    }, this.appContext.testSettings.exposureTime);
+  }
+
+  private onStimulusTimeout(index: number): void {
+    if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
+
+    this.stimulusManager.clearContainer();
+    this.timerManager.stop();
+    this.spamInputCount = 0;
+    this.scheduleNextStimulus(index + 1);
+  }
+
+  private handleUserInput(): void {
+    if (this.state._tag === 'SpamDetected' || this.state._tag === 'Finished' || this.state._tag === 'CountingDown') return;
+
+    this.spamInputCount++;
+
+    if (this.spamInputCount > this.spamPreventionConfig.maxInputsPerStimulus) {
+      this.onSpamDetected();
+      return;
+    }
+
+    if (this.state._tag === 'ShowingStimulus') {
+      const reactionTime = Date.now() - this.state.startTime;
+
       if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
-        console.warn(`Input ignored: Reaction time (${reactionTime}ms) is below `
-          + `the allowed threshold of ${this.spamPreventionConfig.clickAllowedFromMs}ms.`);
+        console.warn(`Input ignored: Reaction time (${reactionTime}ms) is below threshold.`);
         return;
       }
 
-      // Record the valid reaction time and stop the timer
-      this.reactionTimes.push(reactionTime);
+      this.reactionTimes.set(this.state.stimulusIndex, reactionTime);
       this.timerManager.stop();
-
-      // reset spam counter
-      this.resetSpamCounter();
     }
   }
 
-  private increaseSpamCounter() {
-    this.spamInputCount++;
+  private onSpamDetected(): void {
+    this.transitionTo(toSpamDetected());
+    this.timerManager.stopAndReset();
+    clearAllTimeouts();
+    this.showSpamModal();
+    scheduleTimeout(() => {
+      this.hideSpamModal();
+      this.handleRetry();
+    }, 5000);
   }
 
-  private resetSpamCounter() {
-    this.spamInputCount = 0;
-  }
-
-  /**
-   * Called once the test is finished.
-   * Displays "Retry" and "Finish" buttons in place of the test content.
-   */
   private onTestComplete(): void {
+    this.transitionTo(toFinished(this.reactionTimes));
     this.stimulusManager.clearContainer();
     this.destroy();
 
-    // Hide or replace the main container content
     this.stimulusContainer.innerHTML = `
       <div class="flex flex-col items-center space-y-4">
         <div class="text-3xl mb-4" data-localize="testScreenTestCompleteMessage"></div>
@@ -320,7 +305,6 @@ export class TestScreen {
     `;
     updateLanguageUI();
 
-    // Wire up new buttons
     const endRetryBtn = document.getElementById("end-retry-btn") as HTMLButtonElement;
     const endFinishBtn = document.getElementById("end-finish-btn") as HTMLButtonElement;
 
@@ -334,8 +318,7 @@ export class TestScreen {
     // On "Finish", go to results screen
     endFinishBtn.addEventListener("click", () => {
       logWithTime("End screen Finish clicked. Showing results.");
-      const reactionTimes = this.reactionTimes;
-      Router.navigate("/results", {reactionTimes});
+      Router.navigate("/results", { reactionTimes: this.reactionTimes });
     });
   }
 
@@ -346,5 +329,4 @@ export class TestScreen {
   private hideSpamModal() {
     document.getElementById("spamModal")?.classList.remove("modal-open");
   }
-
 }

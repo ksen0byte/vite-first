@@ -31,7 +31,7 @@ function settingsScreenHTML(appContext: AppContext) {
                         </label>
                         <label class="flex flex-col form-control max-w-xs">
                             <select class="select validator select-bordered" id="gender-select" required>
-                                <option value="" disabled ${!appContext.personalData.gender ? 'selected' : ''} data-localize="selectGender">Select Gender</option>
+                                <option value="" disabled ${(appContext.personalData.gender ? '' : 'selected')} data-localize="selectGender">Select Gender</option>
                                 <option value="male" ${appContext.personalData.gender === 'male' ? 'selected' : ''} data-localize="male"></option>
                                 <option value="female" ${appContext.personalData.gender === 'female' ? 'selected' : ''} data-localize="female"></option>
                             </select>
@@ -286,10 +286,10 @@ const setupSlider = (
   const slider = document.getElementById(idPrefix + sliderConfig.id)! as target;
   const label = document.getElementById(idPrefix + sliderConfig.label.id)! as target;
 
-  noUiSlider.create(slider, (currentValue === undefined) ? sliderConfig.options : {...sliderConfig.options, start: currentValue});
+  noUiSlider.create(slider, (currentValue === undefined) ? sliderConfig.options : {...sliderConfig.options, start: currentValue as number | number[]});
   slider.noUiSlider!.on("update", (values, _) => {
     const firstValue = Number(values[0]);
-    const secondValue = values[1] !== undefined ? Number(values[1]) : undefined;
+    const secondValue = values[1] === undefined ? undefined : Number(values[1]);
 
     if (secondValue !== undefined) {
       label.textContent = `${localize(sliderConfig.label.localizationKey)}: ${firstValue}-${secondValue} ${localize(sliderConfig.label.unit)}`;
@@ -348,16 +348,20 @@ const startButtonCallback: () => void = () => {
     return;
   }
 
-  const firstName = (document.getElementById(inputsConfig.nameInputId) as HTMLInputElement).value;
-  const lastName = (document.getElementById(inputsConfig.surnameInputId) as HTMLInputElement).value;
-  const gender = (document.getElementById(inputsConfig.genderSelectId) as HTMLSelectElement).value as Gender;
-  const ageValue = parseInt((document.getElementById(inputsConfig.ageInputId) as HTMLSelectElement).value);
-  const age = Number(ageValue);
-  if (isNaN(age)) throw new Error("Invalid age: Please enter a valid number.");
+  const ageValue = (document.getElementById(inputsConfig.ageInputId) as HTMLSelectElement).value;
+  const age = Number.parseInt(ageValue, 10);
+  if (Number.isNaN(age)) {
+    // Ideally, this should be handled by form validation, but let's keep it safe
+    alert(localize("invalidAgeError") || "Please enter a valid age.");
+    return;
+  }
   const stimulusSize = getSliderValue(inputsConfig.sizeSliderId[testMode]) as StimulusSize;
   const exposureTime = getSliderValue(inputsConfig.exposureTimeSliderId[testMode]) as ExposureTime;
   const exposureDelay = getSliderValue(inputsConfig.exposureDelaySliderId[testMode]) as ExposureDelay;
   const stimulusCount = getSliderValue(inputsConfig.stimulusCountSliderId[testMode]) as StimulusCount;
+  const firstName = (document.getElementById(inputsConfig.nameInputId) as HTMLInputElement).value;
+  const lastName = (document.getElementById(inputsConfig.surnameInputId) as HTMLInputElement).value;
+  const gender = (document.getElementById(inputsConfig.genderSelectId) as HTMLSelectElement).value as Gender;
 
   // 3. Gather parameters and log them
   const appContext: AppContext = {
@@ -380,7 +384,7 @@ const startButtonCallback: () => void = () => {
 
   AppContextManager.setContext(appContext);
 
-  // transition to test type selection screen
+  // transition to the test type selection screen
   Router.navigate("/testTypeSelection");
 }
 

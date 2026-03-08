@@ -1,4 +1,4 @@
-(globalThis as any).localStorage = {
+(globalThis as { localStorage?: unknown }).localStorage = {
   getItem: () => null,
   setItem: () => {},
   removeItem: () => {},
@@ -113,7 +113,7 @@ export class ReactionStatsCli {
 
         const exposureDelay = Array.isArray(t.testSettings.exposureDelay)
           ? t.testSettings.exposureDelay
-          : [NaN, NaN];
+          : [Number.NaN, Number.NaN];
 
         const exposureDelayMin = Number(exposureDelay[0]);
         const exposureDelayMax = Number(exposureDelay[1]);
@@ -191,7 +191,7 @@ export class ReactionStatsCli {
     let csvContent = "\uFEFF"; // UTF-8 BOM for Excel compatibility
     csvContent += headers.join(",") + "\n";
     for (const r of rows) {
-      csvContent += toCsvLine(headers as string[], r as any) + "\n";
+      csvContent += toCsvLine(headers as string[], r as unknown as Record<string, unknown>) + "\n";
     }
 
     // Write to file or stdout

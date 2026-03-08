@@ -70,13 +70,13 @@ export function setupResultsScreen(
         <!-- Mean -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statMean">Mean</div>
-          <div class="stat-value text-lg">${reactionTimeStats.meanVal !== null ? reactionTimeStats.meanVal.toFixed(2) + localize("ms") : "N/A"}</div>
+          <div class="stat-value text-lg">${(reactionTimeStats.meanVal === null ? "N/A" : reactionTimeStats.meanVal.toFixed(2) + localize("ms"))}</div>
         </div>
 
         <!-- Mode -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statMode">Median</div>
-          <div class="stat-value text-lg">${reactionTimeStats.modeVal !== null ? reactionTimeStats.modeVal.toFixed(2) + localize("ms") : "N/A"}</div>
+          <div class="stat-value text-lg">${(reactionTimeStats.modeVal === null ? "N/A" : reactionTimeStats.modeVal.toFixed(2) + localize("ms"))}</div>
         </div>
 
         <!-- Std Dev -->
@@ -171,29 +171,43 @@ async function saveResultsAndSetupNextScreen(
   const reactionTimesArray: number[] = Array.from(reactionTimes.values());
 
   try {
-    const user = await upsertUser({
+    const upsertResult = await upsertUser({
       firstName: appContext.personalData.firstName,
       lastName: appContext.personalData.lastName,
       gender: appContext.personalData.gender,
       age: appContext.personalData.age
     });
-    if (!user) {
-      // noinspection ExceptionCaughtLocallyJS
-      throw new Error("Error saving user");
+
+    if (upsertResult._tag === 'Failure') {
+      console.error("Error saving user", upsertResult.error);
+      return;
     }
 
-    console.log(`User saved: ${user}`);
+    const user = upsertResult.value;
+    console.log(`User saved: ${JSON.stringify(user)}`);
 
     // Save the test linked to this user
-    const testId = await saveTestRecord(user!, appContext.testSettings, reactionTimesArray);
+    const saveResult = await saveTestRecord(user, appContext.testSettings, reactionTimesArray);
+    if (saveResult._tag === 'Failure') {
+      console.error("Error saving test record", saveResult.error);
+      return;
+    }
+
+    const testId = saveResult.value;
     console.log(`Test saved with ID: ${testId}`);
 
-    const tests = await getTestsForUser(user!.firstName, user!.lastName);
+    const getTestsResult = await getTestsForUser(user.firstName, user.lastName);
+    if (getTestsResult._tag === 'Failure') {
+      console.error("Error retrieving tests", getTestsResult.error);
+      return;
+    }
+
+    const tests = getTestsResult.value;
 
     // Navigate to the user profile screen
     Router.navigate('/profile', {user, tests}); // Pass user and tests to profile route
   } catch (err) {
-    console.error("Error saving user or test record", err);
+    console.error("Error in saveResultsAndSetupNextScreen", err);
   }
 }
 
