@@ -33,13 +33,6 @@ export const COLOR_SEQUENCE: readonly ColorType[] = [
   "yellow", "green", "green", "red", "red", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "yellow", "yellow", "green", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "yellow", "green", "red", "green", "yellow", "red", "red", "yellow", "yellow", "green", "yellow", "green", "red", "green", "green", "green", "red", "yellow", "red", "red", "yellow", "yellow", "yellow", "green", "green", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "yellow", "green", "green", "red", "red", "green", "yellow", "yellow", "green", "yellow", "green", "red", "green", "green", "green", "red", "yellow", "red", "red", "yellow", "yellow", "red", "red", "green", "green", "yellow", "yellow", "green", "yellow", "yellow", "green", "red", "green", "red", "yellow", "green", "green", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "yellow", "yellow", "red", "red", "red",
 ];
 
-export const SYLLABLE_SEQUENCE_EN: readonly string[] = [
-  "ze", "te", "da", "ko", "je", "ya", "na", "ju", "hu", "si", "le", "de", "yo", "mo", "wa", "ye", "wo", "so", "ja", "tu", "hi", "me", "pi", "ro", "li", "ca", "bo", "vu", "bu", "ge", "mu", "yu", "ta", "cu", "lu", "vi", "su", "mi", "za", "po", "do", "du", "he", "se", "pa",
-];
-
-export const SYLLABLE_SEQUENCE_UA: readonly string[] = [
-  "па", "шу", "фе", "фо", "ме", "та", "со", "ра", "ка", "гу", "хо", "жу", "жа", "по", "во", "ча", "ро", "ву", "вa", "ре", "ві", "бу", "ша", "ле", "пу", "ді", "рі", "шо", "са", "ке", "ні", "кі", "но", "ла", "мо", "га", "го", "жі", "ко", "хі", "ці", "ші", "чо", "бі", "же",
-];
 
 export const COMBINED_SEQUENCE: readonly (FigureType | ColorType | string)[] = ["triangle", "вікно", "square", "red", "green", "овес", "кіт", "circle", "red", "клен", "дім", "red", "green", "red", "triangle", "слон", "куля", "triangle", "red", "верба", "кедр", "square", "коза", "жовтий", "square", "кран", "бик", "льон", "triangle", "circle", "кріт", "заєць", "triangle", "triangle", "square", "green", "red", "осел", "red", "circle", "red", "стілець", "triangle", "green", "green", "жовтий", "green", "triangle", "дуб", "triangle", "ніж", "square", "circle", "тигр", "жовтий", "green", "бук", "стіл", "triangle", "square", "circle", "кінь", "жовтий", "red", "окуляри", "пояс", "circle", "роза", "мох", "жовтий", "circle", "square", "їжак", "жовтий", "triangle", "circle", "green", "circle", "вовк", "red", "лев", "square", "triangle", "square", "сіль", "кінь", "square", "гора", "triangle", "circle", "жовтий", "соя", "red", "circle", "red", "лисиця", "red", "меч", "circle", "дім", "жовтий", "ялина", "triangle", "мак", "circle", "жовтий", "слон", "кіт", "жовтий", "роза", "green", "сіль", "жовтий", "green", "square", "green", "red", "square", "green", "green",];
 
@@ -48,6 +41,7 @@ export const isTargetWordEn = (w: string): boolean =>
   ["bear", "cat", "goat", "bull", "mole", "wolf", "frog", "hare", "mule", "lynx", "buck", "lion", "fox"].includes(w);
 export const isTargetWordUa = (w: string): boolean =>
   ["слон", "кіт", "коза", "бик", "кріт", "вовк", "їжак", "заєць", "осел", "тигр", "кінь", "лев", "лисиця"].includes(w);
+
 /**
  * Safe wrap-around accessor
  */

@@ -222,8 +222,8 @@ function getTestModeLocalizationKey(testMode: TestMode): string {
       return "shapesOption";
     case "words":
       return "wordsOption";
-    case "syllables":
-      return "syllablesOption";
+    case "colors":
+      return "colorsOption";
     default:
       throw new Error("Invalid test mode");
   }

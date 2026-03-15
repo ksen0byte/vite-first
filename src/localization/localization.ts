@@ -1,6 +1,7 @@
 import {settings} from "../config/settings.ts";
 import {LanguageManager} from "./LanguageManager.ts";
 import katex from 'katex';
+import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.ts";
 
 export function updateLanguageUI(): void {
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
@@ -108,10 +109,10 @@ const localization: LocalizationKeys = {
   shapeSizeSliderLabel: {en: "Shape Size", uk: "Розмір фігури"},
   wordsOption: {en: "🔤 Words", uk: "🔤 Слова"},
   wordSizeSliderLabel: {en: "Word Size", uk: "Розмір слова"},
-  wordPreviewWord: {en: "Love", uk: "Любов"},
-  syllablesOption: {en: "🆎 Random Syllables", uk: "🆎 Беззмістовні Склади"},
-  syllableSizeSliderLabel: {en: "Syllable Size", uk: "Розмір складу"},
-  syllablePreviewSyllable: {en: "Mo", uk: "Ма"},
+  wordPreviewWord: {en: "Lion", uk: "Лев"},
+  colorsOption: {en: "🎨 Colors", uk: "🎨 Кольори"},
+  colorsSizeSliderLabel: {en: "Colored Rectangle Size", uk: "Розмір кольорового прямокутника"},
+
   fontSizeSliderLabel: {en: "Font Size", uk: "Розмір шрифту"},
 
   // Test settings
@@ -169,17 +170,17 @@ const localization: LocalizationKeys = {
   },
 
   // --- HEADERS ---
-  headingBiologicalAgeFormulasUsed: { en: "Formulas Used", uk: "Використані формули" },
-  headingBiologicalAgeTempoInterpretation: { en: "Interpretation of TBD", uk: "Інтерпретація ТБР" },
+  headingBiologicalAgeFormulasUsed: {en: "Formulas Used", uk: "Використані формули"},
+  headingBiologicalAgeTempoInterpretation: {en: "Interpretation of TBD", uk: "Інтерпретація ТБР"},
 
   // --- VARIABLE DESCRIPTIONS ---
   // Actual SR
-  variableActualSensorimotorReaction: { en: "\\text{SR}_{act}", uk: "СР_ф" },
-  descriptionActualSensorimotorReaction: { en: "Actual Sensorimotor Reaction", uk: "Фактичне значення сенсомоторного реагування" },
+  variableActualSensorimotorReaction: {en: "\\text{SR}_{act}", uk: "СР_ф"},
+  descriptionActualSensorimotorReaction: {en: "Actual Sensorimotor Reaction", uk: "Фактичне значення сенсомоторного реагування"},
 
   // Normative SR
-  variableNormativeSensorimotorReaction: { en: "\\text{SR}_{norm}", uk: "СР_т" },
-  descriptionNormativeSensorimotorReaction: { en: "Normative Sensorimotor Reaction", uk: "Табличне належне значення сенсомоторного реагування" },
+  variableNormativeSensorimotorReaction: {en: "\\text{SR}_{norm}", uk: "СР_т"},
+  descriptionNormativeSensorimotorReaction: {en: "Normative Sensorimotor Reaction", uk: "Табличне належне значення сенсомоторного реагування"},
 
   // Biological age
   variableBiologicalAge: {en: "BA", uk: "БВ"},
@@ -194,14 +195,14 @@ const localization: LocalizationKeys = {
   descriptionChildPassportAge: {en: "Chronological Age", uk: "Паспортний вік"},
 
   // --- INTERPRETATION CONDITIONS (Mathematical conditions) ---
-  conditionBiologicalAgeAcceleratedDevelopment: { en: "TBD < 0.95", uk: "ТБР < 0.95" },
-  conditionBiologicalAgeNormalDevelopment: { en: "0.95 ≤ TBD ≤ 1.10", uk: "0.95 ≤ ТБР ≤ 1.10" },
-  conditionBiologicalAgeDelayedDevelopment: { en: "TBD > 1.10", uk: "ТБР > 1.10" },
+  conditionBiologicalAgeAcceleratedDevelopment: {en: "TBD < 0.95", uk: "ТБР < 0.95"},
+  conditionBiologicalAgeNormalDevelopment: {en: "0.95 ≤ TBD ≤ 1.10", uk: "0.95 ≤ ТБР ≤ 1.10"},
+  conditionBiologicalAgeDelayedDevelopment: {en: "TBD > 1.10", uk: "ТБР > 1.10"},
 
   // --- INTERPRETATION DESCRIPTIONS (Human readable text) ---
-  descriptionBiologicalAgeAcceleratedDevelopment: { en: "Accelerated development", uk: "Розвиток прискорений" },
-  descriptionBiologicalAgeNormalDevelopment: { en: "Normal development", uk: "Розвиток у нормі" },
-  descriptionBiologicalAgeDelayedDevelopment: { en: "Delayed development", uk: "Розвиток уповільнений" },
+  descriptionBiologicalAgeAcceleratedDevelopment: {en: "Accelerated development", uk: "Розвиток прискорений"},
+  descriptionBiologicalAgeNormalDevelopment: {en: "Normal development", uk: "Розвиток у нормі"},
+  descriptionBiologicalAgeDelayedDevelopment: {en: "Delayed development", uk: "Розвиток уповільнений"},
 
 
   // begin test screen
@@ -308,10 +309,10 @@ const localization: LocalizationKeys = {
 };
 
 
-type LocalizationVars = { randomWords: { en: string[]; uk: string[] }; randomSyllables: { en: string[]; uk: string[] } }
+type LocalizationVars = { randomWords: { en: readonly string[]; uk: readonly string[] } }
 type LanguageKey = "uk" | "en"
 
-export function getLocalizedVar(key: keyof LocalizationVars): string[] {
+export function getLocalizedVar(key: keyof LocalizationVars): readonly string[] {
   const currentLanguage = LanguageManager.getCurrentLanguage();
 
   const lang = currentLanguage as LanguageKey || settings.default.language as LanguageKey;
@@ -324,11 +325,7 @@ export function getLocalizedVar(key: keyof LocalizationVars): string[] {
 
 const localizationVars: LocalizationVars = {
   randomWords: {
-    en: ["bean", "beech", "bull", "water", "wolf", "elm", "weight", "mountain", "house", "oak", "hedgehog", "spruce", "hare", "willow", "cedar", "maple", "key", "goat", "horse", "cat", "tap", "mole", "lion", "flax", "linden", "fox", "poppy", "sword", "moss", "ball", "knife", "oats", "window", "donkey", "glasses", "feather", "belt", "bullet", "rose", "elephant", "salt", "soy", "table", "chair", "tiger",],
-    uk: ["біб", "бук", "бик", "вода", "вовк", "в'яз", "гиря", "гора", "будинок", "дуб", "їжак", "ялина", "заєць", "верба", "кедр", "клен", "ключ", "коза", "кінь", "кіт", "кран", "кріт", "лев", "льон", "липа", "лисиця", "мак", "меч", "мох", "м'яч", "ніж", "овес", "вікно", "осел", "окуляри", "перо", "пояс", "куля", "троянда", "слон", "сіль", "соя", "стіл", "стілець", "тигр",],
-  },
-  randomSyllables: {
-    en: ["ze", "te", "da", "ko", "je", "ya", "na", "ju", "hu", "si", "le", "de", "yo", "mo", "wa", "ye", "wo", "so", "ja", "tu", "hi", "me", "pi", "ro", "li", "ca", "bo", "vu", "bu", "ge", "mu", "yu", "ta", "cu", "lu", "vi", "su", "mi", "za", "po", "do", "du", "he", "se", "pa"],
-    uk: ["па", "шу", "фе", "фо", "ме", "та", "со", "ра", "ка", "гу", "хо", "жу", "жа", "по", "во", "ча", "ро", "ву", "вa", "ре", "ві", "бу", "ша", "ле", "пу", "ді", "рі", "шо", "са", "ке", "ні", "кі", "но", "ла", "мо", "га", "го", "жі", "ко", "хі", "ці", "ші", "чо", "бі", "же"],
+    en: WORD_SEQUENCE_EN,
+    uk: WORD_SEQUENCE_UA,
   }
 }

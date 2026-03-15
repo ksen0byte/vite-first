@@ -71,20 +71,19 @@ export const subsectionsConfig = {
       }
     }
   },
-  syllable: {
+  colors: {
     sizeSlider: {
-      id: "syllable-size-slider",
+      id: "colors-size-slider",
       options: {
-        start: 20,
-        step: 1,
+        start: 50,
+        step: 10,
         connect: "lower",
-        range: {min: 15, max: 30},
-        // pips: { mode: PipsMode.Values, values: [20, 30, 40, 50, 60, 70], density: 10 },
+        range: {min: 20, max: 70},
         format: intFormatter,
       } as Options,
       label: {
-        id: "syllable-size-slider-label",
-        localizationKey: "syllableSizeSliderLabel",
+        id: "colors-size-slider-label",
+        localizationKey: "colorsSizeSliderLabel",
         unit: "mm",
       }
     }
@@ -149,22 +148,22 @@ export const inputsConfig = {
   sizeSliderId: {
     "shapes": subsectionsConfig.shape.sizeSlider.id,
     "words": subsectionsConfig.word.sizeSlider.id,
-    "syllables": subsectionsConfig.syllable.sizeSlider.id,
+    "colors": subsectionsConfig.colors.sizeSlider.id,
   },
   exposureTimeSliderId: {
     "shapes": "shapes-" + subsectionsConfig.general.exposureTimeSlider.id,
     "words": "words-" + subsectionsConfig.general.exposureTimeSlider.id,
-    "syllables": "syllables-" + subsectionsConfig.general.exposureTimeSlider.id,
+    "colors": "colors-" + subsectionsConfig.general.exposureTimeSlider.id,
   },
   exposureDelaySliderId: {
     "shapes": "shapes-" + subsectionsConfig.general.exposureDelaySlider.id,
     "words": "words-" + subsectionsConfig.general.exposureDelaySlider.id,
-    "syllables": "syllables-" + subsectionsConfig.general.exposureDelaySlider.id,
+    "colors": "colors-" + subsectionsConfig.general.exposureDelaySlider.id,
   },
   stimulusCountSliderId: {
     "shapes": "shapes-" + subsectionsConfig.general.stimulusCountSlider.id,
     "words": "words-" + subsectionsConfig.general.stimulusCountSlider.id,
-    "syllables": "syllables-" + subsectionsConfig.general.stimulusCountSlider.id,
+    "colors": "colors-" + subsectionsConfig.general.stimulusCountSlider.id,
   },
 
 }

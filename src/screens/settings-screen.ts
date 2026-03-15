@@ -9,6 +9,7 @@ import {defaultAppContext, inputsConfig, subsectionsConfig} from "../config/sett
 import {getRandomShape} from "../components/Shapes.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
+import {getColorRectangleHtml} from "../components/ColorRectangles.ts";
 
 function settingsScreenHTML(appContext: AppContext) {
   return `<main class="flex-grow" id="main">
@@ -181,64 +182,61 @@ function settingsScreenHTML(appContext: AppContext) {
                         </div>
                     </div>
     
-                    <!-- Syllables Subsection -->
+                    <!-- Colors Subsection -->
                     <div
                             tabIndex="0"
                             class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
-                            id="syllables-subsection"
+                            id="colors-subsection"
                     >
-                        <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'syllables' ? 'checked="checked"' : ''} class="peer" data-subsection="syllables"/>
+                        <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'colors' ? 'checked="checked"' : ''} class="peer" data-subsection="colors"/>
                         <!-- Subsection Title -->
                         <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                             data-localize="syllablesOption"
+                             data-localize="colorsOption"
                         >
-                            Random Syllables:
+                            Colors:
                         </div>
                         <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
                             <!-- 2-column layout on medium+ screens -->
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 gap-y-4 lg:gap-6 items-start m-2">
-    
-                                <!-- Left Column: Syllable Preview -->
+
+                                <!-- Left Column: Color Rectangle Preview -->
                                 <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
-                                    <div id="syllable-preview"
+                                    <div id="colors-preview"
                                          class="col-span-1 subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
-                                    <span id="syllable-preview-syllable"
-                                          class="font-mono text-[2cm] leading-none text-red-600"
-                                          data-localize="syllablePreviewSyllable">Mo</span>
+                                        
                                     </div>
                                 </div>
-    
-                                <!-- Right Column: Label, Syllable Size Slider, Exposure Time Slider, Exposure Delay Slider -->
+
+                                <!-- Right Column: Settings (no size slider for colors) -->
                                 <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
-                                    <!-- Syllable Size Slider -->
                                     <div class="flex flex-col space-y-2 w-full">
-                                        <label id="syllable-size-slider-label" class="text-sm font-medium"></label>
-                                        <div id="syllable-size-slider"></div>
+                                        <label id="colors-size-slider-label" class="text-sm font-medium"></label>
+                                        <div id="colors-size-slider"></div>
                                     </div>
                                     <div class="flex flex-col space-y-2 w-full">
-                                        <label id="syllables-exposure-time-label" class="text-sm font-medium"></label>
-                                        <div id="syllables-exposure-time-slider"></div>
+                                        <label id="colors-exposure-time-label" class="text-sm font-medium"></label>
+                                        <div id="colors-exposure-time-slider"></div>
                                     </div>
                                     <div class="flex flex-col space-y-2 w-full">
-                                        <label id="syllables-exposure-delay-label" class="text-sm font-medium"></label>
-                                        <div id="syllables-exposure-delay-slider"></div>
+                                        <label id="colors-exposure-delay-label" class="text-sm font-medium"></label>
+                                        <div id="colors-exposure-delay-slider"></div>
                                     </div>
                                     <div class="flex flex-col space-y-2 w-full">
-                                        <label id="syllables-stimulus-count-label" class="text-sm font-medium"></label>
-                                        <div id="syllables-stimulus-count-slider"></div>
+                                        <label id="colors-stimulus-count-label" class="text-sm font-medium"></label>
+                                        <div id="colors-stimulus-count-slider"></div>
                                     </div>
                                     <!-- Use Pregenerated Delays Checkbox -->
                                     <div class="flex flex-col 2xl:flex-row w-full gap-4">
                                         <div class="flex flex-col space-y-2 flex-1">
                                             <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="syllables-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
+                                                <input type="checkbox" id="colors-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
                                                 <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
                                             </label>
                                         </div>
                                     
                                         <div class="flex flex-col space-y-2 flex-1">
                                             <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="syllables-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
+                                                <input type="checkbox" id="colors-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
                                                 <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
                                             </label>
                                         </div>
@@ -276,7 +274,7 @@ export function setupSettingsScreen(appContainer: HTMLElement): void {
     [
       appContainer.querySelector("#shapes-subsection")!,
       appContainer.querySelector("#words-subsection")!,
-      appContainer.querySelector("#syllables-subsection")!
+      appContainer.querySelector("#colors-subsection")!
     ]
   );
   setupGeometricShapeSection(
@@ -291,11 +289,11 @@ export function setupSettingsScreen(appContainer: HTMLElement): void {
     appContext.testSettings.testMode == "words" ? appContext.testSettings.exposureDelay : undefined,
     appContext.testSettings.testMode == "words" ? appContext.testSettings.stimulusCount : undefined,
   );
-  setupSyllablesSection(
-    appContext.testSettings.testMode == "syllables" ? appContext.testSettings.stimulusSize : undefined,
-    appContext.testSettings.testMode == "syllables" ? appContext.testSettings.exposureTime : undefined,
-    appContext.testSettings.testMode == "syllables" ? appContext.testSettings.exposureDelay : undefined,
-    appContext.testSettings.testMode == "syllables" ? appContext.testSettings.stimulusCount : undefined,
+  setupColorsSection(
+    appContext.testSettings.testMode == "colors" ? appContext.testSettings.stimulusSize : undefined,
+    appContext.testSettings.testMode == "colors" ? appContext.testSettings.exposureTime : undefined,
+    appContext.testSettings.testMode == "colors" ? appContext.testSettings.exposureDelay : undefined,
+    appContext.testSettings.testMode == "colors" ? appContext.testSettings.stimulusCount : undefined,
   );
 
   // footer
@@ -402,17 +400,19 @@ const setupWordsSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureT
   setupCheckboxSliderToggle("words-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
 }
 
-const setupSyllablesSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
-  const setSyllableSize = (size: number) => document.getElementById("syllable-preview-syllable")!.style.fontSize = size + "mm"
-
-  const sectionPrefix = "syllables-";
-  setupSlider(subsectionsConfig.syllable.sizeSlider, "", stimulusSize, (size) => setSyllableSize(size));
+const setupColorsSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
+  function showPreviewRectangle(sizeMm: number) {
+    const colorPreview = document.getElementById("colors-preview") as HTMLElement;
+    colorPreview.innerHTML = getColorRectangleHtml(sizeMm, "yellow");
+  }
+  const sectionPrefix = "colors-";
+  setupSlider(subsectionsConfig.colors.sizeSlider, "", stimulusSize, (sizeMm) => showPreviewRectangle(sizeMm));
   setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
   setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
   setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
 
   // Setup checkbox handler for delay slider
-  setupCheckboxSliderToggle("syllables-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
+  setupCheckboxSliderToggle("colors-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
 }
 
 

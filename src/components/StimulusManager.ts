@@ -2,13 +2,12 @@ import {logWithTime} from "../util/util.ts";
 import {AppContext} from "../config/domain.ts";
 import {getRandomShape, getShapeSvg} from "./Shapes.ts";
 import {getRandomWord, getWordHtml} from "./Words.ts";
-import {getRandomSyllable, getSyllableHtml} from "./Syllables.ts";
+import {getRandomColorRectangle, getColorRectangleHtml} from "./ColorRectangles.ts";
 import {
   FIGURE_SEQUENCE,
   WORD_SEQUENCE_EN,
   WORD_SEQUENCE_UA,
-  SYLLABLE_SEQUENCE_EN,
-  SYLLABLE_SEQUENCE_UA,
+  COLOR_SEQUENCE,
   getStimulusFromSequence
 } from "../domain/stimulus-sequences.ts";
 import {LanguageManager} from "../localization/LanguageManager.ts";
@@ -55,14 +54,12 @@ export class StimulusManager {
         }
         break;
 
-      case "syllables":
+      case "colors":
         if (usePregenerated.stimuli) {
-          const currentLang = LanguageManager.getCurrentLanguage();
-          const syllableSequence = currentLang === "en" ? SYLLABLE_SEQUENCE_EN : SYLLABLE_SEQUENCE_UA;
-          const syllable = getStimulusFromSequence(syllableSequence, stimulusIndex);
-          this.container.innerHTML = getSyllableHtml(syllable, stimulusSize, "red");
+          const color = getStimulusFromSequence(COLOR_SEQUENCE, stimulusIndex);
+          this.container.innerHTML = getColorRectangleHtml(stimulusSize, color);
         } else {
-          this.container.innerHTML = getRandomSyllable(stimulusSize, "red");
+          this.container.innerHTML = getRandomColorRectangle(stimulusSize);
         }
         break;
 
