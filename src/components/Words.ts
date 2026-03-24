@@ -3,7 +3,6 @@ import {getLocalizedVar} from "../localization/localization.ts";
 
 type WordColor = "red" | "green" | "blue";
 
-// A small sample set of words; you can expand this list
 const wordsList = getLocalizedVar("randomWords");
 
 /**
@@ -20,5 +19,19 @@ export function getRandomWord(size: number, color?: WordColor): string {
 }
 
 export function getWordHtml(word: string, size: number, color: WordColor): string {
-  return `<span class="font-mono text-[${size}mm] leading-none text-${color}-600">${word}</span>`;
+  // Map your color names to actual hex/css values if you aren't using a lookup table
+  const colorMap: Record<WordColor, string> = {
+    red: "#dc2626",   // Tailwind's red-600
+    green: "#16a34a", // Tailwind's green-600
+    blue: "#2563eb"   // Tailwind's blue-600
+  };
+
+  const hexColor = colorMap[color];
+
+  return `
+    <span 
+      class="font-mono leading-none" 
+      style="font-size: ${size}mm; color: ${hexColor};"
+    >${word}</span>
+  `;
 }

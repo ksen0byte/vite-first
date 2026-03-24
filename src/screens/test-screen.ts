@@ -58,6 +58,7 @@ export class TestScreen {
    * Set up the Test Screen UI and initialize all logic (countdown, timers, events).
    */
   public setupScreen(): void {
+    this.stopTest(); // Ensure a clean state if re-initializing
     this.renderUI(this.appContext.debugMode);
     this.getElements();
     this.createManagers();
@@ -172,6 +173,7 @@ export class TestScreen {
     this.retryButton.addEventListener("click", () => this.handleRetry());
     this.homeButton.addEventListener("click", () => this.handleHome());
     // Listen for keydown to simulate user input
+    document.removeEventListener("keydown", this.handleKeyDownBound);
     document.addEventListener("keydown", this.handleKeyDownBound);
   }
 
@@ -184,11 +186,12 @@ export class TestScreen {
   }
 
   private stopTest(): void {
-    this.timerManager.stopAndReset();
+    this.timerManager?.stopAndReset();
     clearAllTimeouts();
     this.reactionTimes.clear();
     this.spamInputCount = 0;
-    this.stimuliCounter.reset();
+    this.stimuliCounter?.reset();
+    this.transitionTo(toIdle());
   }
 
   /**
@@ -196,9 +199,7 @@ export class TestScreen {
    * Resets all counters, timers, and clears old timeouts.
    */
   private handleRetry(): void {
-    this.stopTest();
-    this.retryButton.blur();
-    this.startTest();
+    this.setupScreen();
   }
 
   private handleHome(): void {
@@ -285,14 +286,13 @@ export class TestScreen {
     this.showSpamModal();
     scheduleTimeout(() => {
       this.hideSpamModal();
-      this.handleRetry();
+      this.setupScreen(); // Use setupScreen instead of handleRetry to ensure full reset from any state
     }, 5000);
   }
 
   private onTestComplete(): void {
     this.transitionTo(toFinished(this.reactionTimes));
     this.stimulusManager.clearContainer();
-    this.destroy();
 
     this.stimulusContainer.innerHTML = `
       <div class="flex flex-col items-center space-y-4">
@@ -311,13 +311,14 @@ export class TestScreen {
     // On "Retry", reset test
     endRetryBtn.addEventListener("click", () => {
       logWithTime("End screen Retry clicked.");
-      // Re-run handleRetry() or do a fresh TestScreen again
-      this.handleRetry();
+      // Re-setup screen to restore UI and listeners
+      this.setupScreen();
     });
 
     // On "Finish", go to the results screen
     endFinishBtn.addEventListener("click", () => {
       logWithTime("End screen Finish clicked. Showing results.");
+      this.destroy();
       Router.navigate("/results", { reactionTimes: this.reactionTimes });
     });
   }

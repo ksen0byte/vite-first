@@ -112,6 +112,8 @@ const localization: LocalizationKeys = {
   wordPreviewWord: {en: "Lion", uk: "Лев"},
   colorsOption: {en: "🎨 Colors", uk: "🎨 Кольори"},
   colorsSizeSliderLabel: {en: "Colored Rectangle Size", uk: "Розмір кольорового прямокутника"},
+  combinedOption: {en: "🔀 Combined Stimuli", uk: "🔀 Комбіновані Стимули"},
+  combinedSizeSliderLabel: {en: "Combined Stimuli Size", uk: "Розмір комбінованих стимулів"},
 
   fontSizeSliderLabel: {en: "Font Size", uk: "Розмір шрифту"},
 

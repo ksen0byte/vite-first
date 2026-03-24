@@ -21,20 +21,46 @@ export const WORD_SEQUENCE_EN: readonly string[] = [
 ];
 
 export const WORD_SEQUENCE_UA: readonly string[] = [
-  "вікно", "клен", "овес", "кіт", "слон", "дім", "верба", "куля", "кран", "кедр", "коза", "бик", "льон", "кріт", "стілець", "ніж", "дуб", "бук", "заєць", "осел", "стіл", "роза",
-  "тигр", "кінь", "окуляри", "пояс", "мох", "їжак", "соя", "стілець", "лев", "лисиця", "сіль", "гора", "ялина", "меч", "мак", "кінь", "роза", "дуб", "липа", "слон", "дім", "кіт",
+  "вікно", "клен", "овес", "кіт", "слон", "дім", "верба", "куля", "кран", "кедр", "коза", "бик", "льон", "кріт", "стіл", "ніж", "дуб", "бук", "заєць", "осел", "стіл", "роза",
+  "тигр", "кінь", "окуляри", "пояс", "мох", "їжак", "соя", "стіл", "лев", "лисиця", "сіль", "гора", "ялина", "меч", "мак", "кінь", "роза", "дуб", "липа", "слон", "дім", "кіт",
   "коза", "сіль", "куля", "вода", "в'яз", "клен", "перо", "ялина", "м'яч", "кран", "кедр", "коза", "бик", "льон", "кріт", "вовк", "ніж", "дуб", "заєць", "їжак", "стіл", "роза",
   "тигр", "кінь", "окуляри", "пояс", "овес", "верба", "лев", "лисиця", "біб", "ключ", "гора", "ялина", "меч", "мак", "кінь", "роза", "дуб", "липа", "слон", "ключ", "кіт", "коза",
   "сіль", "куля", "вовк", "їжак", "мох", "в'яз", "вода", "перо", "ялина", "м'яч", "гиря", "липа", "осел", "мак", "заєць", "вода", "льон", "соя", "перо", "овес", "м'яч", "кран",
-  "кедр", "лисиця", "бик", "льон", "кріт", "стілець", "ніж", "заєць", "лев", "тигр"
+  "кедр", "лисиця", "бик", "льон", "кріт", "стіл", "ніж", "заєць", "лев", "тигр"
 ];
 
 export const COLOR_SEQUENCE: readonly ColorType[] = [
   "yellow", "green", "green", "red", "red", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "yellow", "yellow", "green", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "yellow", "green", "red", "green", "yellow", "red", "red", "yellow", "yellow", "green", "yellow", "green", "red", "green", "green", "green", "red", "yellow", "red", "red", "yellow", "yellow", "yellow", "green", "green", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "yellow", "green", "green", "red", "red", "green", "yellow", "yellow", "green", "yellow", "green", "red", "green", "green", "green", "red", "yellow", "red", "red", "yellow", "yellow", "red", "red", "green", "green", "yellow", "yellow", "green", "yellow", "yellow", "green", "red", "green", "red", "yellow", "green", "green", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "yellow", "yellow", "red", "red", "red",
 ];
 
-
-export const COMBINED_SEQUENCE: readonly (FigureType | ColorType | string)[] = ["triangle", "вікно", "square", "red", "green", "овес", "кіт", "circle", "red", "клен", "дім", "red", "green", "red", "triangle", "слон", "куля", "triangle", "red", "верба", "кедр", "square", "коза", "жовтий", "square", "кран", "бик", "льон", "triangle", "circle", "кріт", "заєць", "triangle", "triangle", "square", "green", "red", "осел", "red", "circle", "red", "стілець", "triangle", "green", "green", "жовтий", "green", "triangle", "дуб", "triangle", "ніж", "square", "circle", "тигр", "жовтий", "green", "бук", "стіл", "triangle", "square", "circle", "кінь", "жовтий", "red", "окуляри", "пояс", "circle", "роза", "мох", "жовтий", "circle", "square", "їжак", "жовтий", "triangle", "circle", "green", "circle", "вовк", "red", "лев", "square", "triangle", "square", "сіль", "кінь", "square", "гора", "triangle", "circle", "жовтий", "соя", "red", "circle", "red", "лисиця", "red", "меч", "circle", "дім", "жовтий", "ялина", "triangle", "мак", "circle", "жовтий", "слон", "кіт", "жовтий", "роза", "green", "сіль", "жовтий", "green", "square", "green", "red", "square", "green", "green",];
+export const COMBINED_SEQUENCE_EN: readonly (FigureType | ColorType | string)[] = [
+  "triangle", "door", "square", "red", "green", "corn", "cat", "circle", "red", "pine",
+  "home", "red", "green", "red", "triangle", "bear", "bolt", "triangle", "red", "bush",
+  "oak", "square", "goat", "yellow", "square", "tap", "bull", "flax", "triangle", "circle",
+  "mole", "hare", "triangle", "triangle", "square", "green", "red", "mule", "red", "circle",
+  "red", "seat", "triangle", "green", "green", "yellow", "green", "triangle", "elm", "triangle",
+  "knife", "square", "circle", "lynx", "yellow", "green", "ash", "seat", "triangle", "square",
+  "circle", "buck", "yellow", "red", "lens", "belt", "circle", "rose", "moss", "yellow",
+  "circle", "square", "frog", "yellow", "triangle", "circle", "green", "circle", "wolf", "red",
+  "lion", "square", "triangle", "square", "salt", "buck", "square", "hill", "triangle", "circle",
+  "yellow", "soy", "red", "circle", "red", "fox", "red", "club", "circle", "home",
+  "yellow", "fir", "triangle", "lily", "circle", "yellow", "bear", "cat", "yellow", "rose",
+  "green", "salt", "yellow", "green", "square", "green", "red", "square", "green", "green",
+];
+export const COMBINED_SEQUENCE_UA: readonly (FigureType | ColorType | string)[] = [
+  "triangle", "вікно", "square", "red", "green", "овес", "кіт", "circle", "red", "клен",
+  "дім", "red", "green", "red", "triangle", "слон", "куля", "triangle", "red", "верба",
+  "кедр", "square", "коза", "yellow", "square", "кран", "бик", "льон", "triangle", "circle",
+  "кріт", "заєць", "triangle", "triangle", "square", "green", "red", "осел", "red", "circle",
+  "red", "стіл", "triangle", "green", "green", "yellow", "green", "triangle", "дуб", "triangle",
+  "ніж", "square", "circle", "тигр", "yellow", "green", "бук", "стіл", "triangle", "square",
+  "circle", "кінь", "yellow", "red", "окуляри", "пояс", "circle", "роза", "мох", "yellow",
+  "circle", "square", "їжак", "yellow", "triangle", "circle", "green", "circle", "вовк", "red",
+  "лев", "square", "triangle", "square", "сіль", "кінь", "square", "гора", "triangle", "circle",
+  "yellow", "соя", "red", "circle", "red", "лисиця", "red", "меч", "circle", "дім",
+  "yellow", "ялина", "triangle", "мак", "circle", "yellow", "слон", "кіт", "yellow", "роза",
+  "green", "сіль", "yellow", "green", "square", "green", "red", "square", "green", "green",
+];
 
 export const isTargetFigure = (f: FigureType): boolean => f === 'square';
 export const isTargetWordEn = (w: string): boolean =>

@@ -88,6 +88,24 @@ export const subsectionsConfig = {
       }
     }
   },
+  combined: {
+    wordLocalisationKey: "wordPreviewWord",
+    sizeSlider: {
+      id: "combined-size-slider",
+      options: {
+        start: 50,
+        step: 10,
+        connect: "lower",
+        range: {min: 20, max: 70},
+        format: intFormatter,
+      } as Options,
+      label: {
+        id: "combined-size-slider-label",
+        localizationKey: "combinedSizeSliderLabel",
+        unit: "mm",
+      }
+    }
+  },
   general: {
     exposureTimeSlider: {
       id: "exposure-time-slider",
@@ -149,21 +167,25 @@ export const inputsConfig = {
     "shapes": subsectionsConfig.shape.sizeSlider.id,
     "words": subsectionsConfig.word.sizeSlider.id,
     "colors": subsectionsConfig.colors.sizeSlider.id,
+    "combined": subsectionsConfig.combined.sizeSlider.id,
   },
   exposureTimeSliderId: {
     "shapes": "shapes-" + subsectionsConfig.general.exposureTimeSlider.id,
     "words": "words-" + subsectionsConfig.general.exposureTimeSlider.id,
     "colors": "colors-" + subsectionsConfig.general.exposureTimeSlider.id,
+    "combined": "combined-" + subsectionsConfig.general.exposureTimeSlider.id,
   },
   exposureDelaySliderId: {
     "shapes": "shapes-" + subsectionsConfig.general.exposureDelaySlider.id,
     "words": "words-" + subsectionsConfig.general.exposureDelaySlider.id,
     "colors": "colors-" + subsectionsConfig.general.exposureDelaySlider.id,
+    "combined": "combined-" + subsectionsConfig.general.exposureDelaySlider.id,
   },
   stimulusCountSliderId: {
     "shapes": "shapes-" + subsectionsConfig.general.stimulusCountSlider.id,
     "words": "words-" + subsectionsConfig.general.stimulusCountSlider.id,
     "colors": "colors-" + subsectionsConfig.general.stimulusCountSlider.id,
+    "combined": "combined-" + subsectionsConfig.general.stimulusCountSlider.id,
   },
 
 }

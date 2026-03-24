@@ -8,7 +8,7 @@ import {
   WORD_SEQUENCE_EN,
   WORD_SEQUENCE_UA,
   COLOR_SEQUENCE,
-  getStimulusFromSequence
+  getStimulusFromSequence, FigureType, ColorType, COMBINED_SEQUENCE_EN, COMBINED_SEQUENCE_UA
 } from "../domain/stimulus-sequences.ts";
 import {LanguageManager} from "../localization/LanguageManager.ts";
 
@@ -60,6 +60,44 @@ export class StimulusManager {
           this.container.innerHTML = getColorRectangleHtml(stimulusSize, color);
         } else {
           this.container.innerHTML = getRandomColorRectangle(stimulusSize);
+        }
+        break;
+
+      case "combined":
+        if (usePregenerated.stimuli) {
+          const currentLang = LanguageManager.getCurrentLanguage();
+          const combinedSequence = currentLang === "en" ? COMBINED_SEQUENCE_EN : COMBINED_SEQUENCE_UA;
+          const stimulus = getStimulusFromSequence(combinedSequence, stimulusIndex);
+
+          // Identify what the stimulus is
+          const figures: FigureType[] = ['circle', 'triangle', 'square'];
+          const colors: ColorType[] = ['red', 'green', 'yellow'];
+
+          if (figures.includes(stimulus as FigureType)) {
+            this.container.innerHTML = getShapeSvg(stimulusSize, "red", stimulus as FigureType);
+          } else if (colors.includes(stimulus as ColorType)) {
+            this.container.innerHTML = getColorRectangleHtml(stimulusSize, stimulus as ColorType);
+          } else {
+            const mappedFontSize = Math.round(15 + (stimulusSize - 20) * 0.3);
+            this.container.innerHTML = getWordHtml(stimulus, mappedFontSize, "red");
+          }
+        } else {
+          // Pick 1 of 3 types randomly
+          const types = ['shape', 'color', 'word'];
+          const randomType = types[Math.floor(Math.random() * types.length)];
+
+          switch (randomType) {
+            case 'shape':
+              this.container.innerHTML = getRandomShape(stimulusSize, "red");
+              break;
+            case 'color':
+              this.container.innerHTML = getRandomColorRectangle(stimulusSize);
+              break;
+            case 'word':
+              const mappedFontSize = Math.round(15 + (stimulusSize - 20) * 0.3);
+              this.container.innerHTML = getRandomWord(mappedFontSize, "red");
+              break;
+          }
         }
         break;
 

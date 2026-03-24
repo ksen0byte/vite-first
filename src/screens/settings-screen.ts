@@ -245,6 +245,70 @@ function settingsScreenHTML(appContext: AppContext) {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Combined Subsection -->
+                    <div
+                            tabIndex="0"
+                            class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
+                            id="combined-subsection"
+                    >
+                        <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'combined' ? 'checked="checked"' : ''} class="peer" data-subsection="combined"/>
+                        <!-- Subsection Title -->
+                        <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
+                             data-localize="combinedOption"
+                        >
+                            Combined:
+                        </div>
+                        <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
+                            <!-- 2-column layout on medium+ screens -->
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 gap-y-4 lg:gap-6 items-start m-2">
+
+                                <!-- Left Column: Color Rectangle Preview -->
+                                <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
+                                    <div id="combined-preview"
+                                         class="col-span-1 subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
+                                        
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Settings -->
+                                <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label id="combined-size-slider-label" class="text-sm font-medium"></label>
+                                        <div id="combined-size-slider"></div>
+                                    </div>
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label id="combined-exposure-time-label" class="text-sm font-medium"></label>
+                                        <div id="combined-exposure-time-slider"></div>
+                                    </div>
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label id="combined-exposure-delay-label" class="text-sm font-medium"></label>
+                                        <div id="combined-exposure-delay-slider"></div>
+                                    </div>
+                                    <div class="flex flex-col space-y-2 w-full">
+                                        <label id="combined-stimulus-count-label" class="text-sm font-medium"></label>
+                                        <div id="combined-stimulus-count-slider"></div>
+                                    </div>
+                                    <!-- Use Pregenerated Delays Checkbox -->
+                                    <div class="flex flex-col 2xl:flex-row w-full gap-4">
+                                        <div class="flex flex-col space-y-2 flex-1">
+                                            <label class="label cursor-pointer justify-start gap-3">
+                                                <input type="checkbox" id="combined-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
+                                                <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
+                                            </label>
+                                        </div>
+                                    
+                                        <div class="flex flex-col space-y-2 flex-1">
+                                            <label class="label cursor-pointer justify-start gap-3">
+                                                <input type="checkbox" id="combined-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
+                                                <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
           </form>
@@ -274,7 +338,8 @@ export function setupSettingsScreen(appContainer: HTMLElement): void {
     [
       appContainer.querySelector("#shapes-subsection")!,
       appContainer.querySelector("#words-subsection")!,
-      appContainer.querySelector("#colors-subsection")!
+      appContainer.querySelector("#colors-subsection")!,
+      appContainer.querySelector("#combined-subsection")!
     ]
   );
   setupGeometricShapeSection(
@@ -294,6 +359,12 @@ export function setupSettingsScreen(appContainer: HTMLElement): void {
     appContext.testSettings.testMode == "colors" ? appContext.testSettings.exposureTime : undefined,
     appContext.testSettings.testMode == "colors" ? appContext.testSettings.exposureDelay : undefined,
     appContext.testSettings.testMode == "colors" ? appContext.testSettings.stimulusCount : undefined,
+  );
+  setupCombinedSection(
+    appContext.testSettings.testMode == "combined" ? appContext.testSettings.stimulusSize : undefined,
+    appContext.testSettings.testMode == "combined" ? appContext.testSettings.exposureTime : undefined,
+    appContext.testSettings.testMode == "combined" ? appContext.testSettings.exposureDelay : undefined,
+    appContext.testSettings.testMode == "combined" ? appContext.testSettings.stimulusCount : undefined,
   );
 
   // footer
@@ -415,6 +486,44 @@ const setupColorsSection = (stimulusSize?: StimulusSize, exposureTime?: Exposure
   setupCheckboxSliderToggle("colors-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
 }
 
+const setupCombinedSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
+  function showLayeredPreview(sizeMm: number) {
+    const combinedPreview = document.getElementById("combined-preview") as HTMLElement;
+
+    // 1. Calculate the mapped font size (20-70 -> 15-30)
+    const mappedFontSize = Math.round(15 + (sizeMm - 20) * 0.3);
+
+    // Get the current language from your config or a global state
+    // If you have a way to detect current lang, use it here (e.g., currentLang === 'uk' ? 'uk' : 'en')
+    const localizedWord = localize(subsectionsConfig.combined.wordLocalisationKey);
+
+    combinedPreview.innerHTML = `
+      <div class="relative flex items-center justify-center" style="height: ${sizeMm + 20}mm; width: 100%;">
+        
+        <div class="absolute flex items-center justify-center">
+          ${getColorRectangleHtml(sizeMm, "yellow")}
+        </div>
+
+        <div class="absolute flex items-center justify-center">
+          ${getRandomShape(sizeMm, "red", "circle")}
+        </div>
+        
+        <div class="absolute flex items-center justify-center">
+          <span class="font-mono leading-none text-blue-600 drop-shadow-sm" style="font-size: ${mappedFontSize + 'mm'};">${localizedWord}</span>
+        </div>
+        
+      </div>
+    `;
+  }
+
+  const sectionPrefix = "combined-";
+  setupSlider(subsectionsConfig.combined.sizeSlider, "", stimulusSize, (sizeMm) => showLayeredPreview(sizeMm));
+
+  setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
+  setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
+  setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
+  setupCheckboxSliderToggle("combined-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
+}
 
 const startButtonCallback: () => void = () => {
   // 1. Check test mode selection
