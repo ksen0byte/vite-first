@@ -33,7 +33,7 @@ function beginTestScreenHTML(appContext: AppContext): string {
   const lastName = appContext.personalData.lastName || 'N/A';
   const gender = appContext.personalData.gender || 'N/A';
   const age = appContext.personalData.age || 'N/A';
-  const testType = (appContext.testSettings.testType! === 'svmr') ? localize("testTypePzmrShort") : (appContext.testSettings.testType! === 'sr1-3') ? localize("testTypeRV13Short") : localize("testTypeRV23Short");
+  const testType = (appContext.testSettings.testType! === 'svmr') ? localize("testTypePzmrShort") : (appContext.testSettings.testType! === 'crt1-3') ? localize("testTypeRV13Short") : localize("testTypeRV23Short");
   const exposureDelay = `${appContext.testSettings.exposureDelay[0]}-${appContext.testSettings.exposureDelay[1]} ${localize("ms")}`;
 
   return `

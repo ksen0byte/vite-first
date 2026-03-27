@@ -139,8 +139,8 @@ const localization: LocalizationKeys = {
   // Test Type
   selectTestType: {en: "Select Test Type", uk: "Оберіть тип тестування"},
   testTypePzmrShort: {en: "SVMR", uk: "ПЗМР"},
-  testTypeRV13Short: {en: "SR1-3", uk: "РВ1-3"},
-  testTypeRV23Short: {en: "SR2-3", uk: "РВ2-3"},
+  testTypeRV13Short: {en: "CRT1-3", uk: "РВ1-3"},
+  testTypeRV23Short: {en: "CRT2-3", uk: "РВ2-3"},
   testTypePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакція"},
   testTypeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
   testTypeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},

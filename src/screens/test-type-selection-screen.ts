@@ -60,7 +60,7 @@ function setupTestTypeButtonsCallback(_appContext: AppContext) {
     const current = AppContextManager.getContext();
     AppContextManager.setContext({
       ...current,
-      testSettings: { ...current.testSettings, testType: "sr1-3" }
+      testSettings: { ...current.testSettings, testType: "crt1-3" }
     });
   });
 
@@ -70,7 +70,7 @@ function setupTestTypeButtonsCallback(_appContext: AppContext) {
     const current = AppContextManager.getContext();
     AppContextManager.setContext({
       ...current,
-      testSettings: { ...current.testSettings, testType: "sr2-3" }
+      testSettings: { ...current.testSettings, testType: "crt2-3" }
     });
   });
 
@@ -86,11 +86,11 @@ function mainHtml(testType: TestType) {
       <button id="pzmr-button" class="btn btn-soft btn-primary btn-xl w-full ${testType === "svmr" ? "btn-active" : ""}" data-localize="testTypePzmrShort">
         SVMR
       </button>
-      <button id="rv1-3-button" class="btn btn-soft btn-secondary btn-xl btn-disabled w-full ${testType === "sr1-3" ? "btn-active" : ""}" data-localize="testTypeRV13Short">
-        SR1-3
+      <button id="rv1-3-button" class="btn btn-soft btn-secondary btn-xl btn-disabled w-full ${testType === "crt1-3" ? "btn-active" : ""}" data-localize="testTypeRV13Short">
+        CRT1-3
       </button>
-      <button id="rv2-3-button" class="btn btn-soft btn-accent btn-xl btn-disabled w-full ${testType === "sr2-3" ? "btn-active" : ""}" data-localize="testTypeRV23Short">
-        SR2-3
+      <button id="rv2-3-button" class="btn btn-soft btn-accent btn-xl btn-disabled w-full ${testType === "crt2-3" ? "btn-active" : ""}" data-localize="testTypeRV23Short">
+        CRT2-3
       </button>
     </div>
   </div>

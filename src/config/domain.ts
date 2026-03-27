@@ -16,7 +16,7 @@ export interface SliderConfig {
 }
 
 export type TestMode = "shapes" | "words" | "colors" | "combined";
-export type TestType = "svmr" | "sr1-3" | "sr2-3";
+export type TestType = "svmr" | "crt1-3" | "crt2-3";
 export type Gender = 'male' | 'female';
 export type StimulusSize = number;
 export type ExposureTime = number;

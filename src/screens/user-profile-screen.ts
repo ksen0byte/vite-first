@@ -235,9 +235,9 @@ function getTestTypeLocalizationKey(testType: string): string {
   switch (testType) {
     case "svmr":
       return "testTypePzmrLong";
-    case "sr1-3":
+    case "crt1-3":
       return "testTypeRV13Long";
-    case "sr2-3":
+    case "crt2-3":
       return "testTypeRV23Long";
     default:
       throw new Error("Invalid test type");
