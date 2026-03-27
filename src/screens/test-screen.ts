@@ -229,7 +229,7 @@ export class TestScreen {
     }
 
     const delay = getNextDelay(this.appContext.testSettings, index);
-    this.transitionTo(toDelayed(index, delay, Date.now()));
+    this.transitionTo(toDelayed(index, delay, performance.now()));
 
     scheduleTimeout(() => {
       this.showStimulus(index);
@@ -240,7 +240,7 @@ export class TestScreen {
     this.stimuliCounter.set(index + 1);
     this.stimulusManager.showStimulus(index);
     this.timerManager.restart();
-    this.transitionTo(toShowingStimulus(index, Date.now(), "red"));
+    this.transitionTo(toShowingStimulus(index, performance.now(), "red"));
 
     scheduleTimeout(() => {
       this.onStimulusTimeout(index);
@@ -267,7 +267,7 @@ export class TestScreen {
     }
 
     if (this.state._tag === 'ShowingStimulus') {
-      const reactionTime = Date.now() - this.state.startTime;
+      const reactionTime = performance.now() - this.state.startTime;
 
       if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
         console.warn(`Input ignored: Reaction time (${reactionTime}ms) is below threshold.`);

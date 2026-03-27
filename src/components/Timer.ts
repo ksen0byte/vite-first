@@ -14,7 +14,7 @@ export class TimerManager {
   public start() {
     this.stop(); // Stop if already running
 
-    this.timerStart = Date.now();
+    this.timerStart = performance.now();
     this.timerInterval = window.setInterval(() => {
       this.updateTimerDisplay();
     }, 10); // update ~ every 10ms
@@ -31,7 +31,7 @@ export class TimerManager {
 
   /** Reset timer to 0, but keep it running (i.e. new start point). */
   public reset() {
-    this.timerStart = Date.now();
+    this.timerStart = performance.now();
     this.container.textContent = this.formatTimer(0);
   }
 
@@ -55,7 +55,7 @@ export class TimerManager {
       this.container.textContent = this.formatTimer(0);
       return;
     }
-    const elapsedMs = Date.now() - this.timerStart;
+    const elapsedMs = performance.now() - this.timerStart;
     this.container.textContent = this.formatTimer(elapsedMs);
   }
 
