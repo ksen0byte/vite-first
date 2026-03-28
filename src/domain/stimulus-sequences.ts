@@ -1,17 +1,17 @@
 // src/domain/stimulus-sequences.ts
 
-export type FigureType = 'circle' | 'triangle' | 'square';
-export type ColorType = 'red' | 'green' | 'yellow';
+
+import {Color, Shape, Stimulus, Word} from "./types.ts";
 
 export const EXPOSITION_DELAY_SEQUENCE: number[] = [
   900, 1700, 1100, 700, 1900, 1500, 1300, 1900, 1900, 1100, 1900, 1700, 1100, 1900, 1900, 500, 1500, 500, 1100, 1700, 1500, 1900, 1100, 1300, 1500, 1500, 1100, 1100, 900, 700, 1500, 1300, 1700, 1100, 700, 700, 500, 700, 1100, 1900, 1100, 1900, 900, 1300, 1300, 500, 700, 1900, 1900, 1100, 900, 1300, 1900, 500, 500, 1700, 1700, 1300, 1900, 1900, 500, 1300, 900, 1500, 500, 1100, 1300, 500, 1300, 1500, 1500, 1100, 1100, 1100, 1900, 1100, 900, 1100, 1100, 1300, 500, 1900, 1300, 1500, 1700, 1300, 1900, 500, 1900, 1100, 1900, 1300, 500, 1900, 500, 500, 1900, 700, 1900, 500, 700, 900, 700, 900, 700, 700, 1300, 900, 1300, 1500, 500, 1500, 700, 1300, 1900, 1900, 1100, 1700, 500, 700,
 ];
 
-export const FIGURE_SEQUENCE: readonly FigureType[] = [
+export const SHAPE_SEQUENCE: readonly Shape[] = [
   "triangle", "circle", "circle", "square", "square", "triangle", "circle", "triangle", "triangle", "circle", "square", "square", "circle", "square", "triangle", "triangle", "circle", "circle", "square", "square", "triangle", "circle", "square", "square", "triangle", "triangle", "circle", "square", "circle", "triangle", "square", "square", "triangle", "triangle", "circle", "triangle", "circle", "square", "circle", "circle", "circle", "square", "triangle", "square", "square", "triangle", "triangle", "triangle", "circle", "circle", "triangle", "circle", "triangle", "triangle", "circle", "square", "square", "circle", "square", "square", "triangle", "circle", "square", "square", "triangle", "circle", "square", "square", "triangle", "triangle", "circle", "circle", "square", "square", "circle", "triangle", "triangle", "circle", "triangle", "circle", "square", "circle", "circle", "circle", "square", "triangle", "square", "square", "triangle", "triangle", "square", "square", "circle", "circle", "triangle", "triangle", "circle", "triangle", "triangle", "circle", "square", "circle", "square", "triangle", "circle", "circle", "triangle", "circle", "triangle", "triangle", "circle", "square", "square", "circle", "square", "triangle", "triangle", "square", "square", "square",
 ];
 
-export const WORD_SEQUENCE_EN: readonly string[] = [
+export const WORD_SEQUENCE_EN: readonly Word[] = [
   "door", "pine", "corn", "cat", "bear", "home", "bush", "bolt", "tap", "oak", "goat", "bull", "flax", "mole", "seat", "knife", "elm", "ash", "hare", "mule", "desk", "rose",
   "lynx", "buck", "lens", "belt", "moss", "frog", "soy", "seat", "lion", "fox", "salt", "hill", "fir", "club", "lily", "buck", "rose", "elm", "lime", "bear", "home", "cat",
   "goat", "salt", "bolt", "rain", "yew", "pine", "pen", "fir", "ball", "tap", "oak", "goat", "bull", "flax", "mole", "wolf", "knife", "elm", "hare", "frog", "desk", "rose",
@@ -20,7 +20,7 @@ export const WORD_SEQUENCE_EN: readonly string[] = [
   "oak", "fox", "bull", "flax", "mole", "seat", "knife", "hare", "lion", "lynx",
 ];
 
-export const WORD_SEQUENCE_UA: readonly string[] = [
+export const WORD_SEQUENCE_UA: readonly Word[] = [
   "вікно", "клен", "овес", "кіт", "слон", "дім", "верба", "куля", "кран", "кедр", "коза", "бик", "льон", "кріт", "стіл", "ніж", "дуб", "бук", "заєць", "осел", "стіл", "роза",
   "тигр", "кінь", "окуляри", "пояс", "мох", "їжак", "соя", "стіл", "лев", "лисиця", "сіль", "гора", "ялина", "меч", "мак", "кінь", "роза", "дуб", "липа", "слон", "дім", "кіт",
   "коза", "сіль", "куля", "вода", "в'яз", "клен", "перо", "ялина", "м'яч", "кран", "кедр", "коза", "бик", "льон", "кріт", "вовк", "ніж", "дуб", "заєць", "їжак", "стіл", "роза",
@@ -29,11 +29,11 @@ export const WORD_SEQUENCE_UA: readonly string[] = [
   "кедр", "лисиця", "бик", "льон", "кріт", "стіл", "ніж", "заєць", "лев", "тигр"
 ];
 
-export const COLOR_SEQUENCE: readonly ColorType[] = [
+export const COLOR_SEQUENCE: readonly Color[] = [
   "yellow", "green", "green", "red", "red", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "yellow", "yellow", "green", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "yellow", "green", "red", "green", "yellow", "red", "red", "yellow", "yellow", "green", "yellow", "green", "red", "green", "green", "green", "red", "yellow", "red", "red", "yellow", "yellow", "yellow", "green", "green", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "green", "red", "red", "yellow", "yellow", "green", "green", "red", "red", "green", "yellow", "yellow", "green", "yellow", "green", "red", "green", "green", "green", "red", "yellow", "red", "red", "yellow", "yellow", "red", "red", "green", "green", "yellow", "yellow", "green", "yellow", "yellow", "green", "red", "green", "red", "yellow", "green", "green", "yellow", "green", "yellow", "yellow", "green", "red", "red", "green", "red", "yellow", "yellow", "red", "red", "red",
 ];
 
-export const COMBINED_SEQUENCE_EN: readonly (FigureType | ColorType | string)[] = [
+export const COMBINED_SEQUENCE_EN: readonly Stimulus[] = [
   "triangle", "door", "square", "red", "green", "corn", "cat", "circle", "red", "pine",
   "home", "red", "green", "red", "triangle", "bear", "bolt", "triangle", "red", "bush",
   "oak", "square", "goat", "yellow", "square", "tap", "bull", "flax", "triangle", "circle",
@@ -47,7 +47,7 @@ export const COMBINED_SEQUENCE_EN: readonly (FigureType | ColorType | string)[] 
   "yellow", "fir", "triangle", "lily", "circle", "yellow", "bear", "cat", "yellow", "rose",
   "green", "salt", "yellow", "green", "square", "green", "red", "square", "green", "green",
 ];
-export const COMBINED_SEQUENCE_UA: readonly (FigureType | ColorType | string)[] = [
+export const COMBINED_SEQUENCE_UA: readonly Stimulus[] = [
   "triangle", "вікно", "square", "red", "green", "овес", "кіт", "circle", "red", "клен",
   "дім", "red", "green", "red", "triangle", "слон", "куля", "triangle", "red", "верба",
   "кедр", "square", "коза", "yellow", "square", "кран", "бик", "льон", "triangle", "circle",
@@ -62,10 +62,10 @@ export const COMBINED_SEQUENCE_UA: readonly (FigureType | ColorType | string)[] 
   "green", "сіль", "yellow", "green", "square", "green", "red", "square", "green", "green",
 ];
 
-export const isTargetFigure = (f: FigureType): boolean => f === 'square';
-export const isTargetWordEn = (w: string): boolean =>
+export const isTargetFigure = (f: Shape): boolean => f === 'square';
+export const isTargetWordEn = (w: Word): boolean =>
   ["bear", "cat", "goat", "bull", "mole", "wolf", "frog", "hare", "mule", "lynx", "buck", "lion", "fox"].includes(w);
-export const isTargetWordUa = (w: string): boolean =>
+export const isTargetWordUa = (w: Word): boolean =>
   ["слон", "кіт", "коза", "бик", "кріт", "вовк", "їжак", "заєць", "осел", "тигр", "кінь", "лев", "лисиця"].includes(w);
 
 /**

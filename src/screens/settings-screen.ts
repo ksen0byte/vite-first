@@ -6,7 +6,7 @@ import {getSliderValue} from "../util/util.ts";
 import {setupFooter} from "../components/footer.ts";
 import {setupHeader} from "../components/header.ts";
 import {defaultAppContext, inputsConfig, subsectionsConfig} from "../config/settings.ts";
-import {getRandomShape} from "../components/Shapes.ts";
+import {getRandomShapeSvg} from "../components/Shapes.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
 import {getColorRectangleHtml} from "../components/ColorRectangles.ts";
@@ -445,7 +445,7 @@ const setupGeometricShapeSection = (stimulusSize?: StimulusSize, exposureTime?: 
   function showRedCircle(size: number) {
     const shapePreview = document.getElementById("shape-preview") as HTMLElement;
     // Insert the chosen shape
-    shapePreview.innerHTML = getRandomShape(size, "red", "circle");
+    shapePreview.innerHTML = getRandomShapeSvg(size, "red", "circle");
   }
 
   const sectionPrefix = "shapes-";
@@ -505,7 +505,7 @@ const setupCombinedSection = (stimulusSize?: StimulusSize, exposureTime?: Exposu
         </div>
 
         <div class="absolute flex items-center justify-center">
-          ${getRandomShape(sizeMm, "red", "circle")}
+          ${getRandomShapeSvg(sizeMm, "red", "circle")}
         </div>
         
         <div class="absolute flex items-center justify-center">
