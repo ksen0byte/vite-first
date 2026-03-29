@@ -62,11 +62,12 @@ export const COMBINED_SEQUENCE_UA: readonly Stimulus[] = [
   "green", "сіль", "yellow", "green", "square", "green", "red", "square", "green", "green",
 ];
 
-export const isTargetFigure = (f: Shape): boolean => f === 'square';
-export const isTargetWordEn = (w: Word): boolean =>
-  ["bear", "cat", "goat", "bull", "mole", "wolf", "frog", "hare", "mule", "lynx", "buck", "lion", "fox"].includes(w);
-export const isTargetWordUa = (w: Word): boolean =>
-  ["слон", "кіт", "коза", "бик", "кріт", "вовк", "їжак", "заєць", "осел", "тигр", "кінь", "лев", "лисиця"].includes(w);
+const ANIMALS_EN = new Set(["bear", "cat", "goat", "bull", "mole", "wolf", "frog", "hare", "mule", "lynx", "buck", "lion", "fox"]);
+const ANIMALS_UA = new Set(["слон", "кіт", "коза", "бик", "кріт", "вовк", "їжак", "заєць", "осел", "тигр", "кінь", "лев", "лисиця"]);
+
+export const isRed = (s: Stimulus): boolean => s === 'red';
+export const isSquare = (s: Stimulus): boolean => s === 'square';
+export const isAnimal = (s: Stimulus): boolean => ANIMALS_EN.has(s) || ANIMALS_UA.has(s);
 
 /**
  * Safe wrap-around accessor

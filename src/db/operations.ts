@@ -1,6 +1,6 @@
 // src/db/operations.ts
 import {db, User, TestRecord} from './db';
-import {TestSettings} from "../config/domain.ts";
+import {TestSettings, TrialResult} from "../config/domain.ts";
 import { Result, success, failure } from "../util/result.ts";
 
 export type DbError = 
@@ -37,14 +37,14 @@ export async function upsertUser(user: User): Promise<Result<User, DbError>> {
 export async function saveTestRecord(
   user: User,
   testSettings: TestSettings,
-  reactionTimes: number[]
+  trialResults: TrialResult[]
 ): Promise<Result<number, DbError>> {
   try {
     const userKey = `${user.firstName}|${user.lastName}`;
     const testRecord: TestRecord = {
       userKey,
       testSettings,
-      reactionTimes,
+      trials: trialResults,
       date: new Date().toISOString()
     };
     const id = await db.tests.add(testRecord);

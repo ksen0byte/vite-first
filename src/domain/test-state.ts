@@ -1,7 +1,8 @@
 // src/domain/test-state.ts
 
-import { TestSettings } from "../config/domain";
+import {TestSettings, TrialResult} from "../config/domain";
 import { EXPOSITION_DELAY_SEQUENCE, getStimulusFromSequence } from "./stimulus-sequences";
+import {Stimulus} from "./types.ts";
 
 export type TestState =
   | IdleState
@@ -31,7 +32,7 @@ export interface ShowingStimulusState {
   readonly _tag: 'ShowingStimulus';
   readonly stimulusIndex: number;
   readonly startTime: number;
-  readonly stimulusValue: string; // "red" or whatever
+  readonly stimulusValue: Stimulus; // "red" or whatever
 }
 
 export interface SpamDetectedState {
@@ -40,7 +41,7 @@ export interface SpamDetectedState {
 
 export interface FinishedState {
   readonly _tag: 'Finished';
-  readonly reactionTimes: Map<number, number>;
+  readonly reactionTimes: Map<number, TrialResult>;
 }
 
 // Transitions
@@ -66,7 +67,7 @@ export const toDelayed = (
 export const toShowingStimulus = (
   stimulusIndex: number,
   startTime: number,
-  stimulusValue: string
+  stimulusValue: Stimulus
 ): ShowingStimulusState => ({
   _tag: 'ShowingStimulus',
   stimulusIndex,
@@ -76,7 +77,7 @@ export const toShowingStimulus = (
 
 export const toSpamDetected = (): SpamDetectedState => ({ _tag: 'SpamDetected' });
 
-export const toFinished = (reactionTimes: Map<number, number>): FinishedState => ({
+export const toFinished = (reactionTimes: Map<number, TrialResult>): FinishedState => ({
   _tag: 'Finished',
   reactionTimes,
 });

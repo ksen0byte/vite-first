@@ -7,12 +7,15 @@ import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
+import {TrialResult} from "../config/domain.ts";
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
-  reactionTimes: Map<number, number>
+  reactionTimes: Map<number, TrialResult>
 ) {
-  const data = Array.from(reactionTimes.values());
+  const data: number[] = Array.from(reactionTimes.values())
+    .filter(trialResult => trialResult.outcome === "Success")
+    .map(trialResult => trialResult.reactionTime);
 
   if (!data.length) {
     appContainer.innerHTML = `
@@ -165,10 +168,10 @@ export function setupResultsScreen(
 }
 
 async function saveResultsAndSetupNextScreen(
-  reactionTimes: Map<number, number>
+  reactionTimes: Map<number, TrialResult>
 ) {
   const appContext = AppContextManager.getContext();
-  const reactionTimesArray: number[] = Array.from(reactionTimes.values());
+  const trialResults = Array.from(reactionTimes.values());
 
   try {
     const upsertResult = await upsertUser({
@@ -187,7 +190,7 @@ async function saveResultsAndSetupNextScreen(
     console.log(`User saved: ${JSON.stringify(user)}`);
 
     // Save the test linked to this user
-    const saveResult = await saveTestRecord(user, appContext.testSettings, reactionTimesArray);
+    const saveResult = await saveTestRecord(user, appContext.testSettings, trialResults);
     if (saveResult._tag === 'Failure') {
       console.error("Error saving test record", saveResult.error);
       return;

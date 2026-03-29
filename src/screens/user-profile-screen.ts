@@ -46,10 +46,11 @@ function personalDataCardHtml(user: User) {
 }
 
 function testCardHTML(index: number, test: TestRecord): string {
-  const {testSettings, reactionTimes, date} = test;
+  const {testSettings, trials, date} = test;
   const {testMode, stimulusSize, exposureTime, exposureDelay, stimulusCount, testType} = testSettings;
 
   // Generate statistics using ReactionTimeStats
+  const reactionTimes = trials.filter(trial => trial.outcome === "Success").map(trial => trial.reactionTime);
   const stats = new ReactionTimeStats(reactionTimes, exposureTime);
 
   return `
@@ -246,7 +247,8 @@ function getTestTypeLocalizationKey(testType: string): string {
 
 function renderHistograms(tests: TestRecord[]) {
   tests.forEach((test, index) => {
-    const stats = new ReactionTimeStats(test.reactionTimes, test.testSettings.exposureTime);
+    const reactionTimes = test.trials.filter(trial => trial.outcome === "Success").map(trial => trial.reactionTime);
+    const stats = new ReactionTimeStats(reactionTimes, test.testSettings.exposureTime);
     const canvasId = `histogram-${index}`;
 
     stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);

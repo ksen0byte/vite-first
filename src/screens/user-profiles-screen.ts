@@ -5,7 +5,7 @@ import {db, User, TestRecord} from "../db/db";
 import {getAllUsers, getTestsForUser, upsertUser} from "../db/operations";
 import Router from "../routing/router.ts";
 import {exportDataAsJson, readJsonFile} from "../util/export-utils";
-import {TestSettings} from "../config/domain.ts";
+import {TestSettings, TrialResult} from "../config/domain.ts";
 
 /**
  * Exports all users and their test data as a JSON file
@@ -360,8 +360,9 @@ export class UsersScreen {
         };
         type ImportedTestRecord = {
           testSettings: TestSettings;
-          reactionTimes: number[];
           date?: string;
+          trials?: TrialResult[];    // New format
+          reactionTimes?: number[]; // Legacy format
         };
         type ImportedBundle = { user: ImportedUser; tests: ImportedTestRecord[] };
 
@@ -400,24 +401,43 @@ export class UsersScreen {
 
             // Normalize tests; ignore incoming id to avoid collisions
             const normalizedTests: Omit<TestRecord, 'id'>[] = tests
-              .filter((t): t is ImportedTestRecord => !!t && typeof t === 'object' && Array.isArray(t.reactionTimes))
-              .map((t) => ({
-                userKey,
-                testSettings: t.testSettings,
-                reactionTimes: t.reactionTimes,
-                date: (t.date ?? new Date().toISOString())
-              }));
+              .map((t) => {
+                // 1. Determine which data source to use
+                let finalTrials: TrialResult[] = [];
+
+                if (Array.isArray(t.trials)) {
+                  finalTrials = t.trials;
+                } else if (Array.isArray(t.reactionTimes)) {
+                  // Legacy conversion
+                  finalTrials = t.reactionTimes.map((rt, index) => ({
+                    trialIndex: index,
+                    stimulus: 'circle',
+                    reactionTime: rt,
+                    outcome: "Success"
+                  }));
+                } else {
+                  return null; // Skip invalid records
+                }
+
+                return {
+                  userKey,
+                  testSettings: t.testSettings,
+                  trials: finalTrials, // Always store as trials
+                  date: (t.date ?? new Date().toISOString())
+                };
+              })
+              .filter((t): t is Omit<TestRecord, 'id'> => t !== null);
 
             if (normalizedTests.length > 0) {
               // Deduplicate against existing tests for this userKey
               const existing = await db.tests.where('userKey').equals(userKey).toArray();
 
-              const makeSig = (r: Omit<TestRecord, 'id'> | TestRecord): string =>
+              const makeSig = (r: Omit<TestRecord, 'id'> | TestRecord | any): string =>
                 JSON.stringify({
                   userKey: r.userKey,
                   date: r.date,
                   testSettings: r.testSettings,
-                  reactionTimes: r.reactionTimes
+                  trials: r.trials // Compare the object array, not the number array
                 });
 
               const existingSignatures = new Set<string>(existing.map(makeSig));

@@ -1,4 +1,5 @@
 import {Options} from "nouislider";
+import {Stimulus} from "../domain/types.ts";
 
 export const intFormatter = {
   to: (value: number): string => Math.round(value).toString(),
@@ -50,4 +51,18 @@ export interface AppContext {
   readonly personalData: PersonalData,
   readonly testSettings: TestSettings,
   readonly debugMode: DebugMode,
+}
+
+export type TrialOutcome =
+  "Success" |           // Reacted to Target
+  "Miss" |              // Failed to react to Target
+  "FalseAlarm" |        // Reacted to Distractor
+  "CorrectRejection" |  // (Optional) Ignored Distractor correctly
+  "FalseStart";         // Reacted during Pause
+
+export interface TrialResult {
+  trialIndex: number;
+  stimulus: Stimulus;
+  reactionTime: number;
+  outcome: TrialOutcome;
 }

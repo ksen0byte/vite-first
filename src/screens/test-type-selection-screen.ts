@@ -86,7 +86,7 @@ function mainHtml(testType: TestType) {
       <button id="pzmr-button" class="btn btn-soft btn-primary btn-xl w-full ${testType === "svmr" ? "btn-active" : ""}" data-localize="testTypePzmrShort">
         SVMR
       </button>
-      <button id="rv1-3-button" class="btn btn-soft btn-secondary btn-xl btn-disabled w-full ${testType === "crt1-3" ? "btn-active" : ""}" data-localize="testTypeRV13Short">
+      <button id="rv1-3-button" class="btn btn-soft btn-secondary btn-xl w-full ${testType === "crt1-3" ? "btn-active" : ""}" data-localize="testTypeRV13Short">
         CRT1-3
       </button>
       <button id="rv2-3-button" class="btn btn-soft btn-accent btn-xl btn-disabled w-full ${testType === "crt2-3" ? "btn-active" : ""}" data-localize="testTypeRV23Short">

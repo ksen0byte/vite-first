@@ -1,12 +1,12 @@
 // test-screen.ts
-import { AppContext, DebugMode } from "../config/domain.ts";
-import { localize, updateLanguageUI } from "../localization/localization.ts";
-import { logWithTime } from "../util/util.ts";
-import { clearAllTimeouts, scheduleTimeout } from "../util/scheduleTimeout.ts";
-import { StimulusManager } from "../components/StimulusManager.ts";
-import { StimuliCounter } from "../components/StimuliCounter.ts";
-import { TimerManager } from "../components/Timer.ts";
-import { Countdown } from "../components/Countdown.ts";
+import {AppContext, DebugMode, TrialOutcome, TrialResult} from "../config/domain.ts";
+import {localize, updateLanguageUI} from "../localization/localization.ts";
+import {logWithTime} from "../util/util.ts";
+import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
+import {StimulusManager} from "../components/StimulusManager.ts";
+import {StimuliCounter} from "../components/StimuliCounter.ts";
+import {TimerManager} from "../components/Timer.ts";
+import {Countdown} from "../components/Countdown.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
 import {
@@ -19,6 +19,8 @@ import {
   toFinished,
   getNextDelay
 } from "../domain/test-state.ts";
+import {Stimulus} from "../domain/types.ts";
+import {isAnimal, isRed, isSquare} from "../domain/stimulus-sequences.ts";
 
 export class TestScreen {
   private readonly appContainer: HTMLElement;
@@ -40,10 +42,10 @@ export class TestScreen {
 
   // State
   private state: TestState = toIdle();
-  private reactionTimes: Map<number, number> = new Map();
+  private reactionTimes: Map<number, TrialResult> = new Map();
 
   // spam prevention
-  private readonly spamPreventionConfig = { clickAllowedFromMs: 100, maxInputsPerStimulus: 3 };
+  private readonly spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
   private spamInputCount: number = 0;
 
   constructor(appContainer: HTMLElement) {
@@ -106,7 +108,7 @@ export class TestScreen {
         <div id="test-stimulus-container" class="flex items-center justify-center flex-grow text-8xl font-bold"></div>
 
         <!-- Bottom bar: timer (left), counter (right) -->
-        <div class="${debugMode === "prod" ? "hidden" : "" } flex-grow-0 flex justify-between items-end p-4">
+        <div class="${debugMode === "prod" ? "hidden" : ""} flex-grow-0 flex justify-between items-end p-4">
           <!-- Timer (bottom-left) -->
           <div id="timer-container">
             <div id="timer-display" class="text-3xl font-mono text-gray-400">0.000${localize("s")}</div>
@@ -238,9 +240,9 @@ export class TestScreen {
 
   private showStimulus(index: number): void {
     this.stimuliCounter.set(index + 1);
-    this.stimulusManager.showStimulus(index);
+    const stimulus: Stimulus = this.stimulusManager.showStimulus(index);
     this.timerManager.restart();
-    this.transitionTo(toShowingStimulus(index, performance.now(), "red"));
+    this.transitionTo(toShowingStimulus(index, performance.now(), stimulus));
 
     scheduleTimeout(() => {
       this.onStimulusTimeout(index);
@@ -250,6 +252,18 @@ export class TestScreen {
   private onStimulusTimeout(index: number): void {
     if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
 
+    const stimulus = this.state.stimulusValue;
+    const testType = this.appContext.testSettings.testType;
+
+    const hasReacted = this.reactionTimes.has(this.state.stimulusIndex);
+    const shouldHaveReacted = testType === "svmr" || (testType === "crt1-3" && (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)));
+
+    if (!hasReacted && shouldHaveReacted) {
+      this.recordReactionTime(this.state.stimulusValue, -1, "Miss");
+    } else if (!hasReacted && !shouldHaveReacted) {
+      this.recordReactionTime(this.state.stimulusValue, -1, "CorrectRejection");
+    }
+
     this.stimulusManager.clearContainer();
     this.timerManager.stop();
     this.spamInputCount = 0;
@@ -257,26 +271,55 @@ export class TestScreen {
   }
 
   private handleUserInput(): void {
-    if (this.state._tag === 'SpamDetected' || this.state._tag === 'Finished' || this.state._tag === 'CountingDown') return;
+    // 1. Immediate Guard: Exit if state is invalid
+    const invalidStates = ['SpamDetected', 'Finished', 'CountingDown'];
+    if (invalidStates.includes(this.state._tag)) return;
 
-    this.spamInputCount++;
+    // 2. Spam Prevention: Isolated logic
+    if (++this.spamInputCount > this.spamPreventionConfig.maxInputsPerStimulus) {
+      return this.onSpamDetected();
+    }
 
-    if (this.spamInputCount > this.spamPreventionConfig.maxInputsPerStimulus) {
-      this.onSpamDetected();
+    // 3. State Guard: Only process inputs during stimulus
+    if (this.state._tag !== 'ShowingStimulus') return;
+
+    // 4. Threshold Guard
+    const reactionTime = performance.now() - this.state.startTime;
+    if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
+      console.warn(`Input ignored: RT ${reactionTime}ms below threshold.`);
       return;
     }
 
-    if (this.state._tag === 'ShowingStimulus') {
-      const reactionTime = performance.now() - this.state.startTime;
+    // 5. Functional Dispatch
+    this.processTestResponse(this.state.stimulusValue, reactionTime);
+    this.timerManager.stop();
+  }
 
-      if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
-        console.warn(`Input ignored: Reaction time (${reactionTime}ms) is below threshold.`);
-        return;
-      }
+  private processTestResponse(stimulus: Stimulus, rt: number): void {
+    const {testType} = this.appContext.testSettings;
 
-      this.reactionTimes.set(this.state.stimulusIndex, reactionTime);
-      this.timerManager.stop();
+    // Determine correctness based on test type
+    const shouldHaveReacted = testType === "svmr" ||
+      (testType === "crt1-3" && (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)));
+
+    const outcome: TrialOutcome = shouldHaveReacted ? "Success" : "FalseAlarm";
+
+    console.log(`${outcome}: ${stimulus}`);
+    this.recordReactionTime(stimulus, rt, outcome);
+  }
+
+  private recordReactionTime(stimulus: Stimulus, reactionTime: number, outcome: TrialOutcome) {
+    if (this.state._tag !== 'ShowingStimulus') throw new Error("Reaction time can only be recorded when a stimulus is being shown.");
+    if (this.reactionTimes.has(this.state.stimulusIndex)) throw new Error(`Reaction time already recorded for trial ${this.state.stimulusIndex}.`);
+
+    const trialResult: TrialResult = {
+      trialIndex: this.state.stimulusIndex,
+      stimulus: stimulus,
+      reactionTime: reactionTime,
+      outcome: outcome,
     }
+
+    this.reactionTimes.set(this.state.stimulusIndex, trialResult);
   }
 
   private onSpamDetected(): void {
@@ -319,7 +362,7 @@ export class TestScreen {
     endFinishBtn.addEventListener("click", () => {
       logWithTime("End screen Finish clicked. Showing results.");
       this.destroy();
-      Router.navigate("/results", { reactionTimes: this.reactionTimes });
+      Router.navigate("/results", {reactionTimes: this.reactionTimes});
     });
   }
 
