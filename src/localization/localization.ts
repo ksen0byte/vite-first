@@ -118,7 +118,6 @@ const localization: LocalizationKeys = {
   fontSizeSliderLabel: {en: "Font Size", uk: "Розмір шрифту"},
 
   // Test settings
-  generalSettingsTitle: {en: "Test Settings", uk: "Налаштування тесту"},
   exposureTimeLabel: {en: "Stimulus Exposure", uk: "Експозиція подразника"},
   exposureDelayLabel: {en: "Stimulus Exposure Delay", uk: "Затримка експозиції"},
   exposureDelayHint: {en: "Delay is picked randomly between min and max.", uk: "З цього діапазону випадково обирається затримка."},
@@ -144,6 +143,34 @@ const localization: LocalizationKeys = {
   testTypePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакція"},
   testTypeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
   testTypeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
+
+  // Test instructions | modes -> "shapes" | "words" | "colors" | "combined"
+  instructionSvmr: {
+    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when <b>ANY</b> stimulus appears on the screen.",
+    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли на екрані з'явиться <b>БУДЬ-ЯКИЙ</b> подразник."
+  },
+  // en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a target stimulus (Red, Square, or Animal) appears. Ignore other stimuli.",
+  // uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (Червоний, Квадрат або Тварина). Ігноруйте інші подразники."
+  instructionCRT13_shapes: {
+    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a <b>Square</b> appears. Ignore other stimuli.",
+    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Квадрат</b>. Ігноруйте інші подразники."
+  },
+  instructionCRT13_words: {
+    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when an <b>Animal</b> appears. Ignore other stimuli.",
+    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Тварина</b>. Ігноруйте інші подразники."
+  },
+  instructionCRT13_colors: {
+    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a <b>Red</b> appears. Ignore other stimuli.",
+    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Червоний</b>. Ігноруйте інші подразники."
+  },
+  instructionCRT13_combined: {
+    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a target stimulus (Red, Square, or Animal) appears. Ignore other stimuli.",
+    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (<b>Червоний, Квадрат або Тварина</b>). Ігноруйте інші подразники."
+  },
+  instructionCRT23: {
+    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when either of two target stimuli appears. (Wait for implementation details)",
+    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться один із двох цільових подразників. (Очікуйте деталі імплементації)"
+  },
 
   // Biological Age calculator
   screenBiologicalAgeCalculatorTitle: {en: "Biological Age Calculator", uk: "Калькулятор біологічного віку"},
@@ -226,6 +253,7 @@ const localization: LocalizationKeys = {
   testScreenTestPZMRActionButtonLeft: {en: "Press", uk: "Натисніть "},
   testScreenTestPZMRActionButtonName: {en: "Space", uk: "Пробіл"},
   testScreenTestPZMRActionButtonRight: {en: "once a stimulus appears", uk: "одразу, коли з'явиться подразник"},
+  testScreenTestCRTActionButtonRight: {en: "once a target stimulus appears", uk: "одразу, коли з'явиться цільовий подразник"},
   testScreenTestSpamModalTitle: {
     en: "Attention!",
     uk: "Увага!"
@@ -249,6 +277,8 @@ const localization: LocalizationKeys = {
   statFunctionalLevel: {en: "SFL", uk: "ФРС"},
   statReactionStability: {en: "RS", uk: "СР"},
   statFunctionalCapabilities: {en: "FCL", uk: "РФМ"},
+  statErrorsTotal: {en: "Errors Total", uk: "Помилок Всього"},
+  statErrorsPercentage: {en: "Error Rate", uk: "Частота Помилок"},
   statCount: {en: "Count 🧮", uk: "Кількість 🧮"},
   statMean: {en: "μ Mean", uk: "μ Мат. сподівання"},
   statMode: {en: "Mo Mode", uk: "Mo Мода"},

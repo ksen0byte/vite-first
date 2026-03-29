@@ -50,8 +50,7 @@ function testCardHTML(index: number, test: TestRecord): string {
   const {testMode, stimulusSize, exposureTime, exposureDelay, stimulusCount, testType} = testSettings;
 
   // Generate statistics using ReactionTimeStats
-  const reactionTimes = trials.filter(trial => trial.outcome === "Success").map(trial => trial.reactionTime);
-  const stats = new ReactionTimeStats(reactionTimes, exposureTime);
+  const stats = new ReactionTimeStats(trials, exposureTime);
 
   return `
     <div class="card shadow-md bg-base-100">
@@ -182,6 +181,14 @@ function testCardHTML(index: number, test: TestRecord): string {
               <tbody>
                 <!-- Table Rows Localized -->
                 <tr class="text-center">
+                  <td><strong data-localize="statErrorsTotal"></strong></td>
+                  <td>${stats.errorCount}</td>
+                </tr>
+                <tr class="text-center">
+                  <td><strong data-localize="statErrorsPercentage"></strong></td>
+                  <td>${stats.errorPercentage.toFixed(2)}%</td>
+                </tr>
+                <tr class="text-center">
                   <td><strong data-localize="statFunctionalLevel"></strong></td>
                   <td>${stats.calculateFunctionalLevel().toFixed(2)}</td>
                 </tr>
@@ -247,8 +254,7 @@ function getTestTypeLocalizationKey(testType: string): string {
 
 function renderHistograms(tests: TestRecord[]) {
   tests.forEach((test, index) => {
-    const reactionTimes = test.trials.filter(trial => trial.outcome === "Success").map(trial => trial.reactionTime);
-    const stats = new ReactionTimeStats(reactionTimes, test.testSettings.exposureTime);
+    const stats = new ReactionTimeStats(test.trials, test.testSettings.exposureTime);
     const canvasId = `histogram-${index}`;
 
     stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);

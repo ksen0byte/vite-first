@@ -1,14 +1,15 @@
-import {AppContext, TestType} from "../config/domain.ts";
+import {TestMode, TestType} from "../config/domain.ts";
 import {setupFooter} from "../components/footer.ts";
-import {updateLanguageUI} from "../localization/localization.ts";
+import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {setupHeader} from "../components/header.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
 
 export function setupTestTypeSelectionScreen(appContainer: HTMLElement) {
   const appContext = AppContextManager.getContext();
+  const {testType, testMode} = appContext.testSettings;
   // Insert main content
-  appContainer.innerHTML = mainHtml(appContext.testSettings.testType);
+  appContainer.innerHTML = mainHtml(testType);
 
   // Setup header and footer
   setupHeader(appContainer);
@@ -27,19 +28,25 @@ export function setupTestTypeSelectionScreen(appContainer: HTMLElement) {
   updateLanguageUI();
 
   // Setup event listeners for test type buttons and Next button
-  setupTestTypeButtonsCallback(appContext);
+  setupTestTypeButtonsCallback(testMode);
 }
 
-function setupTestTypeButtonsCallback(_appContext: AppContext) {
+function setupTestTypeButtonsCallback(testMode: TestMode) {
   // Get references to the test type buttons and the Next button from the DOM
   const pzmrButton = document.getElementById("pzmr-button") as HTMLButtonElement;
   const rv13Button = document.getElementById("rv1-3-button") as HTMLButtonElement;
   const rv23Button = document.getElementById("rv2-3-button") as HTMLButtonElement;
   const nextButton = document.getElementById("test-next-btn") as HTMLButtonElement;
+  const instructionText = document.getElementById("test-instruction-text") as HTMLElement;
 
   // Helper function to clear the active state from all buttons
   function clearActive() {
     [pzmrButton, rv13Button, rv23Button].forEach(btn => btn.classList.remove("btn-active"));
+  }
+
+  function updateInstruction(testType: TestType) {
+    const instructionKey = testType === "svmr" ? "instructionSvmr" : testType === "crt1-3" ? `instructionCRT13_${testMode}` : `instructionCRT23_${testMode}`;
+    instructionText.innerHTML = localize(instructionKey);
   }
 
   // Attach event listeners to each test type button. On click, update the appContext,
@@ -47,6 +54,7 @@ function setupTestTypeButtonsCallback(_appContext: AppContext) {
   pzmrButton.addEventListener("click", () => {
     clearActive();
     pzmrButton.classList.add("btn-active");
+    updateInstruction("svmr");
     const current = AppContextManager.getContext();
     AppContextManager.setContext({
       ...current,
@@ -57,6 +65,7 @@ function setupTestTypeButtonsCallback(_appContext: AppContext) {
   rv13Button.addEventListener("click", () => {
     clearActive();
     rv13Button.classList.add("btn-active");
+    updateInstruction("crt1-3");
     const current = AppContextManager.getContext();
     AppContextManager.setContext({
       ...current,
@@ -67,6 +76,7 @@ function setupTestTypeButtonsCallback(_appContext: AppContext) {
   rv23Button.addEventListener("click", () => {
     clearActive();
     rv23Button.classList.add("btn-active");
+    updateInstruction("crt2-3");
     const current = AppContextManager.getContext();
     AppContextManager.setContext({
       ...current,
@@ -76,13 +86,15 @@ function setupTestTypeButtonsCallback(_appContext: AppContext) {
 
   // Only proceed to the Begin Test screen if a test type has been selected.
   nextButton.addEventListener("click", () => Router.navigate("/test"));
+
+  updateInstruction("svmr");
 }
 
 function mainHtml(testType: TestType) {
   return `
   <div id="test-type-selection-screen" class="flex flex-grow flex-col items-center justify-center bg-base-200 text-base-content">
     <h2 class="text-2xl font-bold mb-8" data-localize="selectTestType">Select Test Type</h2>
-    <div class="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3 w-full px-8">
+    <div class="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3 w-full px-8 mb-8">
       <button id="pzmr-button" class="btn btn-soft btn-primary btn-xl w-full ${testType === "svmr" ? "btn-active" : ""}" data-localize="testTypePzmrShort">
         SVMR
       </button>
@@ -92,6 +104,9 @@ function mainHtml(testType: TestType) {
       <button id="rv2-3-button" class="btn btn-soft btn-accent btn-xl btn-disabled w-full ${testType === "crt2-3" ? "btn-active" : ""}" data-localize="testTypeRV23Short">
         CRT2-3
       </button>
+    </div>
+    <div>
+      <p id="test-instruction-text"></p>
     </div>
   </div>
   `;

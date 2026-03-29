@@ -88,6 +88,8 @@ export class TestScreen {
    * Builds the screen’s HTML structure.
    */
   private renderUI(debugMode: DebugMode): void {
+    const testType = this.appContext.testSettings.testType;
+    const kbdLocalizationKey = testType === "svmr" ? "testScreenTestPZMRActionButtonRight" : "testScreenTestCRTActionButtonRight";
     this.appContainer.innerHTML = `
       <div id="test-screen" class="flex flex-col flex-grow bg-black text-white">
         <!-- Top bar: back/home and retry (hidden in prod) -->
@@ -119,7 +121,7 @@ export class TestScreen {
             <div>
                 <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonLeft">Press </span>
                 <kbd data-theme="light" class="kbd" data-localize="testScreenTestPZMRActionButtonName">Space</kbd>
-                <span class="font-mono text-gray-400" data-localize="testScreenTestPZMRActionButtonRight"> once a stimulus appears</span>
+                <span class="font-mono text-gray-400" data-localize="${kbdLocalizationKey}"> once a stimulus appears</span>
             </div>          
           </div>
 
@@ -250,18 +252,23 @@ export class TestScreen {
   }
 
   private onStimulusTimeout(index: number): void {
-    if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
-
-    const stimulus = this.state.stimulusValue;
-    const testType = this.appContext.testSettings.testType;
+    if ((this.state._tag !== 'ShowingStimulus' && this.state._tag !== 'Delayed') || this.state.stimulusIndex !== index) return;
 
     const hasReacted = this.reactionTimes.has(this.state.stimulusIndex);
-    const shouldHaveReacted = testType === "svmr" || (testType === "crt1-3" && (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)));
 
-    if (!hasReacted && shouldHaveReacted) {
-      this.recordReactionTime(this.state.stimulusValue, -1, "Miss");
-    } else if (!hasReacted && !shouldHaveReacted) {
-      this.recordReactionTime(this.state.stimulusValue, -1, "CorrectRejection");
+    if (this.state._tag === 'ShowingStimulus') {
+      const stimulus = this.state.stimulusValue;
+      const testType = this.appContext.testSettings.testType;
+      const shouldHaveReacted = testType === "svmr" || (testType === "crt1-3" && (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)));
+
+      if (!hasReacted && shouldHaveReacted) {
+        this.recordReactionTime(this.state.stimulusValue, -1, "Miss");
+      } else if (!hasReacted && !shouldHaveReacted) {
+        this.recordReactionTime(this.state.stimulusValue, -1, "CorrectRejection");
+      }
+    } else if (this.state._tag === 'Delayed') {
+      // If we are in Delayed state, we probably got here because of a FalseStart
+      // we already recorded it in handleUserInput, so we just clear and move on
     }
 
     this.stimulusManager.clearContainer();
@@ -281,6 +288,17 @@ export class TestScreen {
     }
 
     // 3. State Guard: Only process inputs during stimulus
+    if (this.state._tag === 'Delayed') {
+      const reactionTime = performance.now() - this.state.startTime;
+      if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
+        console.warn(`Input ignored: RT ${reactionTime}ms below threshold.`);
+        return;
+      }
+      this.recordReactionTime("none", -1, "FalseStart"); // We don't have stimulus yet, but we want to record the trial index
+      this.onStimulusTimeout(this.state.stimulusIndex); // Force timeout/skip for this trial
+      return;
+    }
+
     if (this.state._tag !== 'ShowingStimulus') return;
 
     // 4. Threshold Guard
@@ -309,8 +327,11 @@ export class TestScreen {
   }
 
   private recordReactionTime(stimulus: Stimulus, reactionTime: number, outcome: TrialOutcome) {
-    if (this.state._tag !== 'ShowingStimulus') throw new Error("Reaction time can only be recorded when a stimulus is being shown.");
-    if (this.reactionTimes.has(this.state.stimulusIndex)) throw new Error(`Reaction time already recorded for trial ${this.state.stimulusIndex}.`);
+    if (this.state._tag !== 'ShowingStimulus' && this.state._tag !== 'Delayed') throw new Error("Reaction time can only be recorded when a stimulus is being shown or delayed.");
+    if (this.reactionTimes.has(this.state.stimulusIndex)) {
+      console.warn(`Reaction time already recorded for trial ${this.state.stimulusIndex}.`);
+      return;
+    }
 
     const trialResult: TrialResult = {
       trialIndex: this.state.stimulusIndex,

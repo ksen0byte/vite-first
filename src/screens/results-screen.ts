@@ -13,11 +13,9 @@ export function setupResultsScreen(
   appContainer: HTMLElement,
   reactionTimes: Map<number, TrialResult>
 ) {
-  const data: number[] = Array.from(reactionTimes.values())
-    .filter(trialResult => trialResult.outcome === "Success")
-    .map(trialResult => trialResult.reactionTime);
+  const trialResults = Array.from(reactionTimes.values());
 
-  if (!data.length) {
+  if (!trialResults.length) {
     appContainer.innerHTML = `
       <div id="results-screen" class="flex flex-col flex-grow bg-base-200 text-base-content p-4">
         <h2 class="text-2xl font-bold mb-4" data-localize="noReactionTimes">No Reaction Times</h2>
@@ -30,32 +28,44 @@ export function setupResultsScreen(
   }
 
   // Frequency distribution
-  const reactionTimeStats = new ReactionTimeStats(data, AppContextManager.getContext().testSettings.exposureTime);
+  const reactionTimeStats = new ReactionTimeStats(trialResults, AppContextManager.getContext().testSettings.exposureTime);
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();
   const functionalCapabilities = reactionTimeStats.calculateFunctionalCapabilities();
 
-  // Render
+  // Render TODO add Mcoi? for crt1-3
   appContainer.innerHTML = `
     <div id="results-screen" class="flex flex-col flex-grow p-4 space-y-4">
       <!-- Title -->
       <h2 class="text-2xl font-bold mb-4" data-localize="testResultsTitle">Test Results</h2>
 
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
+        <!-- Errors Total -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statErrorsTotal">Errors Total</div>
+          <div class="stat-value text-lg">${reactionTimeStats.errorCount}</div>
+        </div>
+
+        <!-- Error Percentage -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statErrorsPercentage">Error Rate</div>
+          <div class="stat-value text-lg">${reactionTimeStats.errorPercentage.toFixed(2)}%</div>
+        </div>
+
         <!-- Functional Level -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statFunctionalLevel">Count</div>
           <div class="stat-value text-lg">${functionalLevelVal ? functionalLevelVal.toFixed(2) : "N/A"}</div>
         </div>
         
-        <!-- Functional Level -->
+        <!-- Reaction Stability -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statReactionStability">Count</div>
           <div class="stat-value text-lg">${reactionStability ? reactionStability.toFixed(2) : "N/A"}</div>
         </div>
         
-        <!-- Functional Level -->
+        <!-- Functional Capabilities -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statFunctionalCapabilities">Count</div>
           <div class="stat-value text-lg">${functionalCapabilities ? functionalCapabilities.toFixed(2) : "N/A"}</div>

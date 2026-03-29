@@ -3,6 +3,7 @@
 import Chart from "chart.js/auto";
 import {localize} from "../localization/localization.ts";
 import {cumulativeStdNormalProbability, mean, median, medianAbsoluteDeviation, quantile, standardDeviation} from "simple-statistics";
+import {TrialResult} from "../config/domain.ts";
 
 export interface FrequencyBin {
   binStart: number;
@@ -35,12 +36,18 @@ export class ReactionTimeStats {
   // Discretized Shannon Entropy (in bits)
   public readonly entropyVal: number;
 
+  public readonly errorCount: number;
+  public readonly errorPercentage: number;
+
   /**
    * Create a new instance with the given array of reaction times.
    */
-  constructor(data: number[], upperBound: number = 500, lowerBound: number = 100) {
+  constructor(trialResults: TrialResult[], upperBound: number = 500, lowerBound: number = 100) {
     // Step 1: Remove hard outliers based on fixed range
-    let cleanedData = data.filter(value => value >= lowerBound && value <= upperBound);
+    let cleanedData = trialResults
+      .filter(trialResult => trialResult.outcome === "Success")
+      .map(trialResult => trialResult.reactionTime)
+      .filter(value => value >= lowerBound && value <= upperBound);
 
     // Step 2: Apply statistical outlier removal
     cleanedData = this.removeOutliersUsingMAD(cleanedData);
@@ -65,8 +72,11 @@ export class ReactionTimeStats {
 
     // Calculate discretized Shannon entropy based on the histogram bins
     this.entropyVal = this.calculateDiscretizedShannonEntropy();
-  }
 
+    const errors = trialResults.filter(t => t.outcome === "Miss" || t.outcome === "FalseAlarm" || t.outcome === "FalseStart");
+    this.errorCount = errors.length;
+    this.errorPercentage = trialResults.length > 0 ? (this.errorCount / trialResults.length) * 100 : 0;
+  }
 
   /**
    * Removes extreme outliers from a dataset using the Modified Z-Score method.
