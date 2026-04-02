@@ -85,8 +85,8 @@ const localization: LocalizationKeys = {
   // dashboard
   dashboardHeaderTitle: {en: "Tools and Services", uk: "Інструменти та сервіси"},
   dashboardReactionDesc: {
-    en: "Classic simple visual-motor reaction test to measure CNS functional state.",
-    uk: "Класичний тест простої зорово-моторної реакції для оцінки функціонального стану ЦНС."
+    en: "Start testing to measure CNS functional state.",
+    uk: "Почати тестування для оцінки функціонального стану ЦНС."
   },
   dashboardBioAgeDesc: {
     en: "Calculate Biological Age using a known mean reaction time.",
@@ -95,6 +95,10 @@ const localization: LocalizationKeys = {
   dashboardProfilesDesc: {
     en: "Manage user profiles and view saved tests.",
     uk: "Керуйте профілями користувачів та переглядайте збережені тести."
+  },
+  dashboardOptimalMode: {
+    en: "Assessment of Sensorimotor Reactivity",
+    uk: "Тести сенсомоторної реактивності"
   },
   open: {en: "Open", uk: "Відкрити"},
 

@@ -15,7 +15,7 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
               <span class="text-6xl">⏱️</span>
             </figure>
             <div class="card-body items-center text-center">
-              <h2 class="card-title" data-localize="testTypePzmrLong">Reaction Test</h2>
+              <h2 class="card-title" data-localize="dashboardOptimalMode">Reaction Test</h2>
               <p data-localize="dashboardReactionDesc">Classic SVMR test to measure CNS functional state.</p>
               <div class="card-actions">
                 <button class="btn btn-primary" data-localize="open">Open</button>
