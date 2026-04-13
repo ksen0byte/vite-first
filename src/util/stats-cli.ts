@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { parseImportedJson, ImportValidationError } from "./import-json";
+import { TrialResult } from "../config/domain";
 
 import { ReactionTimeStats } from "../stats/ReactionTimeStats.node";
 
@@ -108,8 +109,29 @@ export class ReactionStatsCli {
       const u = block.user;
 
       for (const t of block.tests) {
-        // Use existing calculator without modifications
-        const stats = new ReactionTimeStats(t.reactionTimes);
+        let trialResults: TrialResult[];
+
+        if (t.trials && Array.isArray(t.trials)) {
+          // New format: normalize in case it's missing expectedAction/actualAction
+          trialResults = t.trials.map(trial => ({
+            ...trial,
+            expectedAction: (trial as any).expectedAction || 'DEFAULT',
+            actualAction: (trial as any).actualAction || 'DEFAULT'
+          }));
+        } else {
+          // Legacy format (reactionTimes)
+          trialResults = t.reactionTimes.map((rt, index) => ({
+            trialIndex: index,
+            stimulus: 'circle' as any,
+            reactionTime: rt,
+            outcome: rt > 0 ? "Success" : "Miss",
+            expectedAction: 'DEFAULT',
+            actualAction: 'DEFAULT',
+          }));
+        }
+
+        // Use existing calculator
+        const stats = new ReactionTimeStats(trialResults);
 
         const exposureDelay = Array.isArray(t.testSettings.exposureDelay)
           ? t.testSettings.exposureDelay

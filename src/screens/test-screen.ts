@@ -1,5 +1,5 @@
 // test-screen.ts
-import {AppContext, DebugMode, TrialOutcome, TrialResult} from "../config/domain.ts";
+import {AppContext, DebugMode, HandAction, TestType, TrialOutcome, TrialResult} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
 import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
@@ -20,7 +20,14 @@ import {
   getNextDelay
 } from "../domain/test-state.ts";
 import {Stimulus} from "../domain/types.ts";
-import {isAnimal, isRed, isSquare} from "../domain/stimulus-sequences.ts";
+import {
+  isAnimal,
+  isCircle,
+  isGreen,
+  isPlant,
+  isRed,
+  isSquare
+} from "../domain/stimulus-sequences.ts";
 
 export class TestScreen {
   private readonly appContainer: HTMLElement;
@@ -212,8 +219,16 @@ export class TestScreen {
   }
 
   private handleAppKeyDown(event: KeyboardEvent): void {
-    if (event.code === "Space") this.handleUserInput();
-    if (event.code === "Escape") this.handleHome();
+    if (event.code === "Escape") {
+      this.handleHome();
+      return;
+    }
+    const allowedCodes = [
+      "Space", "ControlRight", "ShiftRight", "ArrowRight", "ControlLeft", "ShiftLeft", "ArrowLeft"
+    ];
+    if (allowedCodes.includes(event.code)) {
+      this.handleUserInput(event.code);
+    }
   }
 
   /**
@@ -259,12 +274,13 @@ export class TestScreen {
     if (this.state._tag === 'ShowingStimulus') {
       const stimulus = this.state.stimulusValue;
       const testType = this.appContext.testSettings.testType;
-      const shouldHaveReacted = testType === "svmr" || (testType === "crt1-3" && (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)));
+      const expectedAction = this.getExpectedAction(stimulus, testType);
+      const shouldHaveReacted = expectedAction !== "NONE";
 
       if (!hasReacted && shouldHaveReacted) {
-        this.recordReactionTime(this.state.stimulusValue, -1, "Miss");
+        this.recordReactionTime(this.state.stimulusValue, -1, "Miss", expectedAction, "NONE");
       } else if (!hasReacted && !shouldHaveReacted) {
-        this.recordReactionTime(this.state.stimulusValue, -1, "CorrectRejection");
+        this.recordReactionTime(this.state.stimulusValue, -1, "CorrectRejection", expectedAction, "NONE");
       }
     } else if (this.state._tag === 'Delayed') {
       // If we are in Delayed state, we probably got here because of a FalseStart
@@ -277,7 +293,30 @@ export class TestScreen {
     this.scheduleNextStimulus(index + 1);
   }
 
-  private handleUserInput(): void {
+  private getExpectedAction(stimulus: Stimulus, testType: TestType): HandAction {
+    if (testType === "svmr") return "DEFAULT";
+    if (testType === "crt1-3") {
+      return (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)) ? "DEFAULT" : "NONE";
+    }
+    if (testType === "crt2-3") {
+      if (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)) return "RIGHT";
+      if (isGreen(stimulus) || isCircle(stimulus) || isPlant(stimulus)) return "LEFT";
+      return "NONE";
+    }
+    return "NONE";
+  }
+
+  private mapInputCode(code: string): HandAction {
+    const defaultCodes = ["Space"];
+    const rightCodes = ["ControlRight", "ShiftRight", "ArrowRight"];
+    const leftCodes = ["ControlLeft", "ShiftLeft", "ArrowLeft"];
+    if (defaultCodes.includes(code)) return "DEFAULT";
+    if (rightCodes.includes(code)) return "RIGHT";
+    if (leftCodes.includes(code)) return "LEFT";
+    return "NONE";
+  }
+
+  private handleUserInput(code: string): void {
     // 1. Immediate Guard: Exit if state is invalid
     const invalidStates = ['SpamDetected', 'Finished', 'CountingDown'];
     if (invalidStates.includes(this.state._tag)) return;
@@ -287,6 +326,8 @@ export class TestScreen {
       return this.onSpamDetected();
     }
 
+    const actualAction = this.mapInputCode(code);
+
     // 3. State Guard: Only process inputs during stimulus
     if (this.state._tag === 'Delayed') {
       const reactionTime = performance.now() - this.state.startTime;
@@ -294,7 +335,7 @@ export class TestScreen {
         console.warn(`Input ignored: RT ${reactionTime}ms below threshold.`);
         return;
       }
-      this.recordReactionTime("none", -1, "FalseStart"); // We don't have stimulus yet, but we want to record the trial index
+      this.recordReactionTime("none", -1, "FalseStart", "NONE", actualAction); // We don't have stimulus yet, but we want to record the trial index
       this.onStimulusTimeout(this.state.stimulusIndex); // Force timeout/skip for this trial
       return;
     }
@@ -309,24 +350,36 @@ export class TestScreen {
     }
 
     // 5. Functional Dispatch
-    this.processTestResponse(this.state.stimulusValue, reactionTime);
+    this.processTestResponse(this.state.stimulusValue, reactionTime, actualAction);
     this.timerManager.stop();
   }
 
-  private processTestResponse(stimulus: Stimulus, rt: number): void {
+  private processTestResponse(stimulus: Stimulus, rt: number, actualAction: HandAction): void {
     const {testType} = this.appContext.testSettings;
 
-    // Determine correctness based on test type
-    const shouldHaveReacted = testType === "svmr" ||
-      (testType === "crt1-3" && (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)));
+    const expectedAction = this.getExpectedAction(stimulus, testType);
 
-    const outcome: TrialOutcome = shouldHaveReacted ? "Success" : "FalseAlarm";
+    let outcome: TrialOutcome;
 
-    console.log(`${outcome}: ${stimulus}`);
-    this.recordReactionTime(stimulus, rt, outcome);
+    if (testType === "crt2-3") {
+      if (expectedAction === "NONE") {
+        outcome = "FalseAlarm";
+      } else if (actualAction === expectedAction) {
+        outcome = "Success";
+      } else {
+        outcome = "MixUp";
+      }
+    } else {
+      // SVMR or CRT1-3 only uses DEFAULT (Space/)
+      const shouldHaveReacted = expectedAction !== "NONE";
+      outcome = shouldHaveReacted ? "Success" : "FalseAlarm";
+    }
+
+    console.log(`${outcome}: ${stimulus} (expected: ${expectedAction}, actual: ${actualAction})`);
+    this.recordReactionTime(stimulus, rt, outcome, expectedAction, actualAction);
   }
 
-  private recordReactionTime(stimulus: Stimulus, reactionTime: number, outcome: TrialOutcome) {
+  private recordReactionTime(stimulus: Stimulus, reactionTime: number, outcome: TrialOutcome, expectedAction: HandAction, actualAction: HandAction) {
     if (this.state._tag !== 'ShowingStimulus' && this.state._tag !== 'Delayed') throw new Error("Reaction time can only be recorded when a stimulus is being shown or delayed.");
     if (this.reactionTimes.has(this.state.stimulusIndex)) {
       console.warn(`Reaction time already recorded for trial ${this.state.stimulusIndex}.`);
@@ -338,6 +391,8 @@ export class TestScreen {
       stimulus: stimulus,
       reactionTime: reactionTime,
       outcome: outcome,
+      expectedAction: expectedAction,
+      actualAction: actualAction,
     }
 
     this.reactionTimes.set(this.state.stimulusIndex, trialResult);

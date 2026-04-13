@@ -58,22 +58,36 @@ export class ReactionTimeStats {
     // Calculate statistics on cleaned data
     this.bins = this.computeFrequencyDistribution();
     this.count = cleanedData.length;
-    this.meanVal = mean(cleanedData);
-    this.modeVal = this.getMode();
-    this.stdevVal = standardDeviation(cleanedData);
-    this.cvVal = this.stdevVal / this.meanVal;
-    this.p3Val = quantile(cleanedData, 0.03);
-    this.p10Val = quantile(cleanedData, 0.10);
-    this.p25Val = quantile(cleanedData, 0.25);
-    this.p50Val = quantile(cleanedData, 0.50);
-    this.p75Val = quantile(cleanedData, 0.75);
-    this.p90Val = quantile(cleanedData, 0.90);
-    this.p97Val = quantile(cleanedData, 0.97);
+    
+    if (this.count > 0) {
+      this.meanVal = mean(cleanedData);
+      this.modeVal = this.getMode();
+      this.stdevVal = standardDeviation(cleanedData);
+      this.cvVal = this.meanVal !== 0 ? this.stdevVal / this.meanVal : 0;
+      this.p3Val = quantile(cleanedData, 0.03);
+      this.p10Val = quantile(cleanedData, 0.10);
+      this.p25Val = quantile(cleanedData, 0.25);
+      this.p50Val = quantile(cleanedData, 0.50);
+      this.p75Val = quantile(cleanedData, 0.75);
+      this.p90Val = quantile(cleanedData, 0.90);
+      this.p97Val = quantile(cleanedData, 0.97);
+      this.entropyVal = this.calculateDiscretizedShannonEntropy();
+    } else {
+      this.meanVal = 0;
+      this.modeVal = 0;
+      this.stdevVal = 0;
+      this.cvVal = 0;
+      this.p3Val = 0;
+      this.p10Val = 0;
+      this.p25Val = 0;
+      this.p50Val = 0;
+      this.p75Val = 0;
+      this.p90Val = 0;
+      this.p97Val = 0;
+      this.entropyVal = 0;
+    }
 
-    // Calculate discretized Shannon entropy based on the histogram bins
-    this.entropyVal = this.calculateDiscretizedShannonEntropy();
-
-    const errors = trialResults.filter(t => t.outcome === "Miss" || t.outcome === "FalseAlarm" || t.outcome === "FalseStart");
+    const errors = trialResults.filter(t => t.outcome === "Miss" || t.outcome === "FalseAlarm" || t.outcome === "FalseStart" || t.outcome === "MixUp");
     this.errorCount = errors.length;
     this.errorPercentage = trialResults.length > 0 ? (this.errorCount / trialResults.length) * 100 : 0;
   }
@@ -468,5 +482,25 @@ export class ReactionTimeStats {
       `${localize("statReactionStability")}: ${this.calculateReactionStability().toFixed(2)}`,
       `${localize("statFunctionalCapabilities")}: ${this.calculateFunctionalCapabilities().toFixed(2)}`,
     ].join(" | ");
+  }
+}
+
+export class MultiHandReactionTimeStats {
+  public readonly total: ReactionTimeStats;
+  public readonly left: ReactionTimeStats;
+  public readonly right: ReactionTimeStats;
+
+  constructor(trialResults: TrialResult[], upperBound: number = 1000, lowerBound: number = 100) {
+    this.total = new ReactionTimeStats(trialResults, upperBound, lowerBound);
+    this.left = new ReactionTimeStats(
+      trialResults.filter(t => t.expectedAction === "LEFT"),
+      upperBound,
+      lowerBound
+    );
+    this.right = new ReactionTimeStats(
+      trialResults.filter(t => t.expectedAction === "RIGHT"),
+      upperBound,
+      lowerBound
+    );
   }
 }

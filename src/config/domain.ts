@@ -18,6 +18,7 @@ export interface SliderConfig {
 
 export type TestMode = "shapes" | "words" | "colors" | "combined";
 export type TestType = "svmr" | "crt1-3" | "crt2-3";
+export type HandAction = 'LEFT' | 'RIGHT' | 'DEFAULT' | 'NONE';
 export type Gender = 'male' | 'female';
 export type StimulusSize = number;
 export type ExposureTime = number;
@@ -57,12 +58,15 @@ export type TrialOutcome =
   "Success" |           // Reacted to Target
   "Miss" |              // Failed to react to Target
   "FalseAlarm" |        // Reacted to Distractor
-  "CorrectRejection" |  // (Optional) Ignored Distractor correctly
+  "CorrectRejection" |  // Ignored Distractor correctly
+  "MixUp" |             // Mixed up LEFT and RIGHT targets
   "FalseStart";         // Reacted during Pause
 
 export interface TrialResult {
-  trialIndex: number;
-  stimulus: Stimulus;
-  reactionTime: number;
-  outcome: TrialOutcome;
+  readonly trialIndex: number;
+  readonly stimulus: Stimulus;
+  readonly reactionTime: number;
+  readonly outcome: TrialOutcome;
+  readonly expectedAction: HandAction;
+  readonly actualAction: HandAction;
 }

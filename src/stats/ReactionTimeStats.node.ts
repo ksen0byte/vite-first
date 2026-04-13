@@ -1,6 +1,7 @@
 // ReactionTimeStats.node.ts - Node.js compatible version without browser dependencies
 
 import {cumulativeStdNormalProbability, mean, median, medianAbsoluteDeviation, quantile, standardDeviation} from "simple-statistics";
+import {TrialResult} from "../config/domain.ts";
 
 export interface FrequencyBin {
   binStart: number;
@@ -33,12 +34,18 @@ export class ReactionTimeStats {
   // Discretized Shannon Entropy (in bits)
   public readonly entropyVal: number;
 
+  public readonly errorCount: number;
+  public readonly errorPercentage: number;
+
   /**
    * Create a new instance with the given array of reaction times.
    */
-  constructor(data: number[], upperBound: number = 500, lowerBound: number = 100) {
+  constructor(trialResults: TrialResult[], upperBound: number = 500, lowerBound: number = 100) {
     // Step 1: Remove hard outliers based on fixed range
-    let cleanedData = data.filter(value => value >= lowerBound && value <= upperBound);
+    let cleanedData = trialResults
+      .filter(trialResult => trialResult.outcome === "Success")
+      .map(trialResult => trialResult.reactionTime)
+      .filter(value => value >= lowerBound && value <= upperBound);
 
     // Step 2: Apply statistical outlier removal
     cleanedData = this.removeOutliersUsingMAD(cleanedData);
@@ -49,20 +56,38 @@ export class ReactionTimeStats {
     // Calculate statistics on cleaned data
     this.bins = this.computeFrequencyDistribution();
     this.count = cleanedData.length;
-    this.meanVal = mean(cleanedData);
-    this.modeVal = this.getMode();
-    this.stdevVal = standardDeviation(cleanedData);
-    this.cvVal = this.stdevVal / this.meanVal;
-    this.p3Val = quantile(cleanedData, 0.03);
-    this.p10Val = quantile(cleanedData, 0.10);
-    this.p25Val = quantile(cleanedData, 0.25);
-    this.p50Val = quantile(cleanedData, 0.50);
-    this.p75Val = quantile(cleanedData, 0.75);
-    this.p90Val = quantile(cleanedData, 0.90);
-    this.p97Val = quantile(cleanedData, 0.97);
 
-    // Calculate discretized Shannon entropy based on the histogram bins
-    this.entropyVal = this.calculateDiscretizedShannonEntropy();
+    if (this.count > 0) {
+      this.meanVal = mean(cleanedData);
+      this.modeVal = this.getMode();
+      this.stdevVal = standardDeviation(cleanedData);
+      this.cvVal = this.meanVal !== 0 ? this.stdevVal / this.meanVal : 0;
+      this.p3Val = quantile(cleanedData, 0.03);
+      this.p10Val = quantile(cleanedData, 0.10);
+      this.p25Val = quantile(cleanedData, 0.25);
+      this.p50Val = quantile(cleanedData, 0.50);
+      this.p75Val = quantile(cleanedData, 0.75);
+      this.p90Val = quantile(cleanedData, 0.90);
+      this.p97Val = quantile(cleanedData, 0.97);
+      this.entropyVal = this.calculateDiscretizedShannonEntropy();
+    } else {
+      this.meanVal = 0;
+      this.modeVal = 0;
+      this.stdevVal = 0;
+      this.cvVal = 0;
+      this.p3Val = 0;
+      this.p10Val = 0;
+      this.p25Val = 0;
+      this.p50Val = 0;
+      this.p75Val = 0;
+      this.p90Val = 0;
+      this.p97Val = 0;
+      this.entropyVal = 0;
+    }
+
+    const errors = trialResults.filter(t => t.outcome === "Miss" || t.outcome === "FalseAlarm" || t.outcome === "FalseStart" || t.outcome === "MixUp");
+    this.errorCount = errors.length;
+    this.errorPercentage = trialResults.length > 0 ? (this.errorCount / trialResults.length) * 100 : 0;
   }
 
 

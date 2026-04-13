@@ -171,9 +171,21 @@ const localization: LocalizationKeys = {
     en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a target stimulus (Red, Square, or Animal) appears. Ignore other stimuli.",
     uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (<b>Червоний, Квадрат або Тварина</b>). Ігноруйте інші подразники."
   },
-  instructionCRT23: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when either of two target stimuli appears. (Wait for implementation details)",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться один із двох цільових подразників. (Очікуйте деталі імплементації)"
+  instructionCRT23_shapes: {
+    en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Square</b> <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Circle</b>. Ignore <b>Triangle</b>.",
+    uk: "Натискайте <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Квадрата</b>, <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Кола</b>. Ігноруйте <b>Трикутник</b>."
+  },
+  instructionCRT23_words: {
+    en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Animal</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Plant</b>. Ignore <b>Non-living thing</b>.",
+    uk: "Натискайте <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Тварини</b>, <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Рослини</b>. Ігноруйте <b>Неживі предмети</b>."
+  },
+  instructionCRT23_colors: {
+    en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green</b>. Ignore <b>Yellow</b>.",
+    uk: "Натискайте <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного</b>, <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого</b>. Ігноруйте <b>Жовтий</b>."
+  },
+  instructionCRT23_combined: {
+    en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red/Square/Animal</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green/Circle/Plant</b>. Ignore <b>Yellow/Triangle/Non-living</b>.",
+    uk: "Натискайте <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного/Квадрата/Тварини</b>, <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого/Кола/Рослини</b>. Ігноруйте <b>Жовтий/Трикутник/Неживе</b>."
   },
 
   // Biological Age calculator
@@ -275,6 +287,9 @@ const localization: LocalizationKeys = {
   noReactionTimes: {en: "No Reaction Times", uk: "Немає результатів реакції"},
   testResultsTitle: {en: "Test Results", uk: "Результати тесту"},
   frequencyDistributionTitle: {en: "Frequency Distribution", uk: "Частотний Розподіл"},
+  statLeftHand: {en: "Left Hand", uk: "Ліва рука"},
+  statRightHand: {en: "Right Hand", uk: "Права рука"},
+  statTotal: {en: "Total", uk: "Всього"},
   dontSaveAndQuit: {en: "Don't Save and Quite", uk: "Не зберігати"},
   saveResults: {en: "Save", uk: "Зберегти"},
 

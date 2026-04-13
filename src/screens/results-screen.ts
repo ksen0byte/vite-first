@@ -3,7 +3,7 @@
 import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
-import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
+import {MultiHandReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
@@ -28,17 +28,62 @@ export function setupResultsScreen(
   }
 
   // Frequency distribution
-  const reactionTimeStats = new ReactionTimeStats(trialResults, AppContextManager.getContext().testSettings.exposureTime);
+  const testType = AppContextManager.getContext().testSettings.testType;
+  const multiHandStats = new MultiHandReactionTimeStats(trialResults, AppContextManager.getContext().testSettings.exposureTime);
+  const reactionTimeStats = multiHandStats.total;
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();
   const functionalCapabilities = reactionTimeStats.calculateFunctionalCapabilities();
+
+  const multiHandTable = testType === "crt2-3" ? `
+    <div class="overflow-x-auto w-full mb-4">
+      <table class="table table-zebra w-full shadow rounded-lg overflow-hidden">
+        <thead class="bg-base-300">
+          <tr>
+            <th class="text-left py-3 px-4"></th>
+            <th class="text-center py-3 px-4" data-localize="statTotal">Total</th>
+            <th class="text-center py-3 px-4" data-localize="statLeftHand">Left Hand</th>
+            <th class="text-center py-3 px-4" data-localize="statRightHand">Right Hand</th>
+          </tr>
+        </thead>
+        <tbody class="text-base">
+          <tr>
+            <td class="font-bold py-3 px-4" data-localize="statMean">Mean</td>
+            <td class="text-center py-3 px-4">${multiHandStats.total.count > 0 ? multiHandStats.total.meanVal.toFixed(2) + localize("ms") : 'N/A'}</td>
+            <td class="text-center py-3 px-4">${multiHandStats.left.count > 0 ? multiHandStats.left.meanVal.toFixed(2) + localize("ms") : 'N/A'}</td>
+            <td class="text-center py-3 px-4">${multiHandStats.right.count > 0 ? multiHandStats.right.meanVal.toFixed(2) + localize("ms") : 'N/A'}</td>
+          </tr>
+          <tr>
+            <td class="font-bold py-3 px-4" data-localize="statErrorsTotal">Total Errors</td>
+            <td class="text-center py-3 px-4">${multiHandStats.total.errorCount}</td>
+            <td class="text-center py-3 px-4">${multiHandStats.left.errorCount}</td>
+            <td class="text-center py-3 px-4">${multiHandStats.right.errorCount}</td>
+          </tr>
+          <tr>
+            <td class="font-bold py-3 px-4" data-localize="statErrorsPercentage">Error Rate</td>
+            <td class="text-center py-3 px-4">${multiHandStats.total.errorPercentage.toFixed(2)}%</td>
+            <td class="text-center py-3 px-4">${multiHandStats.left.errorPercentage.toFixed(2)}%</td>
+            <td class="text-center py-3 px-4">${multiHandStats.right.errorPercentage.toFixed(2)}%</td>
+          </tr>
+          <tr>
+            <td class="font-bold py-3 px-4" data-localize="statCount">Count</td>
+            <td class="text-center py-3 px-4">${multiHandStats.total.count}</td>
+            <td class="text-center py-3 px-4">${multiHandStats.left.count}</td>
+            <td class="text-center py-3 px-4">${multiHandStats.right.count}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  ` : "";
 
   // Render TODO add Mcoi? for crt1-3
   appContainer.innerHTML = `
     <div id="results-screen" class="flex flex-col flex-grow p-4 space-y-4">
       <!-- Title -->
       <h2 class="text-2xl font-bold mb-4" data-localize="testResultsTitle">Test Results</h2>
+
+      ${multiHandTable}
 
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
         <!-- Errors Total -->

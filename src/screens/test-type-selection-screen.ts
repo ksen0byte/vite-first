@@ -28,10 +28,10 @@ export function setupTestTypeSelectionScreen(appContainer: HTMLElement) {
   updateLanguageUI();
 
   // Setup event listeners for test type buttons and Next button
-  setupTestTypeButtonsCallback(testMode);
+  setupTestTypeButtonsCallback(testType, testMode);
 }
 
-function setupTestTypeButtonsCallback(testMode: TestMode) {
+function setupTestTypeButtonsCallback(testType: TestType, testMode: TestMode) {
   // Get references to the test type buttons and the Next button from the DOM
   const pzmrButton = document.getElementById("pzmr-button") as HTMLButtonElement;
   const rv13Button = document.getElementById("rv1-3-button") as HTMLButtonElement;
@@ -87,7 +87,7 @@ function setupTestTypeButtonsCallback(testMode: TestMode) {
   // Only proceed to the Begin Test screen if a test type has been selected.
   nextButton.addEventListener("click", () => Router.navigate("/test"));
 
-  updateInstruction("svmr");
+  updateInstruction(testType);
 }
 
 function mainHtml(testType: TestType) {
@@ -101,12 +101,12 @@ function mainHtml(testType: TestType) {
       <button id="rv1-3-button" class="btn btn-soft btn-secondary btn-xl w-full ${testType === "crt1-3" ? "btn-active" : ""}" data-localize="testTypeRV13Short">
         CRT1-3
       </button>
-      <button id="rv2-3-button" class="btn btn-soft btn-accent btn-xl btn-disabled w-full ${testType === "crt2-3" ? "btn-active" : ""}" data-localize="testTypeRV23Short">
+      <button id="rv2-3-button" class="btn btn-soft btn-accent btn-xl w-full ${testType === "crt2-3" ? "btn-active" : ""}" data-localize="testTypeRV23Short">
         CRT2-3
       </button>
     </div>
     <div>
-      <p id="test-instruction-text"></p>
+      <p class="px-8 text-center" id="test-instruction-text"></p>
     </div>
   </div>
   `;

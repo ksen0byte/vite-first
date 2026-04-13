@@ -1,5 +1,7 @@
 // src/util/import-json.ts
 
+import {TrialResult} from "../config/domain.ts";
+
 // --- Domain types (runtime-validated) ---
 
 export type Gender = "male" | "female" | "other" | "unknown";
@@ -24,6 +26,7 @@ export interface ImportedTest {
   userKey: string;
   testSettings: ImportedTestSettings;
   reactionTimes: number[];
+  trials?: TrialResult[];
   date: string; // ISO
   id: number;
 }
@@ -133,15 +136,14 @@ export function parseImportedJson(raw: unknown): ImportedJson {
         testType: asString(settingsRaw["testType"], `${tPath}.testSettings.testType`),
       };
 
-      const reactionTimes = asNumberArray(t["reactionTimes"], `${tPath}.reactionTimes`);
-
-      // Optional: basic sanity filter (keep as-is for now; math layer can decide)
-      // if (reactionTimes.length === 0) throw new ImportValidationError("reactionTimes is empty", `${tPath}.reactionTimes`);
+      const reactionTimes = t["reactionTimes"] ? asNumberArray(t["reactionTimes"], `${tPath}.reactionTimes`) : [];
+      const trials = t["trials"] ? asArray(t["trials"], `${tPath}.trials`) as TrialResult[] : undefined;
 
       const test: ImportedTest = {
         userKey: asString(t["userKey"], `${tPath}.userKey`),
         testSettings,
         reactionTimes,
+        trials,
         date: asString(t["date"], `${tPath}.date`),
         id: asNumber(t["id"], `${tPath}.id`),
       };

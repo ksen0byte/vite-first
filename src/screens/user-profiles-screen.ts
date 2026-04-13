@@ -406,14 +406,21 @@ export class UsersScreen {
                 let finalTrials: TrialResult[] = [];
 
                 if (Array.isArray(t.trials)) {
-                  finalTrials = t.trials;
+                  // Normalize in case it's missing expectedAction/actualAction from old exports
+                  finalTrials = t.trials.map(trial => ({
+                    ...trial,
+                    expectedAction: (trial as any).expectedAction || 'DEFAULT',
+                    actualAction: (trial as any).actualAction || 'DEFAULT'
+                  }));
                 } else if (Array.isArray(t.reactionTimes)) {
                   // Legacy conversion
                   finalTrials = t.reactionTimes.map((rt, index) => ({
                     trialIndex: index,
                     stimulus: 'circle',
                     reactionTime: rt,
-                    outcome: "Success"
+                    outcome: "Success",
+                    expectedAction: "DEFAULT",
+                    actualAction: "DEFAULT",
                   }));
                 } else {
                   return null; // Skip invalid records

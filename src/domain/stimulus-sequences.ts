@@ -65,9 +65,23 @@ export const COMBINED_SEQUENCE_UA: readonly Stimulus[] = [
 const ANIMALS_EN = new Set(["bear", "cat", "goat", "bull", "mole", "wolf", "frog", "hare", "mule", "lynx", "buck", "lion", "fox"]);
 const ANIMALS_UA = new Set(["слон", "кіт", "коза", "бик", "кріт", "вовк", "їжак", "заєць", "осел", "тигр", "кінь", "лев", "лисиця"]);
 
+const PLANTS_EN = new Set(["pine", "corn", "bush", "oak", "flax", "moss", "soy", "fir", "lily", "lime", "yew", "rose", "bean"]);
+const PLANTS_UA = new Set(["клен", "овес", "верба", "кедр", "льон", "мох", "соя", "ялина", "мак", "липа", "в'яз", "біб", "роза"]);
+
+const NON_LIVING_EN = new Set(["door", "home", "bolt", "tap", "seat", "knife", "desk", "lens", "belt", "salt", "hill", "club", "rain", "pen", "ball", "key", "bell"]);
+const NON_LIVING_UA = new Set(["вікно", "дім", "куля", "кран", "стіл", "ніж", "окуляри", "пояс", "сіль", "гора", "ялина", "меч", "вода", "перо", "м'яч", "гиря", "ключ", "дуб", "бук"]);
+
 export const isRed = (s: Stimulus): boolean => s === 'red';
 export const isSquare = (s: Stimulus): boolean => s === 'square';
 export const isAnimal = (s: Stimulus): boolean => ANIMALS_EN.has(s) || ANIMALS_UA.has(s);
+
+export const isGreen = (s: Stimulus): boolean => s === 'green';
+export const isCircle = (s: Stimulus): boolean => s === 'circle';
+export const isPlant = (s: Stimulus): boolean => PLANTS_EN.has(s) || PLANTS_UA.has(s);
+
+export const isYellow = (s: Stimulus): boolean => s === 'yellow';
+export const isTriangle = (s: Stimulus): boolean => s === 'triangle';
+export const isNonLiving = (s: Stimulus): boolean => NON_LIVING_EN.has(s) || NON_LIVING_UA.has(s);
 
 /**
  * Safe wrap-around accessor

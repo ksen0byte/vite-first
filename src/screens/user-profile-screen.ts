@@ -3,7 +3,7 @@ import {setupHeader} from '../components/header';
 import {setupFooter} from '../components/footer';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
-import {ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
+import {MultiHandReactionTimeStats, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {TestMode} from "../config/domain.ts";
 import Router from "../routing/router.ts";
 
@@ -50,7 +50,53 @@ function testCardHTML(index: number, test: TestRecord): string {
   const {testMode, stimulusSize, exposureTime, exposureDelay, stimulusCount, testType} = testSettings;
 
   // Generate statistics using ReactionTimeStats
-  const stats = new ReactionTimeStats(trials, exposureTime);
+  const multiHandStats = new MultiHandReactionTimeStats(trials, exposureTime);
+  const stats = multiHandStats.total;
+  const statsRight = multiHandStats.right;
+  const statsLeft = multiHandStats.left;
+
+  const multiHandTableHtml = testType === "crt2-3" ? `
+    <!-- Multi-hand Statistics Summary -->
+    <div class="overflow-x-auto mt-4 w-full">
+      <table class="table table-zebra table-md w-full">
+        <thead>
+          <tr class="text-center bg-base-300">
+            <th></th>
+            <th data-localize="statTotal"></th>
+            <th data-localize="statLeftHand"></th>
+            <th data-localize="statRightHand"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="text-center">
+            <td><strong data-localize="meanLabel"></strong></td>
+            <td>${stats.count > 0 ? stats.meanVal.toFixed(2) + '<span data-localize="ms"></span>' : 'N/A'}</td>
+            <td>${statsLeft.count > 0 ? statsLeft.meanVal.toFixed(2) + '<span data-localize="ms"></span>' : 'N/A'}</td>
+            <td>${statsRight.count > 0 ? statsRight.meanVal.toFixed(2) + '<span data-localize="ms"></span>' : 'N/A'}</td>
+          </tr>
+          <tr class="text-center">
+            <td><strong data-localize="statErrorsTotal"></strong></td>
+            <td>${stats.errorCount}</td>
+            <td>${statsLeft.errorCount}</td>
+            <td>${statsRight.errorCount}</td>
+          </tr>
+          <tr class="text-center">
+            <td><strong data-localize="statErrorsPercentage"></strong></td>
+            <td>${stats.errorPercentage.toFixed(2)}%</td>
+            <td>${statsLeft.errorPercentage.toFixed(2)}%</td>
+            <td>${statsRight.errorPercentage.toFixed(2)}%</td>
+          </tr>
+          <tr class="text-center">
+            <td><strong data-localize="countLabel"></strong></td>
+            <td>${stats.count}</td>
+            <td>${statsLeft.count}</td>
+            <td>${statsRight.count}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="divider"></div>
+  ` : "";
 
   return `
     <div class="card shadow-md bg-base-100">
@@ -63,6 +109,9 @@ function testCardHTML(index: number, test: TestRecord): string {
           </div>
           <span>${new Date(date).toLocaleString()}</span>
         </h2>
+        
+        ${multiHandTableHtml}
+        
         <div class="flex justify-between">
           <!-- Test Settings -->
           <div class="overflow-x-auto mt-4 w-full">          

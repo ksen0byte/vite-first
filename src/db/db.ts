@@ -39,7 +39,7 @@ export class CnsTestDatabase extends Dexie {
       users: '[firstName+lastName], gender, age', // Re-declare to preserve
       tests: '++id, userKey, date'
     }).upgrade(async tx => {
-      console.log("Migration started...");
+      console.log("Migration to version 2 started...");
       // Use 'any' here because the record actually contains 'reactionTimes'
       // which is no longer in your TestRecord interface.
       await tx.table("tests").toCollection().modify((test: any) => {
@@ -48,9 +48,28 @@ export class CnsTestDatabase extends Dexie {
             trialIndex: index,
             stimulus: 'circle',
             reactionTime: rt,
-            outcome: "Success"
+            outcome: "Success",
+            expectedAction: 'DEFAULT',
+            actualAction: 'DEFAULT'
           }));
           delete test.reactionTimes;
+        }
+      });
+    });
+
+    // Version 3: The migrated state to include expectedAction and actualAction
+    this.version(3).stores({
+      users: '[firstName+lastName], gender, age', // Re-declare to preserve
+      tests: '++id, userKey, date'
+    }).upgrade(async tx => {
+      console.log("Migration to version 3 started...");
+      await tx.table("tests").toCollection().modify((test: any) => {
+        if (Array.isArray(test.trials)) {
+          test.trials = test.trials.map((trial: any) => ({
+            ...trial,
+            expectedAction: trial.expectedAction || 'DEFAULT',
+            actualAction: trial.actualAction || 'DEFAULT'
+          }));
         }
       });
     });
