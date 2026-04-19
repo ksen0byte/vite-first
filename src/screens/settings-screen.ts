@@ -491,7 +491,7 @@ const setupCombinedSection = (stimulusSize?: StimulusSize, exposureTime?: Exposu
     const combinedPreview = document.getElementById("combined-preview") as HTMLElement;
 
     // 1. Calculate the mapped font size (20-70 -> 15-30)
-    const mappedFontSize = Math.round(15 + (sizeMm - 20) * 0.3);
+    const mappedFontSize = sizeMm; // Math.round(15 + (sizeMm - 20) * 0.3);
 
     // Get the current language from your config or a global state
     // If you have a way to detect current lang, use it here (e.g., currentLang === 'uk' ? 'uk' : 'en')

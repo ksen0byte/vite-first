@@ -57,10 +57,10 @@ export const subsectionsConfig = {
     sizeSlider: {
       id: "word-size-slider",
       options: {
-        start: 20,
-        step: 1,
+        start: 50,
+        step: 10,
         connect: "lower",
-        range: {min: 15, max: 100},
+        range: {min: 10, max: 70},
         // pips: { mode: PipsMode.Values, values: [20, 30, 40, 50, 60, 70], density: 10 },
         format: intFormatter,
       } as Options,

@@ -76,7 +76,7 @@ export class StimulusManager {
       this.container.innerHTML = getColorRectangleHtml(size, stimulus as Color);
     } else {
       // It's a word: apply scaling logic
-      const fontSize = Math.round(15 + (size - 20) * 0.3);
+      const fontSize = size; // Math.round(15 + (size - 20) * 0.3);
       this.container.innerHTML = getWordHtml(stimulus as Word, fontSize, "red");
     }
   }
