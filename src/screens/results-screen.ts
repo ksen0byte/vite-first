@@ -77,7 +77,7 @@ export function setupResultsScreen(
     </div>
   ` : "";
 
-  // Render TODO add Mcoi? for crt1-3
+  // Render
   appContainer.innerHTML = `
     <div id="results-screen" class="flex flex-col flex-grow p-4 space-y-4">
       <!-- Title -->
