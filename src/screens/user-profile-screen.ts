@@ -128,15 +128,15 @@ function testCardHTML(index: number, test: TestRecord): string {
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="stimulusSizeLabel"></strong></td>
-                <td>${stimulusSize}<span data-localize="mm"></span></td>
+                <td>${Math.round(stimulusSize)}<span data-localize="mm"></span></td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="exposureTimeLabel"></strong></td>
-                <td>${exposureTime}<span data-localize="ms"></span></td>
+                <td>${Math.round(exposureTime)}<span data-localize="ms"></span></td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="exposureDelayMinMaxLabel"></strong></td>
-                <td>${Math.min(...exposureDelay)}<span data-localize="ms"></span> - ${Math.max(...exposureDelay)}<span data-localize="ms"></span></td>
+                <td>${Math.round(Math.min(...exposureDelay))}<span data-localize="ms"></span> - ${Math.round(Math.max(...exposureDelay))}<span data-localize="ms"></span></td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="stimulusCountLabel"></strong></td>
