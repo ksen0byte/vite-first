@@ -25,7 +25,6 @@ export interface DelayedState {
   readonly _tag: 'Delayed';
   readonly stimulusIndex: number;
   readonly delayMs: number;
-  readonly startTime: number;
 }
 
 export interface ShowingStimulusState {
@@ -55,13 +54,11 @@ export const toCountingDown = (count: number): CountingDownState => ({
 
 export const toDelayed = (
   stimulusIndex: number,
-  delayMs: number,
-  startTime: number
+  delayMs: number
 ): DelayedState => ({
   _tag: 'Delayed',
   stimulusIndex,
   delayMs,
-  startTime,
 });
 
 export const toShowingStimulus = (

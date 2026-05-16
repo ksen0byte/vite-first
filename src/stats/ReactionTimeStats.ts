@@ -119,7 +119,7 @@ export class ReactionTimeStats {
   private removeOutliersUsingMAD(data: number[]): number[] {
     // Handle small datasets: retain all data if size is too small for MAD
     if (data.length < 5) {
-      console.warn("Dataset too small for MAD-based outlier detection.");
+      console.warn("Dataset too small for MAD-based outlier detection.", data);
       return data;
     }
 

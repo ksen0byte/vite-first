@@ -248,7 +248,7 @@ export class TestScreen {
     }
 
     const delay = getNextDelay(this.appContext.testSettings, index);
-    this.transitionTo(toDelayed(index, delay, performance.now()));
+    this.transitionTo(toDelayed(index, delay));
 
     scheduleTimeout(() => {
       this.showStimulus(index);
@@ -256,6 +256,7 @@ export class TestScreen {
   }
 
   private showStimulus(index: number): void {
+    if (this.state._tag !== 'Delayed' || this.state.stimulusIndex !== index) return;
     this.stimuliCounter.set(index + 1);
     const stimulus: Stimulus = this.stimulusManager.showStimulus(index);
     this.timerManager.restart();
@@ -267,7 +268,9 @@ export class TestScreen {
   }
 
   private onStimulusTimeout(index: number): void {
-    if ((this.state._tag !== 'ShowingStimulus' && this.state._tag !== 'Delayed') || this.state.stimulusIndex !== index) return;
+    if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
+
+    clearAllTimeouts();
 
     const hasReacted = this.reactionTimes.has(this.state.stimulusIndex);
 
@@ -282,9 +285,6 @@ export class TestScreen {
       } else if (!hasReacted && !shouldHaveReacted) {
         this.recordReactionTime(this.state.stimulusValue, -1, "CorrectRejection", expectedAction, "NONE");
       }
-    } else if (this.state._tag === 'Delayed') {
-      // If we are in Delayed state, we probably got here because of a FalseStart
-      // we already recorded it in handleUserInput, so we just clear and move on
     }
 
     this.stimulusManager.clearContainer();
@@ -330,13 +330,7 @@ export class TestScreen {
 
     // 3. State Guard: Only process inputs during stimulus
     if (this.state._tag === 'Delayed') {
-      const reactionTime = performance.now() - this.state.startTime;
-      if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
-        console.warn(`Input ignored: RT ${reactionTime}ms below threshold.`);
-        return;
-      }
       this.recordReactionTime("none", -1, "FalseStart", "NONE", actualAction); // We don't have stimulus yet, but we want to record the trial index
-      this.onStimulusTimeout(this.state.stimulusIndex); // Force timeout/skip for this trial
       return;
     }
 
