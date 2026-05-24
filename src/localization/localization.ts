@@ -270,13 +270,17 @@ const localization: LocalizationKeys = {
   testScreenTestPZMRActionButtonName: {en: "Space", uk: "Пробіл"},
   testScreenTestPZMRActionButtonRight: {en: "once a stimulus appears", uk: "одразу, коли з'явиться подразник"},
   testScreenTestCRTActionButtonRight: {en: "once a target stimulus appears", uk: "одразу, коли з'явиться цільовий подразник"},
-  testScreenTestSpamModalTitle: {
-    en: "Attention!",
-    uk: "Увага!"
+  spamWarningTitle: {
+    en: "Too many inputs detected",
+    uk: "Виявлено забагато натискань"
   },
-  testScreenTestSpamModalMessage: {
-    en: "Please avoid repetitive actions as it may lead to incorrect test results. The test will be restarted.",
-    uk: "Будь ласка, уникайте повторюваних дій, оскільки це може призвести до некоректних результатів тесту. Тест буде перезапущено з початку."
+  spamWarningMessage: {
+    en: "Please avoid repeated key presses during the test. Spamming can distort reaction-time measurements and produce incorrect results. Start the test again when you are ready to continue.",
+    uk: "Будь ласка, уникайте повторних натискань під час тесту. Спам може спотворити вимірювання часу реакції та призвести до некоректних результатів. Розпочніть тест знову, коли будете готові продовжити."
+  },
+  spamWarningStartAgainButton: {
+    en: "Start Test Again",
+    uk: "Почати тест знову"
   },
   testScreenTestCompleteMessage: {
     en: "Congratulations! You have completed the test.",

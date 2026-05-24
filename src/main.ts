@@ -10,6 +10,7 @@ import Router from "./routing/router.ts";
 import {setupProfileScreen} from "./screens/user-profile-screen.ts";
 import {setupDashboardScreen} from "./features/dashboard/dashboard-screen.ts";
 import {setupBioAgeCalculatorScreen} from "./features/biological-age/screens/bio-age-calculator-screen.ts";
+import {setupSpamWarningScreen} from "./screens/spam-warning-screen.ts";
 
 const appContainer = document.getElementById('app')! as HTMLElement;
 
@@ -19,6 +20,7 @@ Router.registerRoute('/settings', () => setupSettingsScreen(appContainer));
 Router.registerRoute('/testTypeSelection', () => setupTestTypeSelectionScreen(appContainer));
 Router.registerRoute('/beginTest', () => setupBeginTestScreen(appContainer));
 Router.registerRoute('/test', () => new TestScreen(appContainer).setupScreen());
+Router.registerRoute('/spam-warning', () => setupSpamWarningScreen(appContainer));
 Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(appContainer));
 Router.registerRoute('/users', async () => {
   appContainer.innerHTML = '<p>Loading...</p>';

@@ -140,13 +140,6 @@ export class TestScreen {
           </div>
         </div>
         
-        <!-- Spam Modal -->
-        <div id="spamModal" class="modal">
-          <div class="modal-box">
-            <h3 class="font-bold text-lg" data-localize="testScreenTestSpamModalTitle"></h3>
-            <p class="py-4" data-localize="testScreenTestSpamModalMessage"></p>
-          </div>
-        </div>
       </div>
     `;
   }
@@ -396,11 +389,8 @@ export class TestScreen {
     this.transitionTo(toSpamDetected());
     this.timerManager.stopAndReset();
     clearAllTimeouts();
-    this.showSpamModal();
-    scheduleTimeout(() => {
-      this.hideSpamModal();
-      this.setupScreen(); // Use setupScreen instead of handleRetry to ensure full reset from any state
-    }, 5000);
+    this.destroy();
+    Router.navigate("/spam-warning");
   }
 
   private onTestComplete(): void {
@@ -434,13 +424,5 @@ export class TestScreen {
       this.destroy();
       Router.navigate("/results", {reactionTimes: this.reactionTimes});
     });
-  }
-
-  private showSpamModal() {
-    document.getElementById("spamModal")?.classList.add("modal-open");
-  }
-
-  private hideSpamModal() {
-    document.getElementById("spamModal")?.classList.remove("modal-open");
   }
 }

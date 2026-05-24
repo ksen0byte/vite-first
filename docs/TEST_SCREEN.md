@@ -18,15 +18,15 @@ the current context.
 
 ### Transitions
 
-| From State                                | Trigger                             | To State            | Action                                                                  |
-|-------------------------------------------|-------------------------------------|---------------------|-------------------------------------------------------------------------|
-| `Idle`                                    | `startTest()`                       | `CountingDown`      | Starts the `Countdown` component.                                       |
-| `CountingDown`                            | Countdown finish                    | `Delayed` (index 0) | Calls `runTest()` -> `scheduleNextStimulus(0)`.                         |
-| `Delayed`                                 | `delay` timeout                     | `ShowingStimulus`   | Calls `showStimulus(index)`. Stimulus becomes visible. UI Timer starts. |
-| `ShowingStimulus`                         | `exposureTime` timeout              | `Delayed` (index+1) | Calls `onStimulusTimeout()` -> `scheduleNextStimulus(index+1)`.         |
-| `ShowingStimulus`                         | `exposureTime` timeout (last index) | `Finished`          | Calls `onStimulusTimeout()` -> `onTestComplete()`.                      |
-| *Any* (except `Finished`, `CountingDown`) | Excessive input (>3)                | `SpamDetected`      | Shows spam modal, clears all timers.                                    |
-| `SpamDetected`                            | 5s timeout                          | `CountingDown`      | Re-initializes the test via `setupScreen()`.                            |
+| From State                                | Trigger                             | To State                 | Action                                                                            |
+|-------------------------------------------|-------------------------------------|--------------------------|-----------------------------------------------------------------------------------|
+| `Idle`                                    | `startTest()`                       | `CountingDown`           | Starts the `Countdown` component.                                                 |
+| `CountingDown`                            | Countdown finish                    | `Delayed` (index 0)      | Calls `runTest()` -> `scheduleNextStimulus(0)`.                                   |
+| `Delayed`                                 | `delay` timeout                     | `ShowingStimulus`        | Calls `showStimulus(index)`. Stimulus becomes visible. UI Timer starts.           |
+| `ShowingStimulus`                         | `exposureTime` timeout              | `Delayed` (index+1)      | Calls `onStimulusTimeout()` -> `scheduleNextStimulus(index+1)`.                   |
+| `ShowingStimulus`                         | `exposureTime` timeout (last index) | `Finished`               | Calls `onStimulusTimeout()` -> `onTestComplete()`.                                |
+| *Any* (except `Finished`, `CountingDown`) | Excessive input (>3)                | `SpamDetected`           | Clears timers, destroys the active test screen, and redirects to `/spam-warning`. |
+| `SpamDetected`                            | User clicks "Start Test Again"      | Test type selection page | The warning page routes back to `/testTypeSelection`.                             |
 
 ---
 
@@ -82,7 +82,7 @@ To ensure stability and prevent overlapping actions, all asynchronous logic uses
 
 - **Centralized Tracking**: Every `setTimeout` call is tracked in a registry.
 - **`clearAllTimeouts()`**: This is called whenever the test flow is interrupted (e.g., spam detection, manual retry, or moving between trials) to ensure no "stray" timers fire and
-  cause unexpected state transitions.
+  cause unexpected state transitions. When spam is detected, `TestScreen.destroy()` also removes the keyboard listener before routing to the dedicated warning page.
 - **Race Condition Prevention**: `onStimulusTimeout` and `showStimulus` perform index validation (`this.state.stimulusIndex === index`) to ensure they only process the trial they
   were originally scheduled for.
 
