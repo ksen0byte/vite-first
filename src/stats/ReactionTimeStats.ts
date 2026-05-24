@@ -42,7 +42,7 @@ export class ReactionTimeStats {
   /**
    * Create a new instance with the given array of reaction times.
    */
-  constructor(trialResults: TrialResult[], upperBound: number = 500, lowerBound: number = 100) {
+  constructor(trialResults: TrialResult[], upperBound: number = 700, lowerBound: number = 100) {
     // Step 1: Remove hard outliers based on fixed range
     let cleanedData = trialResults
       .filter(trialResult => trialResult.outcome === "Success")
