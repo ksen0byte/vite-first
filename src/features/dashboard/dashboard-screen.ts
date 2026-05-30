@@ -23,7 +23,7 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
             </div>
           </div>
 
-          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" id="service-bio-age">
+          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer hidden" id="service-bio-age">
             <figure class="px-10 pt-10">
               <span class="text-6xl">🧬</span>
             </figure>
