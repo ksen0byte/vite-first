@@ -3,7 +3,7 @@ import {setupHeader} from '../components/header';
 import {setupFooter} from '../components/footer';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
-import {MultiHandReactionTimeStats, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
+import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {TestMode} from "../config/domain.ts";
 import Router from "../routing/router.ts";
 
@@ -54,49 +54,7 @@ function testCardHTML(index: number, test: TestRecord): string {
   const stats = multiHandStats.total;
   const statsRight = multiHandStats.right;
   const statsLeft = multiHandStats.left;
-
-  const multiHandTableHtml = testType === "crt2-3" ? `
-    <!-- Multi-hand Statistics Summary -->
-    <div class="overflow-x-auto mt-4 w-full">
-      <table class="table table-zebra table-md w-full">
-        <thead>
-          <tr class="text-center bg-base-300">
-            <th></th>
-            <th data-localize="statTotal"></th>
-            <th data-localize="statLeftHand"></th>
-            <th data-localize="statRightHand"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="text-center">
-            <td><strong data-localize="meanLabel"></strong></td>
-            <td>${stats.count > 0 ? stats.meanVal.toFixed(2) + '<span data-localize="ms"></span>' : 'N/A'}</td>
-            <td>${statsLeft.count > 0 ? statsLeft.meanVal.toFixed(2) + '<span data-localize="ms"></span>' : 'N/A'}</td>
-            <td>${statsRight.count > 0 ? statsRight.meanVal.toFixed(2) + '<span data-localize="ms"></span>' : 'N/A'}</td>
-          </tr>
-          <tr class="text-center">
-            <td><strong data-localize="statErrorsTotal"></strong></td>
-            <td>${stats.errorCount}</td>
-            <td>${statsLeft.errorCount}</td>
-            <td>${statsRight.errorCount}</td>
-          </tr>
-          <tr class="text-center">
-            <td><strong data-localize="statErrorsPercentage"></strong></td>
-            <td>${stats.errorPercentage.toFixed(2)}%</td>
-            <td>${statsLeft.errorPercentage.toFixed(2)}%</td>
-            <td>${statsRight.errorPercentage.toFixed(2)}%</td>
-          </tr>
-          <tr class="text-center">
-            <td><strong data-localize="countLabel"></strong></td>
-            <td>${stats.count}</td>
-            <td>${statsLeft.count}</td>
-            <td>${statsRight.count}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="divider"></div>
-  ` : "";
+  const showHandBreakdown = testType === "crt2-3";
 
   return `
     <div class="card shadow-md bg-base-100">
@@ -109,9 +67,7 @@ function testCardHTML(index: number, test: TestRecord): string {
           </div>
           <span>${new Date(date).toLocaleString()}</span>
         </h2>
-        
-        ${multiHandTableHtml}
-        
+
         <div class="flex justify-between">
           <!-- Test Settings -->
           <div class="overflow-x-auto mt-4 w-full">          
@@ -163,27 +119,45 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <!-- Table Rows Localized -->
                 <tr class="text-center">
                   <td><strong data-localize="countLabel"></strong></td>
-                  <td>${stats.count}</td>
+                  <td>
+                    ${stats.count}
+                    ${handBreakdownValueHtml(statsLeft.count, statsRight.count, showHandBreakdown)}
+                  </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="meanLabel"></strong></td>
-                  <td>${stats.meanVal.toFixed(2)}<span data-localize="ms"></span></td>
+                  <td>
+                    ${stats.meanVal.toFixed(2)}<span data-localize="ms"></span>
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.meanVal.toFixed(2)}<span data-localize="ms"></span>`)}
+                  </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="modeLabel"></strong></td>
-                  <td>${stats.modeVal ? stats.modeVal.toFixed(2) : "N/A"}<span data-localize="ms"></span></td>
+                  <td>
+                    ${stats.modeVal ? stats.modeVal.toFixed(2) : "N/A"}<span data-localize="ms"></span>
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.modeVal ? handStats.modeVal.toFixed(2) : "N/A"}<span data-localize="ms"></span>`)}
+                  </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="stdevLabel"></strong></td>
-                  <td>${stats.stdevVal.toFixed(2)}<span data-localize="ms"></span></td>
+                  <td>
+                    ${stats.stdevVal.toFixed(2)}<span data-localize="ms"></span>
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.stdevVal.toFixed(2)}<span data-localize="ms"></span>`)}
+                  </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="cvLabel"></strong></td>
-                  <td>${stats.cvVal.toFixed(2)}</td>
+                  <td>
+                    ${stats.cvVal.toFixed(2)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => handStats.cvVal.toFixed(2))}
+                  </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="entropyLabel"></strong></td>
-                  <td>${stats.entropyVal.toFixed(3)} <span data-localize="bits"></span></td>
+                  <td>
+                    ${stats.entropyVal.toFixed(3)} <span data-localize="bits"></span>
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.entropyVal.toFixed(3)} <span data-localize="bits"></span>`)}
+                  </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="p3Label"></strong></td>
@@ -231,12 +205,19 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <!-- Table Rows Localized -->
                 <tr class="text-center">
                   <td><strong data-localize="statErrorsTotal"></strong></td>
-                  <td>${stats.errorCount}</td>
+                  <td>
+                    ${stats.errorCount}
+                    ${handBreakdownValueHtml(statsLeft.errorCount, statsRight.errorCount, showHandBreakdown)}
+                  </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statErrorsPercentage"></strong></td>
-                  <td>${stats.errorPercentage.toFixed(2)}%</td>
+                  <td>
+                    ${stats.errorPercentage.toFixed(2)}%
+                    ${handBreakdownValueHtml(statsLeft.errorPercentage, statsRight.errorPercentage, showHandBreakdown, (value) => `${value.toFixed(2)}%`)}
+                  </td>
                 </tr>
+                ${errorBreakdownRowsHtml(multiHandStats, showHandBreakdown)}
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalLevel"></strong></td>
                   <td>${stats.calculateFunctionalLevel().toFixed(2)}</td>
@@ -262,6 +243,61 @@ function testCardHTML(index: number, test: TestRecord): string {
       </div>
     </div>
   `;
+}
+
+function errorBreakdownRowsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {
+  return OUTCOME_BREAKDOWN.map((outcome: OutcomeBreakdown) => {
+    const leftCount = multiHandStats.left.outcomeCountsByOutcome[outcome];
+    const rightCount = multiHandStats.right.outcomeCountsByOutcome[outcome];
+
+    return `
+      <tr class="text-center">
+        <td><strong data-localize="${getTrialOutcomeLocalizationKey(outcome)}"></strong></td>
+        <td>
+          <div>${multiHandStats.total.outcomeCountsByOutcome[outcome]}</div>
+          ${handBreakdownValueHtml(leftCount, rightCount, showHandBreakdown)}
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function handBreakdownValueHtml(
+  leftValue: number,
+  rightValue: number,
+  showHandBreakdown: boolean,
+  formatValue: (value: number) => string = (value) => value.toString()
+): string {
+  if (!showHandBreakdown || (leftValue === 0 && rightValue === 0)) return "";
+
+  return `
+    <div class="text-xs opacity-70">
+      <span data-localize="statLeftHand"></span>: ${formatValue(leftValue)}
+      /
+      <span data-localize="statRightHand"></span>: ${formatValue(rightValue)}
+    </div>
+  `;
+}
+
+function handBreakdownStatsValueHtml(
+  leftStats: ReactionTimeStats,
+  rightStats: ReactionTimeStats,
+  showHandBreakdown: boolean,
+  formatValue: (stats: ReactionTimeStats) => string
+): string {
+  if (!showHandBreakdown || (leftStats.count === 0 && rightStats.count === 0)) return "";
+
+  return `
+    <div class="text-xs opacity-70">
+      <span data-localize="statLeftHand"></span>: ${leftStats.count > 0 ? formatValue(leftStats) : "N/A"}
+      /
+      <span data-localize="statRightHand"></span>: ${rightStats.count > 0 ? formatValue(rightStats) : "N/A"}
+    </div>
+  `;
+}
+
+function getTrialOutcomeLocalizationKey(outcome: keyof ReactionTimeStats["outcomeCountsByOutcome"]): string {
+  return `trialOutcome${outcome}`;
 }
 
 function userProfileFooterHTML(): string {

@@ -98,3 +98,6 @@ Each trial results in one of the following `TrialOutcome` values:
 - **`CorrectRejection`**: The user correctly ignored a distractor stimulus.
 - **`MixUp`**: The user reacted to a target but used the wrong action (e.g., Left instead of Right in choice tests).
 - **`FalseStart`**: The user reacted during the pre-stimulus delay period.
+
+Results and saved profile cards show the aggregate error count plus localized outcome stats for `Miss`, `FalseAlarm`, `FalseStart`, `MixUp`, and `CorrectRejection`. For CRT2-3
+tests, values include a left/right detail line only when that split has non-zero data.

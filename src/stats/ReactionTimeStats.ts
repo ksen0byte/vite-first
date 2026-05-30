@@ -3,13 +3,19 @@
 import Chart from "chart.js/auto";
 import {localize} from "../localization/localization.ts";
 import {cumulativeStdNormalProbability, mean, median, medianAbsoluteDeviation, quantile, standardDeviation} from "simple-statistics";
-import {TrialResult} from "../config/domain.ts";
+import {TrialOutcome, TrialResult} from "../config/domain.ts";
 
 export interface FrequencyBin {
   binStart: number;
   binEnd: number;
   frequency: number;
 }
+
+export type ErrorOutcome = Extract<TrialOutcome, "Miss" | "FalseAlarm" | "FalseStart" | "MixUp">;
+export type OutcomeBreakdown = ErrorOutcome | "CorrectRejection";
+
+export const ERROR_OUTCOMES: readonly ErrorOutcome[] = ["Miss", "FalseAlarm", "FalseStart", "MixUp"];
+export const OUTCOME_BREAKDOWN: readonly OutcomeBreakdown[] = [...ERROR_OUTCOMES, "CorrectRejection"];
 
 export class ReactionTimeStats {
   private readonly data: number[];
@@ -38,6 +44,7 @@ export class ReactionTimeStats {
 
   public readonly errorCount: number;
   public readonly errorPercentage: number;
+  public readonly outcomeCountsByOutcome: Record<OutcomeBreakdown, number>;
 
   /**
    * Create a new instance with the given array of reaction times.
@@ -87,7 +94,18 @@ export class ReactionTimeStats {
       this.entropyVal = 0;
     }
 
-    const errors = trialResults.filter(t => t.outcome === "Miss" || t.outcome === "FalseAlarm" || t.outcome === "FalseStart" || t.outcome === "MixUp");
+    this.outcomeCountsByOutcome = OUTCOME_BREAKDOWN.reduce<Record<OutcomeBreakdown, number>>((acc, outcome) => {
+      acc[outcome] = trialResults.filter(t => t.outcome === outcome).length;
+      return acc;
+    }, {
+      Miss: 0,
+      FalseAlarm: 0,
+      FalseStart: 0,
+      MixUp: 0,
+      CorrectRejection: 0,
+    });
+
+    const errors = trialResults.filter(t => ERROR_OUTCOMES.includes(t.outcome as ErrorOutcome));
     this.errorCount = errors.length;
     this.errorPercentage = trialResults.length > 0 ? (this.errorCount / trialResults.length) * 100 : 0;
   }

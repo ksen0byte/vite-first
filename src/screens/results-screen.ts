@@ -3,7 +3,7 @@
 import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
-import {MultiHandReactionTimeStats} from "../stats/ReactionTimeStats.ts";
+import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
@@ -31,51 +31,12 @@ export function setupResultsScreen(
   const testType = AppContextManager.getContext().testSettings.testType;
   const multiHandStats = new MultiHandReactionTimeStats(trialResults, AppContextManager.getContext().testSettings.exposureTime);
   const reactionTimeStats = multiHandStats.total;
+  const showHandBreakdown = testType === "crt2-3";
+  const errorBreakdownStats = errorBreakdownStatsHtml(multiHandStats, showHandBreakdown);
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();
   const functionalCapabilities = reactionTimeStats.calculateFunctionalCapabilities();
-
-  const multiHandTable = testType === "crt2-3" ? `
-    <div class="overflow-x-auto w-full mb-4">
-      <table class="table table-zebra w-full shadow rounded-lg overflow-hidden">
-        <thead class="bg-base-300">
-          <tr>
-            <th class="text-left py-3 px-4"></th>
-            <th class="text-center py-3 px-4" data-localize="statTotal">Total</th>
-            <th class="text-center py-3 px-4" data-localize="statLeftHand">Left Hand</th>
-            <th class="text-center py-3 px-4" data-localize="statRightHand">Right Hand</th>
-          </tr>
-        </thead>
-        <tbody class="text-base">
-          <tr>
-            <td class="font-bold py-3 px-4" data-localize="statMean">Mean</td>
-            <td class="text-center py-3 px-4">${multiHandStats.total.count > 0 ? multiHandStats.total.meanVal.toFixed(2) + localize("ms") : 'N/A'}</td>
-            <td class="text-center py-3 px-4">${multiHandStats.left.count > 0 ? multiHandStats.left.meanVal.toFixed(2) + localize("ms") : 'N/A'}</td>
-            <td class="text-center py-3 px-4">${multiHandStats.right.count > 0 ? multiHandStats.right.meanVal.toFixed(2) + localize("ms") : 'N/A'}</td>
-          </tr>
-          <tr>
-            <td class="font-bold py-3 px-4" data-localize="statErrorsTotal">Total Errors</td>
-            <td class="text-center py-3 px-4">${multiHandStats.total.errorCount}</td>
-            <td class="text-center py-3 px-4">${multiHandStats.left.errorCount}</td>
-            <td class="text-center py-3 px-4">${multiHandStats.right.errorCount}</td>
-          </tr>
-          <tr>
-            <td class="font-bold py-3 px-4" data-localize="statErrorsPercentage">Error Rate</td>
-            <td class="text-center py-3 px-4">${multiHandStats.total.errorPercentage.toFixed(2)}%</td>
-            <td class="text-center py-3 px-4">${multiHandStats.left.errorPercentage.toFixed(2)}%</td>
-            <td class="text-center py-3 px-4">${multiHandStats.right.errorPercentage.toFixed(2)}%</td>
-          </tr>
-          <tr>
-            <td class="font-bold py-3 px-4" data-localize="statCount">Count</td>
-            <td class="text-center py-3 px-4">${multiHandStats.total.count}</td>
-            <td class="text-center py-3 px-4">${multiHandStats.left.count}</td>
-            <td class="text-center py-3 px-4">${multiHandStats.right.count}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  ` : "";
 
   // Render
   appContainer.innerHTML = `
@@ -83,21 +44,87 @@ export function setupResultsScreen(
       <!-- Title -->
       <h2 class="text-2xl font-bold mb-4" data-localize="testResultsTitle">Test Results</h2>
 
-      ${multiHandTable}
+      <!-- First stats block (count, mean, median, variance, std dev, range) -->
+      <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
 
+        <!-- Count -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statCount">Count</div>
+          <div class="stat-value text-lg">${reactionTimeStats.count}</div>
+          ${handBreakdownDescHtml(multiHandStats.left.count, multiHandStats.right.count, showHandBreakdown)}
+        </div>
+
+        <!-- Mean -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statMean">Mean</div>
+          <div class="stat-value text-lg">${(reactionTimeStats.meanVal === null ? "N/A" : reactionTimeStats.meanVal.toFixed(2) + localize("ms"))}</div>
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.meanVal.toFixed(2)}${localize("ms")}`)}
+        </div>
+
+        <!-- Mode -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statMode">Median</div>
+          <div class="stat-value text-lg">${(reactionTimeStats.modeVal === null ? "N/A" : reactionTimeStats.modeVal.toFixed(2) + localize("ms"))}</div>
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => stats.modeVal === null ? "N/A" : `${stats.modeVal.toFixed(2)}${localize("ms")}`)}
+        </div>
+
+        <!-- Std Dev -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statStdDev">Std Dev</div>
+          <div class="stat-value text-lg">${reactionTimeStats.stdevVal.toFixed(2)}</div>
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => stats.stdevVal.toFixed(2))}
+        </div>
+        
+        <!-- Coefficient of Variation -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statCV">CV</div>
+          <div class="stat-value text-lg">${reactionTimeStats.cvVal.toFixed(2)}</div>
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => stats.cvVal.toFixed(2))}
+        </div>
+
+        <!-- Discretized Shannon Entropy -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statEntropy">Shannon Entropy</div>
+          <div class="stat-value text-lg">${reactionTimeStats.entropyVal.toFixed(3)} <span data-localize="bits"></span></div>
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.entropyVal.toFixed(3)} ${localize("bits")}`)}
+        </div>
+
+      </div>
+
+      <!-- Second stats block (errors) -->
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
         <!-- Errors Total -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statErrorsTotal">Errors Total</div>
           <div class="stat-value text-lg">${reactionTimeStats.errorCount}</div>
+          ${handBreakdownDescHtml(multiHandStats.left.errorCount, multiHandStats.right.errorCount, showHandBreakdown)}
         </div>
 
         <!-- Error Percentage -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statErrorsPercentage">Error Rate</div>
           <div class="stat-value text-lg">${reactionTimeStats.errorPercentage.toFixed(2)}%</div>
+          ${handBreakdownDescHtml(multiHandStats.left.errorPercentage, multiHandStats.right.errorPercentage, showHandBreakdown, (value) => `${value.toFixed(2)}%`)}
         </div>
 
+        ${errorBreakdownStats}
+      </div>
+
+      <!-- Third stats block (percentiles) -->
+      <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
+
+        <!-- p50 -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statP50">p50</div>
+          <div class="stat-value text-lg">${reactionTimeStats.p50Val.toFixed(2)}ms</div>
+        </div>
+
+        <!-- p90 -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base" data-localize="statP90">p90</div>
+          <div class="stat-value text-lg">${reactionTimeStats.p90Val.toFixed(2)}ms</div>
+        </div>
+        
         <!-- Functional Level -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statFunctionalLevel">Count</div>
@@ -116,91 +143,10 @@ export function setupResultsScreen(
           <div class="stat-value text-lg">${functionalCapabilities ? functionalCapabilities.toFixed(2) : "N/A"}</div>
         </div>
       </div>
-      <!-- First stats block (count, mean, median, variance, std dev, range) -->
+      
+      <!-- Loskutova stats-->
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
-
-        <!-- Count -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statCount">Count</div>
-          <div class="stat-value text-lg">${reactionTimeStats.count}</div>
-        </div>
-
-        <!-- Mean -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statMean">Mean</div>
-          <div class="stat-value text-lg">${(reactionTimeStats.meanVal === null ? "N/A" : reactionTimeStats.meanVal.toFixed(2) + localize("ms"))}</div>
-        </div>
-
-        <!-- Mode -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statMode">Median</div>
-          <div class="stat-value text-lg">${(reactionTimeStats.modeVal === null ? "N/A" : reactionTimeStats.modeVal.toFixed(2) + localize("ms"))}</div>
-        </div>
-
-        <!-- Std Dev -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statStdDev">Std Dev</div>
-          <div class="stat-value text-lg">${reactionTimeStats.stdevVal.toFixed(2)}</div>
-        </div>
         
-        <!-- Coefficient of Variation -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statCV">CV</div>
-          <div class="stat-value text-lg">${reactionTimeStats.cvVal.toFixed(2)}</div>
-        </div>
-
-        <!-- Discretized Shannon Entropy -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statEntropy">Shannon Entropy</div>
-          <div class="stat-value text-lg">${reactionTimeStats.entropyVal.toFixed(3)} <span data-localize="bits"></span></div>
-        </div>
-
-      </div>
-
-      <!-- Second stats block (percentiles) -->
-      <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
-
-        <!-- p3 -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statP3">p3</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p3Val.toFixed(2)}ms</div>
-        </div>
-
-        <!-- p10 -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statP10">p10</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p10Val.toFixed(2)}ms</div>
-        </div>
-
-        <!-- p25 -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statP25">p25</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p25Val.toFixed(2)}ms</div>
-        </div>
-
-        <!-- p50 -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statP50">p50</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p50Val.toFixed(2)}ms</div>
-        </div>
-
-        <!-- p75 -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statP75">p75</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p75Val.toFixed(2)}ms</div>
-        </div>
-
-        <!-- p90 -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statP90">p90</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p90Val.toFixed(2)}ms</div>
-        </div>
-
-        <!-- p97 -->
-        <div class="stat place-items-center">
-          <div class="stat-title text-base" data-localize="statP97">p97</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p97Val.toFixed(2)}ms</div>
-        </div>
       </div>
 
       <!-- Frequency Distribution Table -->
@@ -220,6 +166,59 @@ export function setupResultsScreen(
   ]);
   reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
   updateLanguageUI();
+}
+
+function errorBreakdownStatsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {
+  return OUTCOME_BREAKDOWN.map((outcome) => {
+    const leftCount = multiHandStats.left.outcomeCountsByOutcome[outcome];
+    const rightCount = multiHandStats.right.outcomeCountsByOutcome[outcome];
+
+    return `
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="${getTrialOutcomeLocalizationKey(outcome)}"></div>
+        <div class="stat-value text-lg">${multiHandStats.total.outcomeCountsByOutcome[outcome]}</div>
+        ${handBreakdownDescHtml(leftCount, rightCount, showHandBreakdown)}
+      </div>
+    `;
+  }).join("");
+}
+
+function handBreakdownDescHtml(
+  leftValue: number,
+  rightValue: number,
+  showHandBreakdown: boolean,
+  formatValue: (value: number) => string = (value) => value.toString()
+): string {
+  if (!showHandBreakdown || (leftValue === 0 && rightValue === 0)) return "";
+
+  return `
+    <div class="stat-desc">
+      <span data-localize="statLeftHand"></span>: ${formatValue(leftValue)}
+      /
+      <span data-localize="statRightHand"></span>: ${formatValue(rightValue)}
+    </div>
+  `;
+}
+
+function handBreakdownDescHtmlForStats(
+  leftStats: ReactionTimeStats,
+  rightStats: ReactionTimeStats,
+  showHandBreakdown: boolean,
+  formatValue: (stats: ReactionTimeStats) => string
+): string {
+  if (!showHandBreakdown || (leftStats.count === 0 && rightStats.count === 0)) return "";
+
+  return `
+    <div class="stat-desc">
+      <span data-localize="statLeftHand"></span>: ${leftStats.count > 0 ? formatValue(leftStats) : "N/A"}
+      /
+      <span data-localize="statRightHand"></span>: ${rightStats.count > 0 ? formatValue(rightStats) : "N/A"}
+    </div>
+  `;
+}
+
+function getTrialOutcomeLocalizationKey(outcome: keyof ReactionTimeStats["outcomeCountsByOutcome"]): string {
+  return `trialOutcome${outcome}`;
 }
 
 async function saveResultsAndSetupNextScreen(
