@@ -6,12 +6,25 @@ import {User, TestRecord} from "../db/db.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {TestMode} from "../config/domain.ts";
 import Router from "../routing/router.ts";
+import {Chart} from "chart.js";
+import {printConfig} from "../config/settings.ts";
 
+let chartInstances: Chart[] = [];
 
 export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]) {
   const sortedTests = tests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Set CSS variables for print configuration
+  document.documentElement.style.setProperty('--print-chart-width', `${printConfig.chart.width}px`);
+  document.documentElement.style.setProperty('--print-chart-height', `${printConfig.chart.height}px`);
+  document.documentElement.style.setProperty('--print-page-margin', printConfig.page.margin);
+  document.documentElement.style.setProperty('--print-table-cell-height', printConfig.table.cellHeight);
+  document.documentElement.style.setProperty('--print-font-size', printConfig.fontSize);
+  document.documentElement.style.setProperty('--print-line-height', printConfig.lineHeight.toString());
+
   appContainer.innerHTML = `
     <div id="user-profile-screen" class="flex flex-col flex-grow bg-base-200 text-base-content p-4">
+      ${printHeaderHtml(user)}
       <div class="flex-1 space-y-4">
           ${personalDataCardHtml(user)}
           <!-- Test Cards -->
@@ -23,15 +36,53 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
 
   setupFooter(appContainer, userProfileFooterHTML(), [
     {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/")},
+    {buttonFn: () => document.getElementById("print-btn")! as HTMLButtonElement, callback: () => handlePrint(user)},
   ]);
-  renderHistograms(sortedTests);
+  chartInstances = renderHistograms(sortedTests);
+  setupPrintHandlers();
   updateLanguageUI();
+}
+
+function handlePrint(user: User): void {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const timeStr = now.toTimeString().slice(0, 5).replace(/:/g, '');
+  const filename = `${user.lastName}_${user.firstName}_${dateStr}_${timeStr}`;
+
+  const originalTitle = document.title;
+  document.title = filename;
+
+  window.print();
+
+  setTimeout(() => {
+    document.title = originalTitle;
+  }, 100);
+}
+
+function printHeaderHtml(user: User): string {
+  const {firstName, lastName, gender, age} = user;
+  const currentDate = new Date().toLocaleDateString();
+  const genderText = gender === "male" ? `<span data-localize="male"></span>` : `<span data-localize="female"></span>`;
+
+  return `
+  <div id="print-header" class="hidden print:block mb-4">
+    <h1 class="text-2xl font-bold mb-2" data-localize="printReportTitle"></h1>
+    <div class="flex gap-4 text-sm">
+      <span><strong data-localize="surnameLabel"></strong>: ${lastName}</span>
+      <span><strong data-localize="nameLabel"></strong>: ${firstName}</span>
+      <span><strong data-localize="ageLabel"></strong>: ${age}</span>
+      <span><strong data-localize="selectGender"></strong>: ${genderText}</span>
+      <span><strong data-localize="printReportDate"></strong>: ${currentDate}</span>
+    </div>
+    <hr class="my-2 border-black">
+  </div>
+  `;
 }
 
 function personalDataCardHtml(user: User) {
   const {firstName, lastName, gender, age} = user;
   return `
-  <div class="card shadow-md bg-base-100">
+  <div class="card shadow-md bg-base-100 print:hidden">
     <div class="card-body">
       <div class="flex space-x-2">
         <p class="text-lg"><strong data-localize="surnameLabel"></strong>: <span>${lastName}</span></p>
@@ -160,24 +211,8 @@ function testCardHTML(index: number, test: TestRecord): string {
                   </td>
                 </tr>
                 <tr class="text-center">
-                  <td><strong data-localize="p3Label"></strong></td>
-                  <td>${stats.p3Val.toFixed(2)}<span data-localize="ms"></span></td>
-                </tr>
-                <tr class="text-center">
-                  <td><strong data-localize="p10Label"></strong></td>
-                  <td>${stats.p10Val.toFixed(2)}<span data-localize="ms"></span></td>
-                </tr>
-                <tr class="text-center">
-                  <td><strong data-localize="p25Label"></strong></td>
-                  <td>${stats.p25Val.toFixed(2)}<span data-localize="ms"></span></td>
-                </tr>
-                <tr class="text-center">
                   <td><strong data-localize="medianLabel"></strong></td>
                   <td>${stats.p50Val.toFixed(2)}<span data-localize="ms"></span></td>
-                </tr>
-                <tr class="text-center">
-                  <td><strong data-localize="p75Label"></strong></td>
-                  <td>${stats.p75Val.toFixed(2)}<span data-localize="ms"></span></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="p90Label"></strong></td>
@@ -304,7 +339,8 @@ function userProfileFooterHTML(): string {
   return `
     <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
       <div class="flex-1"></div>
-      <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="backToMainPage"></button>
+      <button id="print-btn" class="btn btn-outline btn-primary" data-localize="printButton"></button>
+      <button id="main-page-btn" class="btn btn-outline btn-success ml-2" data-localize="backToMainPage"></button>
     </footer>
   `;
 }
@@ -337,11 +373,30 @@ function getTestTypeLocalizationKey(testType: string): string {
   }
 }
 
-function renderHistograms(tests: TestRecord[]) {
+function renderHistograms(tests: TestRecord[]): Chart[] {
+  const charts: Chart[] = [];
   tests.forEach((test, index) => {
     const stats = new ReactionTimeStats(test.trials, test.testSettings.exposureTime);
     const canvasId = `histogram-${index}`;
-
-    stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
+    const chart = stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
+    charts.push(chart);
   });
+  return charts;
+}
+
+function setupPrintHandlers() {
+  const beforePrintHandler = () => {
+    chartInstances.forEach(chart => {
+      chart.resize(printConfig.chart.width, printConfig.chart.height);
+    });
+  };
+
+  const afterPrintHandler = () => {
+    chartInstances.forEach(chart => {
+      chart.resize();
+    });
+  };
+
+  window.addEventListener('beforeprint', beforePrintHandler);
+  window.addEventListener('afterprint', afterPrintHandler);
 }

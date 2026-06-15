@@ -189,3 +189,18 @@ export const inputsConfig = {
   },
 
 }
+
+export const printConfig = {
+  chart: {
+    width: 800,
+    height: 400,
+  },
+  page: {
+    margin: "0.5cm",
+  },
+  table: {
+    cellHeight: "1.25em",
+  },
+  fontSize: "50%",
+  lineHeight: 1.2,
+}

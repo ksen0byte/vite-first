@@ -383,7 +383,7 @@ export class ReactionTimeStats {
    * Draws a histogram of bins, highlighting the highest-frequency bin in pink,
    * and labeling it as "(Highest)" in the tooltip.
    */
-  public drawHistogram(ctx: HTMLCanvasElement) {
+  public drawHistogram(ctx: HTMLCanvasElement): Chart {
     const modeBin = this.getModalClass();
 
     const labels = this.bins.map((bin) => `${bin.binStart} - ${bin.binEnd} ${localize("ms")}`);
@@ -392,7 +392,7 @@ export class ReactionTimeStats {
     const subtitle = this.generateStatisticsSummary();
 
     // noinspection JSUnusedGlobalSymbols
-    new Chart(ctx, {
+    return new Chart(ctx, {
       type: "bar",
       data: {
         labels: labels,

@@ -29,3 +29,110 @@
   }
 
 }
+
+@media print {
+  @page {
+    size: landscape;
+    margin: var(--print-page-margin, 0.5cm);
+  }
+
+  /* Scale down font size globally */
+  * {
+    color: black !important;
+    background-color: white !important;
+    font-size: var(--print-font-size, 50%) !important;
+    line-height: var(--print-line-height, 1.2) !important;
+  }
+
+  /* Remove all padding and margins for dense layout */
+  .card, .card-body {
+    padding: 0.25rem !important;
+    margin: 0.25rem 0 !important;
+    gap: 0.25rem !important;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 0.25rem !important;
+  }
+
+  /* Dense table layout */
+  table {
+    border-collapse: collapse;
+    margin: 0 !important;
+    table-layout: fixed;
+  }
+
+  table, th, td {
+    border: 1px solid #000 !important;
+    //padding: 0.1rem 0.2rem !important;
+    height: var(--print-table-cell-height, 1.6em) !important;
+    vertical-align: middle !important;
+  }
+
+  th, td {
+    white-space: nowrap;
+  }
+
+  /* Compact dividers */
+  .divider {
+    display: none;
+  }
+
+  /* Hide header and footer when printing */
+  header, footer {
+    display: none !important;
+  }
+
+  /* Show print header */
+  #print-header {
+    display: block !important;
+  }
+
+  /* Ensure cards break properly across pages */
+  .card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure charts have proper sizing */
+  canvas {
+    width: var(--print-chart-width, 800px) !important;
+    height: var(--print-chart-height, 400px) !important;
+  }
+
+  /* Chart container */
+  .flex.flex-grow.p-8 {
+    padding: 0.5rem !important;
+    height: var(--print-chart-height, 400px) !important;
+    min-height: unset !important;
+    // center the chart
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+
+  /* Remove background colors for better print contrast */
+  body, #app, .bg-base-200 {
+    background: white !important;
+  }
+
+  /* Ensure text is black for printing */
+  .text-base-content {
+    color: black !important;
+  }
+
+  /* Compact title spacing */
+  .card-title {
+    margin-bottom: 0.25rem !important;
+  }
+
+  /* Dense flex layouts */
+  .flex {
+    gap: 0.25rem !important;
+  }
+
+  .mt-4 {
+    margin-top: 0.25rem !important;
+  }
+}
