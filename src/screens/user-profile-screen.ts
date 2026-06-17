@@ -392,9 +392,11 @@ function setupPrintHandlers() {
   };
 
   const afterPrintHandler = () => {
-    chartInstances.forEach(chart => {
-      chart.resize();
-    });
+    setTimeout(() => {
+      chartInstances.forEach(chart => {
+        chart.resize();
+      });
+    }, printConfig.resize.timeoutAfterPrint)
   };
 
   window.addEventListener('beforeprint', beforePrintHandler);

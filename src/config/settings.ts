@@ -203,4 +203,7 @@ export const printConfig = {
   },
   fontSize: "50%",
   lineHeight: 1.2,
+  resize: {
+    timeoutAfterPrint: 500,
+  },
 }
