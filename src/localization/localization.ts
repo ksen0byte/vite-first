@@ -106,6 +106,7 @@ const localization: LocalizationKeys = {
   mm: {en: "mm", uk: "мм"},
   ms: {en: "ms", uk: "мс"},
   s: {en: "s", uk: "с"},
+  au: {en: "arb. u.", uk: "ум. од."},
 
   // Test mode
   testModeLabel: {en: "Test Mode", uk: "Вид Подразника"},
@@ -173,19 +174,19 @@ const localization: LocalizationKeys = {
   },
   instructionCRT23_shapes: {
     en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Square</b> <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Circle</b>. Ignore <b>Triangle</b>.",
-    uk: "Натискайте <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Квадрата</b>, <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Кола</b>. Ігноруйте <b>Трикутник</b>."
+    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Кола</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Квадрата</b>. Ігноруйте <b>Трикутник</b>."
   },
   instructionCRT23_words: {
     en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Animal</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Plant</b>. Ignore <b>Non-living thing</b>.",
-    uk: "Натискайте <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Тварини</b>, <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Рослини</b>. Ігноруйте <b>Неживі предмети</b>."
+    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Рослини</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Тварини</b>. Ігноруйте <b>Неживі предмети</b>."
   },
   instructionCRT23_colors: {
     en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green</b>. Ignore <b>Yellow</b>.",
-    uk: "Натискайте <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного</b>, <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого</b>. Ігноруйте <b>Жовтий</b>."
+    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного</b>. Ігноруйте <b>Жовтий</b>."
   },
   instructionCRT23_combined: {
     en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red/Square/Animal</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green/Circle/Plant</b>. Ignore <b>Yellow/Triangle/Non-living</b>.",
-    uk: "Натискайте <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного/Квадрата/Тварини</b>, <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого/Кола/Рослини</b>. Ігноруйте <b>Жовтий/Трикутник/Неживе</b>."
+    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого/Кола/Рослини</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного/Квадрата/Тварини</b>. Ігноруйте <b>Жовтий/Трикутник/Неживе</b>."
   },
 
   // Biological Age calculator

@@ -65,12 +65,12 @@ export class ReactionTimeStats {
     // Calculate statistics on cleaned data
     this.bins = this.computeFrequencyDistribution();
     this.count = cleanedData.length;
-    
+
     if (this.count > 0) {
       this.meanVal = mean(cleanedData);
       this.modeVal = this.getMode();
       this.stdevVal = standardDeviation(cleanedData);
-      this.cvVal = this.meanVal !== 0 ? this.stdevVal / this.meanVal : 0;
+      this.cvVal = (this.meanVal !== 0 ? this.stdevVal / this.meanVal : 0) * 100;
       this.p3Val = quantile(cleanedData, 0.03);
       this.p10Val = quantile(cleanedData, 0.10);
       this.p25Val = quantile(cleanedData, 0.25);
@@ -494,7 +494,7 @@ export class ReactionTimeStats {
       `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
       `${localize("modeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
       `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
-      `${localize("cvLabel")}: ${this.cvVal.toFixed(2)}`,
+      `${localize("cvLabel")}: ${this.cvVal.toFixed(2)}%`,
       `${localize("entropyLabel")}: ${this.entropyVal.toFixed(3)} ${localize("bits")}`,
       `${localize("statFunctionalLevel")}: ${this.calculateFunctionalLevel().toFixed(2)}`,
       `${localize("statReactionStability")}: ${this.calculateReactionStability().toFixed(2)}`,

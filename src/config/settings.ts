@@ -7,7 +7,7 @@ export const settings = {
     testMode: "shapes" as TestMode,
     stimulusSize: 50 as StimulusSize,
     exposureTime: 700 as ExposureTime,
-    exposureDelay: [750, 1250] as ExposureDelay,
+    exposureDelay: [500, 1900] as ExposureDelay,
     stimulusCount: 50 as StimulusCount,
   }
 };

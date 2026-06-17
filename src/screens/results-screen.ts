@@ -71,14 +71,14 @@ export function setupResultsScreen(
         <!-- Std Dev -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statStdDev">Std Dev</div>
-          <div class="stat-value text-lg">${reactionTimeStats.stdevVal.toFixed(2)}</div>
+          <div class="stat-value text-lg">${reactionTimeStats.stdevVal.toFixed(2)} <span data-localize="ms"></div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => stats.stdevVal.toFixed(2))}
         </div>
         
         <!-- Coefficient of Variation -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statCV">CV</div>
-          <div class="stat-value text-lg">${reactionTimeStats.cvVal.toFixed(2)}</div>
+          <div class="stat-value text-lg">${reactionTimeStats.cvVal.toFixed(2)}%</div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => stats.cvVal.toFixed(2))}
         </div>
 
@@ -116,31 +116,31 @@ export function setupResultsScreen(
         <!-- p50 -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP50">p50</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p50Val.toFixed(2)}ms</div>
+          <div class="stat-value text-lg">${reactionTimeStats.p50Val.toFixed(2)} <span data-localize="ms"></div>
         </div>
 
         <!-- p90 -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statP90">p90</div>
-          <div class="stat-value text-lg">${reactionTimeStats.p90Val.toFixed(2)}ms</div>
+          <div class="stat-value text-lg">${reactionTimeStats.p90Val.toFixed(2)} <span data-localize="ms"></div>
         </div>
         
         <!-- Functional Level -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statFunctionalLevel">Count</div>
-          <div class="stat-value text-lg">${functionalLevelVal ? functionalLevelVal.toFixed(2) : "N/A"}</div>
+          <div class="stat-value text-lg">${functionalLevelVal ? functionalLevelVal.toFixed(2) : "N/A"} <span data-localize="au"></div>
         </div>
         
         <!-- Reaction Stability -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statReactionStability">Count</div>
-          <div class="stat-value text-lg">${reactionStability ? reactionStability.toFixed(2) : "N/A"}</div>
+          <div class="stat-value text-lg">${reactionStability ? reactionStability.toFixed(2) : "N/A"} <span data-localize="au"></div>
         </div>
         
         <!-- Functional Capabilities -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statFunctionalCapabilities">Count</div>
-          <div class="stat-value text-lg">${functionalCapabilities ? functionalCapabilities.toFixed(2) : "N/A"}</div>
+          <div class="stat-value text-lg">${functionalCapabilities ? functionalCapabilities.toFixed(2) : "N/A"} <span data-localize="au"></div>
         </div>
       </div>
       

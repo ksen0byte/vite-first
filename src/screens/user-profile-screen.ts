@@ -135,15 +135,15 @@ function testCardHTML(index: number, test: TestRecord): string {
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="stimulusSizeLabel"></strong></td>
-                <td>${Math.round(stimulusSize)}<span data-localize="mm"></span></td>
+                <td>${Math.round(stimulusSize)} <span data-localize="mm"></span></td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="exposureTimeLabel"></strong></td>
-                <td>${Math.round(exposureTime)}<span data-localize="ms"></span></td>
+                <td>${Math.round(exposureTime)} <span data-localize="ms"></span></td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="exposureDelayMinMaxLabel"></strong></td>
-                <td>${Math.round(Math.min(...exposureDelay))}<span data-localize="ms"></span> - ${Math.round(Math.max(...exposureDelay))}<span data-localize="ms"></span></td>
+                <td>${Math.round(Math.min(...exposureDelay))} <span data-localize="ms"></span> - ${Math.round(Math.max(...exposureDelay))} <span data-localize="ms"></span></td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="stimulusCountLabel"></strong></td>
@@ -178,28 +178,28 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <tr class="text-center">
                   <td><strong data-localize="meanLabel"></strong></td>
                   <td>
-                    ${stats.meanVal.toFixed(2)}<span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.meanVal.toFixed(2)}<span data-localize="ms"></span>`)}
+                    ${stats.meanVal.toFixed(2)} <span data-localize="ms"></span>
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.meanVal.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="modeLabel"></strong></td>
                   <td>
-                    ${stats.modeVal ? stats.modeVal.toFixed(2) : "N/A"}<span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.modeVal ? handStats.modeVal.toFixed(2) : "N/A"}<span data-localize="ms"></span>`)}
+                    ${stats.modeVal ? stats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.modeVal ? handStats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="stdevLabel"></strong></td>
                   <td>
-                    ${stats.stdevVal.toFixed(2)}<span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.stdevVal.toFixed(2)}<span data-localize="ms"></span>`)}
+                    ${stats.stdevVal.toFixed(2)} <span data-localize="ms"></span>
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.stdevVal.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="cvLabel"></strong></td>
                   <td>
-                    ${stats.cvVal.toFixed(2)}
+                    ${stats.cvVal.toFixed(2)}%
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => handStats.cvVal.toFixed(2))}
                   </td>
                 </tr>
@@ -212,15 +212,15 @@ function testCardHTML(index: number, test: TestRecord): string {
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="medianLabel"></strong></td>
-                  <td>${stats.p50Val.toFixed(2)}<span data-localize="ms"></span></td>
+                  <td>${stats.p50Val.toFixed(2)} <span data-localize="ms"></span></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="p90Label"></strong></td>
-                  <td>${stats.p90Val.toFixed(2)}<span data-localize="ms"></span></td>
+                  <td>${stats.p90Val.toFixed(2)} <span data-localize="ms"></span></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="p97Label"></strong></td>
-                  <td>${stats.p97Val.toFixed(2)}<span data-localize="ms"></span></td>
+                  <td>${stats.p97Val.toFixed(2)} <span data-localize="ms"></span></td>
                 </tr>
               </tbody>
             </table>
@@ -255,15 +255,15 @@ function testCardHTML(index: number, test: TestRecord): string {
                 ${errorBreakdownRowsHtml(multiHandStats, showHandBreakdown)}
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalLevel"></strong></td>
-                  <td>${stats.calculateFunctionalLevel().toFixed(2)}</td>
+                  <td>${stats.calculateFunctionalLevel().toFixed(2)} <span data-localize="au"></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statReactionStability"></strong></td>
-                  <td>${stats.calculateReactionStability().toFixed(2)}</td>
+                  <td>${stats.calculateReactionStability().toFixed(2)} <span data-localize="au"></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalCapabilities"></strong></td>
-                  <td>${stats.calculateFunctionalCapabilities().toFixed(2)}</td>
+                  <td>${stats.calculateFunctionalCapabilities().toFixed(2)} <span data-localize="au"></td>
                 </tr>
               </tbody>
             </table>
