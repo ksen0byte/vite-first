@@ -1,4 +1,6 @@
 /** @type {import('vite').UserConfig} */
-export default {
-    "base": "./"
-}
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  base: process.env.VITE_BASE || '/'
+})
