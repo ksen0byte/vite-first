@@ -1,6 +1,6 @@
 class Router {
   private static routes: { [path: string]: () => void } = {};
-  private static basePath: string = import.meta.env.BASE_URL || '/vite-first/'; // Use Vite's BASE_URL
+  private static basePath: string = import.meta.env.VITE_ROUTER_BASE || '/vite-first/'; // Use Vite's BASE_URL
   private static appContainer: HTMLElement;
 
   /**
