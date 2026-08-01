@@ -76,13 +76,12 @@ User inputs (keyboard presses) are processed in `handleUserInput(code)`.
 
 ---
 
-## 4. Timeout Management
+## 4. Timer Management
 
-To ensure stability and prevent overlapping actions, all asynchronous logic uses the `scheduleTimeout` utility.
+Each `TestScreen` owns a `BrowserScheduler`; there is no application-wide timeout registry.
 
-- **Centralized Tracking**: Every `setTimeout` call is tracked in a registry.
-- **`clearAllTimeouts()`**: This is called whenever the test flow is interrupted (e.g., spam detection, manual retry, or moving between trials) to ensure no "stray" timers fire and
-  cause unexpected state transitions. When spam is detected, `TestScreen.destroy()` also removes the keyboard listener before routing to the dedicated warning page.
+- **Lifecycle ownership**: all screen-owned delayed work is scheduled through that scheduler. `destroy()` calls `cancelAll()`, so leaving, retrying, or interrupting a test cancels its
+  pending work. When spam is detected, `destroy()` also removes the keyboard listener before routing to the dedicated warning page.
 - **Race Condition Prevention**: `onStimulusTimeout` and `showStimulus` perform index validation (`this.state.stimulusIndex === index`) to ensure they only process the trial they
   were originally scheduled for.
 
