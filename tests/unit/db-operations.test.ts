@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {db} from '../../src/db/db.ts';
 import {deleteUserAndTests, getTestsForUser, saveTestRecord, upsertUser} from '../../src/db/operations.ts';
 import {TestSettings, TrialResult} from '../../src/config/domain.ts';
@@ -53,6 +53,19 @@ describe('upsertUser', () => {
       _tag: 'Success',
       value: [{userKey: 'Ada|Example', trials: [trial]}],
     });
+  });
+
+  it('returns a typed write failure without persisting a user when the database rejects the write', async () => {
+    const put = vi.spyOn(db.users, 'put').mockRejectedValueOnce(new Error('disk unavailable'));
+
+    const result = await upsertUser({firstName: 'Ada', lastName: 'Example', gender: 'female', age: 34});
+
+    expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure') {
+      expect(result.error._tag).toBe('DatabaseWriteError');
+    }
+    expect(await db.users.get(['Ada', 'Example'])).toBeUndefined();
+    put.mockRestore();
   });
 
   it('deletes a user and all associated tests atomically', async () => {
