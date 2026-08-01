@@ -46,6 +46,18 @@ test('does not retain focus in dashboard content after navigating away', async (
   expect(await page.evaluate(() => document.activeElement?.id)).not.toBe('service-reaction');
 });
 
+test('returns home from the keyboard-reachable header logo', async ({ page }) => {
+  await page.goto('./');
+  await page.locator('#service-reaction').click();
+  await expect(page.locator('#personal-data-form')).toBeVisible();
+
+  const logo = page.getByRole('button', {name: 'Logo'});
+  await logo.focus();
+  await expect(logo).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#service-reaction')).toBeVisible();
+});
+
 test('retains the selected language across a Settings route round trip', async ({ page }) => {
   await page.goto('./');
   const heading = page.locator('#dashboard-content h1');
