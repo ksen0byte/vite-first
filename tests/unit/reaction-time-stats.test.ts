@@ -93,6 +93,6 @@ describe('multi-hand CRT2-3 characterization', () => {
 });
 
 describe('browser and node drift', () => {
-  it.todo('uses the same default hard bounds in browser and CLI output');
-  it.todo('uses the same coefficient-of-variation scale in browser and CLI output');
+  it.skip('keeps independent hard bounds because the one-off CLI is deprecated', () => {});
+  it.skip('keeps its independent coefficient scale because the one-off CLI is deprecated', () => {});
 });
