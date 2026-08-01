@@ -44,3 +44,19 @@ test('rejects repeated non-Space SVMR keys without recording input or detecting 
   await expect(page.locator('#test-screen')).toBeVisible();
   await expect(page).not.toHaveURL(/spam-warning/);
 });
+
+test('renders imported hostile names as literal text without injected markup', async ({ page }) => {
+  page.on('dialog', (dialog) => dialog.accept());
+  await page.goto('./');
+  await page.locator('#service-profiles').click();
+  await expect(page.locator('#import-data-btn')).toBeVisible();
+
+  const fileChooserPromise = page.waitForEvent('filechooser');
+  await page.locator('#import-data-btn').click();
+  const fileChooser = await fileChooserPromise;
+  await fileChooser.setFiles('tests/fixtures/import/malformed/html-bearing-names.json');
+
+  await expect(page.locator('.card-title')).toContainText('<img src=x onerror=alert(1)>');
+  await expect(page.locator('.users-list img')).toHaveCount(0);
+  await expect(page.locator('.users-list svg[onload]')).toHaveCount(0);
+});
