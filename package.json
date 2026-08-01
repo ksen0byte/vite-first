@@ -14,6 +14,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:real-timer": "playwright test tests/e2e/real-timer.spec.ts",
     "check": "npm run check:types && npm run lint && npm run test && npm run build"
   },
   "devDependencies": {
