@@ -49,7 +49,7 @@ Status meanings:
 | CRT2-3 expects `RIGHT` for red, square, or animal; `LEFT` for green, circle, or plant; otherwise `NONE`. | `getExpectedAction`, classification predicates | Characterized | `test-response.test.ts: classifies CRT2-3 stimulus` | Not reviewed. |
 | CRT2-3 response outcomes are success for matching action, mix-up for a wrong action on a target, and false alarm on a distractor. | `processTestResponse` | Characterized | `test-response.test.ts: classifies every CRT2-3 response outcome` | Not reviewed. |
 | Current SVMR/CRT1-3 handling maps all listed control, shift, arrow, and Space keys to actions, while their outcome branch does not compare actual action. | `handleAppKeyDown`, `mapInputCode`, `processTestResponse` | Owner decision required — resolved by DEC-001 | `test-response.test.ts: non-Space keys ignored for svmr/crt1-3` | Do not infer compatibility from legacy material. |
-| `Escape` routes home and is separate from trial response handling. | `handleAppKeyDown`, `handleHome` | Unverified | `test-response.test.ts: escape is not a trial response` | Not reviewed. |
+| `Escape` routes home and is separate from trial response handling. | `handleAppKeyDown`, `handleHome` | Characterized | `tests/e2e/app-load.spec.ts: uses Escape to abandon an active test without recording a trial response` | Not reviewed. |
 
 ## Stimulus sequence and classification predicates
 
