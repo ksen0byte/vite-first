@@ -72,6 +72,24 @@ test('exposes the language selector name and checked state to keyboard users', a
   await expect(languageToggle).toBeChecked();
 });
 
+test('selects CRT1-3 and starts the configured test flow', async ({ page }) => {
+  await page.goto('./');
+  await page.locator('#service-reaction').click();
+  await page.locator('#surname-input').fill('Example');
+  await page.locator('#name-input').fill('Ada');
+  await page.locator('#age-input').fill('34');
+  await page.locator('#gender-select').selectOption('female');
+  await page.locator('#start-test-btn').click();
+
+  const crt13 = page.locator('#rv1-3-button');
+  await crt13.click();
+  await expect(crt13).toHaveClass(/btn-active/);
+  await expect(page.locator('#pzmr-button')).not.toHaveClass(/btn-active/);
+  await expect(page.locator('#test-instruction-text')).not.toBeEmpty();
+  await page.locator('#test-next-btn').click();
+  await expect(page.locator('#test-screen')).toBeVisible();
+});
+
 test('Browser Back abandons an active test without a delayed route mutation', async ({ page }) => {
   await page.goto('./');
   await page.locator('#service-reaction').click();
