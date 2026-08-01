@@ -4,6 +4,8 @@ import katex from 'katex';
 import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.ts";
 
 export function updateLanguageUI(): void {
+  document.documentElement.lang = LanguageManager.getCurrentLanguage();
+
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
   localizableElements.forEach((element) => {
     const key = element.dataset.localize!;

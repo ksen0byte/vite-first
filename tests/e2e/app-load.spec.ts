@@ -63,9 +63,11 @@ test('retains the selected language across a Settings route round trip', async (
   await page.goto('./');
   const heading = page.locator('#dashboard-content h1');
   await expect(heading).toHaveText('Інструменти та сервіси');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'uk');
 
   await page.locator('#language-toggle').check();
   await expect(heading).toHaveText('Tools and Services');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 
   await page.locator('#service-reaction').click();
   await expect(page.locator('#personal-data-form')).toBeVisible();
