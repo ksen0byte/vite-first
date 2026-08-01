@@ -2,11 +2,12 @@ import {setupHeader} from '../components/header';
 import {setupFooter} from '../components/footer';
 import {localize, updateLanguageUI} from '../localization/localization';
 import {db, User, TestRecord} from "../db/db";
-import {getAllUsers, getTestsForUser, upsertUser} from "../db/operations";
+import {getAllUsers, getTestsForUser} from "../db/operations";
 import Router from "../routing/router.ts";
 import {exportDataAsJson, readJsonFile} from "../util/export-utils";
 import {escapeHtml} from "../util/html.ts";
 import {parseImportedJson} from '../util/import-json.ts';
+import {importUsers} from '../application/import-users.ts';
 
 /**
  * Exports all users and their test data as a JSON file
@@ -376,62 +377,8 @@ export class UsersScreen {
           alert(localize('importError'));
           return;
         }
-        const items = parsed.value;
-
-        let importedUsers = 0;
-        let importedTests = 0;
-
-        await db.transaction('rw', db.users, db.tests, async () => {
-          for (const item of items) {
-            const normalizedUser: User = item.user;
-
-            // Upsert user, but count only if it didn't exist before
-            const existed = await db.users.get([normalizedUser.firstName, normalizedUser.lastName]);
-            const upsertResult = await upsertUser(normalizedUser);
-            if (upsertResult._tag === 'Failure') throw upsertResult.error;
-            if (!existed) {
-              importedUsers += 1;
-            }
-
-            const userKey = `${normalizedUser.firstName}|${normalizedUser.lastName}`;
-            const normalizedTests: Omit<TestRecord, 'id'>[] = item.tests.map((test) => ({
-              userKey,
-              testSettings: test.testSettings,
-              trials: [...test.trials],
-              date: test.date,
-            }));
-
-            if (normalizedTests.length > 0) {
-              // Deduplicate against existing tests for this userKey
-              const existing = await db.tests.where('userKey').equals(userKey).toArray();
-
-              const makeSig = (r: Pick<TestRecord, 'userKey' | 'date' | 'testSettings' | 'trials'>): string =>
-                JSON.stringify({
-                  userKey: r.userKey,
-                  date: r.date,
-                  testSettings: r.testSettings,
-                  trials: r.trials // Compare the object array, not the number array
-                });
-
-              const existingSignatures = new Set<string>(existing.map(makeSig));
-
-              // Filter out tests that already exist (by signature)
-              const toAdd: Omit<TestRecord, 'id'>[] = [];
-              for (const t of normalizedTests) {
-                const sig = makeSig(t);
-                if (!existingSignatures.has(sig)) {
-                  existingSignatures.add(sig); // prevent duplicates within the same import too
-                  toAdd.push(t);
-                }
-              }
-
-              if (toAdd.length > 0) {
-                await db.tests.bulkAdd(toAdd);
-                importedTests += toAdd.length;
-              }
-            }
-          }
-        });
+        const importResult = await importUsers(parsed.value);
+        if (importResult._tag === 'Failure') throw importResult.error;
 
         // Refresh UI
         const usersResult = await getAllUsers();
@@ -442,8 +389,8 @@ export class UsersScreen {
         updateLanguageUI();
 
         alert(localize('importSuccess')
-          .replace('%u', String(importedUsers))
-          .replace('%t', String(importedTests)));
+          .replace('%u', String(importResult.value.importedUsers))
+          .replace('%t', String(importResult.value.importedTests)));
       } catch (e) {
         console.error('Error importing data:', e);
         alert(localize('importError'));
