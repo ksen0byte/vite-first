@@ -97,6 +97,7 @@ async function exportUserData(firstName: string, lastName: string): Promise<void
 export class UsersScreen {
   private readonly appContainer: HTMLElement;
   private users: User[] = []; // Cached state for users
+  private readonly handleContainerClickBound: (event: MouseEvent) => Promise<void>;
 
   constructor(appContainer: HTMLElement) {
     this.appContainer = appContainer;
@@ -105,6 +106,7 @@ export class UsersScreen {
     this.setupScreen = this.setupScreen.bind(this);
     this.viewUserProfile = this.viewUserProfile.bind(this);
     this.addUser = this.addUser.bind(this);
+    this.handleContainerClickBound = this.handleContainerClick.bind(this);
   }
 
   /**
@@ -214,7 +216,15 @@ export class UsersScreen {
    * Attaches event listeners to dynamically generated buttons.
    */
   private attachEventListeners() {
-    this.appContainer.addEventListener('click', async (event) => {
+    this.appContainer.removeEventListener('click', this.handleContainerClickBound);
+    this.appContainer.addEventListener('click', this.handleContainerClickBound);
+  }
+
+  public destroy(): void {
+    this.appContainer.removeEventListener('click', this.handleContainerClickBound);
+  }
+
+  private async handleContainerClick(event: MouseEvent): Promise<void> {
       const target = event.target as HTMLElement;
 
       // Delegate the event strictly to the delete-user-btn
@@ -248,7 +258,6 @@ export class UsersScreen {
         const lastName = exportButton.getAttribute('data-last-name')!;
         await exportUserData(firstName, lastName);
       }
-    });
   }
 
   /**

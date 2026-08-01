@@ -5,14 +5,14 @@ import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {TestMode} from "../config/domain.ts";
-import Router from "../routing/router.ts";
+import Router, {Cleanup} from "../routing/router.ts";
 import {Chart} from "chart.js";
 import {printConfig} from "../config/settings.ts";
 
 let chartInstances: Chart[] = [];
 
-export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]) {
-  const sortedTests = tests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]): Cleanup {
+  const sortedTests = [...tests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Set CSS variables for print configuration
   document.documentElement.style.setProperty('--print-chart-width', `${printConfig.chart.width}px`);
@@ -39,8 +39,14 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
     {buttonFn: () => document.getElementById("print-btn")! as HTMLButtonElement, callback: () => handlePrint(user)},
   ]);
   chartInstances = renderHistograms(sortedTests);
-  setupPrintHandlers();
+  const cleanupPrintHandlers = setupPrintHandlers();
   updateLanguageUI();
+
+  return () => {
+    cleanupPrintHandlers();
+    chartInstances.forEach((chart) => chart.destroy());
+    chartInstances = [];
+  };
 }
 
 function handlePrint(user: User): void {
@@ -384,15 +390,16 @@ function renderHistograms(tests: TestRecord[]): Chart[] {
   return charts;
 }
 
-function setupPrintHandlers() {
+function setupPrintHandlers(): Cleanup {
   const beforePrintHandler = () => {
     chartInstances.forEach(chart => {
       chart.resize(printConfig.chart.width, printConfig.chart.height);
     });
   };
 
+  let resizeTimeout: ReturnType<typeof setTimeout> | undefined;
   const afterPrintHandler = () => {
-    setTimeout(() => {
+    resizeTimeout = setTimeout(() => {
       chartInstances.forEach(chart => {
         chart.resize();
       });
@@ -401,4 +408,10 @@ function setupPrintHandlers() {
 
   window.addEventListener('beforeprint', beforePrintHandler);
   window.addEventListener('afterprint', afterPrintHandler);
+
+  return () => {
+    window.removeEventListener('beforeprint', beforePrintHandler);
+    window.removeEventListener('afterprint', afterPrintHandler);
+    if (resizeTimeout !== undefined) clearTimeout(resizeTimeout);
+  };
 }

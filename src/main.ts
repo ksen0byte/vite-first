@@ -29,7 +29,9 @@ Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(ap
 Router.registerRoute('/users', async () => {
   appContainer.innerHTML = '<p>Loading...</p>';
   try {
-    await new UsersScreen(appContainer).setupScreen();
+    const usersScreen = new UsersScreen(appContainer);
+    await usersScreen.setupScreen();
+    return () => usersScreen.destroy();
   } catch (error) {
     console.error('Failed to load User Screen:', error);
     appContainer.innerHTML = '<p>Error loading user screen. Please try again later.</p>';
@@ -56,7 +58,7 @@ Router.registerRoute('/profile', () => {
     return;
   }
 
-  setupProfileScreen(appContainer, user, tests);
+  return setupProfileScreen(appContainer, user, tests);
 });
 
 // Initialize router
