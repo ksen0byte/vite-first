@@ -175,6 +175,52 @@ test('uses Escape to abandon an active test without recording a trial response',
   await expect(page).not.toHaveURL(/spam-warning/);
 });
 
+test('ignores an early SVMR response using minimum real-clock settings', async ({ page }) => {
+  test.setTimeout(45_000);
+
+  await page.goto('./');
+  await page.locator('#language-toggle').check();
+  await page.locator('#service-reaction').click();
+
+  await page.locator('#shapes-exposure-time-slider').evaluate((element) => {
+    const slider = (element as HTMLElement & {readonly noUiSlider?: {set: (value: string) => void}}).noUiSlider;
+    if (!slider) throw new Error('Exposure-time slider is unavailable.');
+    slider.set('500');
+  });
+  await page.locator('#shapes-exposure-delay-slider').evaluate((element) => {
+    const slider = (element as HTMLElement & {readonly noUiSlider?: {set: (value: readonly string[]) => void}}).noUiSlider;
+    if (!slider) throw new Error('Exposure-delay slider is unavailable.');
+    slider.set(['250', '250']);
+  });
+  await page.locator('#shapes-stimulus-count-slider').evaluate((element) => {
+    const slider = (element as HTMLElement & {readonly noUiSlider?: {set: (value: string) => void}}).noUiSlider;
+    if (!slider) throw new Error('Stimulus-count slider is unavailable.');
+    slider.set('30');
+  });
+
+  await expect(page.locator('#shapes-exposure-time-label')).toHaveText('Stimulus Exposure: 500 ms');
+  await expect(page.locator('#shapes-exposure-delay-label')).toHaveText('Stimulus Exposure Delay: 250-250 ms');
+  await expect(page.locator('#shapes-stimulus-count-label')).toHaveText('Number of Stimuli: 30');
+  await page.locator('#shapes-use-pregenerated-delay').uncheck();
+  await expect(page.locator('#shapes-use-pregenerated-delay')).not.toBeChecked();
+
+  await page.locator('#surname-input').fill('Example');
+  await page.locator('#name-input').fill('Ada');
+  await page.locator('#age-input').fill('34');
+  await page.locator('#gender-select').selectOption('female');
+  await page.locator('#start-test-btn').click();
+  await page.locator('#pzmr-button').click();
+  await page.locator('#test-next-btn').click();
+
+  await expect(page.locator('#stimuli-counter')).toHaveText('1/30', {timeout: 8_000});
+  await page.keyboard.press('Space');
+  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 30_000});
+  await page.locator('#end-finish-btn').click();
+
+  await expect(page.locator('#results-screen')).toBeVisible();
+  await expect(page.locator('[data-localize="trialOutcomeMiss"]').locator('..')).toContainText('30');
+});
+
 test('completes an SVMR session through the real timer sequence', async ({ page }) => {
   await page.clock.install();
   await page.goto('./');
