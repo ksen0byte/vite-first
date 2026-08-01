@@ -49,6 +49,16 @@ test('retains the selected language across a Settings route round trip', async (
   await expect(heading).toHaveText('Tools and Services');
 });
 
+test('gives localized settings inputs accessible names', async ({ page }) => {
+  await page.goto('./');
+  await page.locator('#language-toggle').check();
+  await page.locator('#service-reaction').click();
+
+  await expect(page.getByLabel('Last Name')).toHaveAttribute('id', 'surname-input');
+  await expect(page.getByLabel('Name', {exact: true})).toHaveAttribute('id', 'name-input');
+  await expect(page.getByLabel('Age')).toHaveAttribute('id', 'age-input');
+});
+
 test('rejects repeated non-Space SVMR keys without recording input or detecting spam', async ({ page }) => {
   await page.goto('./');
   await page.locator('#service-reaction').click();

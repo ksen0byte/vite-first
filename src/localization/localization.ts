@@ -10,6 +10,7 @@ export function updateLanguageUI(): void {
     const textContent = localize(key);
     if (element.tagName === "INPUT") {
       element.setAttribute("placeholder", textContent);
+      element.setAttribute("aria-label", textContent);
     } else {
       element.textContent = textContent;
     }
