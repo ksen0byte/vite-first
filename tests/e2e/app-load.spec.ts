@@ -154,6 +154,24 @@ test('completes a CRT1-3 session through the real timer sequence', async ({ page
   await expect(page.locator('#results-screen')).toBeVisible();
 });
 
+test('completes a CRT2-3 session through the real timer sequence', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('./');
+  await page.locator('#service-reaction').click();
+  await page.locator('#surname-input').fill('Example');
+  await page.locator('#name-input').fill('Ada');
+  await page.locator('#age-input').fill('34');
+  await page.locator('#gender-select').selectOption('female');
+  await page.locator('#start-test-btn').click();
+  await page.locator('#rv2-3-button').click();
+  await page.locator('#test-next-btn').click();
+
+  await page.clock.fastForward(100_000);
+  await expect(page.locator('#end-finish-btn')).toBeVisible();
+  await page.locator('#end-finish-btn').click();
+  await expect(page.locator('#results-screen')).toBeVisible();
+});
+
 test('retries a completed SVMR session with a fresh countdown and counter', async ({ page }) => {
   await page.clock.install();
   await page.goto('./');
