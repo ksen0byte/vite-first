@@ -44,6 +44,14 @@ describe('parseImportedJson', () => {
   });
 
   it.each([
+    ['unknown schema version', {schemaVersion: 2, exportedAt: '2026-08-01T12:00:00.000Z', users: currentExport}],
+    ['malformed envelope timestamp', {schemaVersion: 1, exportedAt: 'not-a-date', users: currentExport}],
+    ['missing envelope user array', {schemaVersion: 1, exportedAt: '2026-08-01T12:00:00.000Z'}],
+  ])('rejects a v1 envelope with %s', (_label, envelope) => {
+    expect(parseImportedJson(envelope)._tag).toBe('Failure');
+  });
+
+  it.each([
     ['invalid action', invalidAction],
     ['invalid date', invalidDate],
     ['invalid gender', invalidGender],
