@@ -138,6 +138,25 @@ test('selects CRT2-3 and starts the configured test flow', async ({ page }) => {
   await expect(page.locator('#test-screen')).toBeVisible();
 });
 
+test('uses Escape to abandon an active test without recording a trial response', async ({ page }) => {
+  await page.goto('./');
+  await page.locator('#service-reaction').click();
+  await page.locator('#surname-input').fill('Example');
+  await page.locator('#name-input').fill('Ada');
+  await page.locator('#age-input').fill('34');
+  await page.locator('#gender-select').selectOption('female');
+  await page.locator('#start-test-btn').click();
+  await page.locator('#pzmr-button').click();
+  await page.locator('#test-next-btn').click();
+  await expect(page.locator('#test-screen')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+
+  await expect(page.locator('#service-reaction')).toBeVisible();
+  await expect(page.locator('#test-screen')).toHaveCount(0);
+  await expect(page).not.toHaveURL(/spam-warning/);
+});
+
 test('completes an SVMR session through the real timer sequence', async ({ page }) => {
   await page.clock.install();
   await page.goto('./');
