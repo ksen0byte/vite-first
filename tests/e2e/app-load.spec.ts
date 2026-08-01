@@ -99,6 +99,28 @@ test('rejects repeated non-Space SVMR keys without recording input or detecting 
   await expect(page).not.toHaveURL(/spam-warning/);
 });
 
+test('routes accepted input spam to the warning screen and recovers to test selection', async ({ page }) => {
+  await page.goto('./');
+  await page.locator('#service-reaction').click();
+  await page.locator('#surname-input').fill('Example');
+  await page.locator('#name-input').fill('Ada');
+  await page.locator('#age-input').fill('34');
+  await page.locator('#gender-select').selectOption('female');
+  await page.locator('#start-test-btn').click();
+  await page.locator('#pzmr-button').click();
+  await page.locator('#test-next-btn').click();
+  await page.waitForTimeout(5_000);
+
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Space');
+
+  await expect(page.locator('#spam-warning-screen')).toBeVisible();
+  await page.locator('#spam-warning-retry-btn').click();
+  await expect(page.locator('#pzmr-button')).toBeVisible();
+});
+
 test('renders imported hostile names as literal text without injected markup', async ({ page }) => {
   page.on('dialog', (dialog) => dialog.accept());
   await page.goto('./');
