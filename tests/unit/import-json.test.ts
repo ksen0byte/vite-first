@@ -27,6 +27,22 @@ describe('parseImportedJson', () => {
     }
   });
 
+  it('accepts the versioned v1 export envelope while retaining the current array format', () => {
+    const result = parseImportedJson({
+      schemaVersion: 1,
+      exportedAt: '2026-08-01T12:00:00.000Z',
+      users: currentExport,
+    });
+
+    expect(result).toMatchObject({_tag: 'Success', value: [{user: {firstName: 'Ada'}}]});
+  });
+
+  it('accepts the legacy single-bundle export shape', () => {
+    const result = parseImportedJson(currentExport[0]);
+
+    expect(result).toMatchObject({_tag: 'Success', value: [{user: {firstName: 'Ada'}}]});
+  });
+
   it.each([
     ['invalid action', invalidAction],
     ['invalid date', invalidDate],

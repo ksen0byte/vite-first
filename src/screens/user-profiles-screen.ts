@@ -6,7 +6,7 @@ import {deleteUserAndTests, getAllUsers, getTestsForUser} from "../db/operations
 import Router from "../routing/router.ts";
 import {exportDataAsJson, readJsonFile} from "../util/export-utils";
 import {escapeHtml} from "../util/html.ts";
-import {parseImportedJson} from '../util/import-json.ts';
+import {ExportEnvelopeV1, parseImportedJson} from '../util/import-json.ts';
 import {importUsers} from '../application/import-users.ts';
 
 /**
@@ -22,12 +22,12 @@ async function exportAllUsersData(): Promise<void> {
     }
     const users = usersResult.value;
 
-    const exportData: ExportUserBundle[] = [];
+    const usersForExport: ExportUserBundle[] = [];
 
     for (const user of users) {
       const testsResult = await getTestsForUser(user.firstName, user.lastName);
       const tests = testsResult._tag === 'Success' ? testsResult.value : [];
-      exportData.push({
+      usersForExport.push({
         user,
         tests
       });
@@ -42,6 +42,7 @@ async function exportAllUsersData(): Promise<void> {
     const filename = `users_data_${timestamp}.json`;
 
     // Export the data using the utility function
+    const exportData: ExportEnvelopeV1 = {schemaVersion: 1, exportedAt: now.toISOString(), users: usersForExport};
     const result = await exportDataAsJson(exportData, filename);
     if (result._tag === 'Failure') {
       alert(result.error);
@@ -72,7 +73,7 @@ async function exportUserData(firstName: string, lastName: string): Promise<void
     const testsResult = await getTestsForUser(firstName, lastName);
     const tests = testsResult._tag === 'Success' ? testsResult.value : [];
 
-    const exportData: ExportUserBundle = {
+    const userForExport: ExportUserBundle = {
       user,
       tests
     };
@@ -86,6 +87,7 @@ async function exportUserData(firstName: string, lastName: string): Promise<void
     const filename = `user_data_${firstName}_${lastName}_${timestamp}.json`;
 
     // Export the data using the utility function
+    const exportData: ExportEnvelopeV1 = {schemaVersion: 1, exportedAt: now.toISOString(), users: [userForExport]};
     const result = await exportDataAsJson(exportData, filename);
     if (result._tag === 'Failure') {
       alert(result.error);

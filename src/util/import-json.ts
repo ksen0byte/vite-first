@@ -20,6 +20,12 @@ export interface NormalizedImportBundle {
 
 export type NormalizedImport = readonly NormalizedImportBundle[];
 
+export interface ExportEnvelopeV1 {
+  readonly schemaVersion: 1;
+  readonly exportedAt: string;
+  readonly users: readonly unknown[];
+}
+
 const testModes: readonly TestMode[] = ['shapes', 'words', 'colors', 'combined'];
 const testTypes: readonly TestType[] = ['svmr', 'crt1-3', 'crt2-3'];
 const genders: readonly Gender[] = ['male', 'female'];
@@ -39,12 +45,14 @@ const invalidValue = (path: string, expected: string): Result<never, ImportError
   failure({ _tag: 'InvalidValue', path, expected });
 
 export function parseImportedJson(raw: unknown): Result<NormalizedImport, ImportError> {
-  if (!Array.isArray(raw)) return invalidType('$', 'array');
+  const bundlesResult = getImportBundles(raw);
+  if (bundlesResult._tag === 'Failure') return bundlesResult;
+  const sourceBundles = bundlesResult.value;
   const bundles: NormalizedImportBundle[] = [];
 
-  for (let bundleIndex = 0; bundleIndex < raw.length; bundleIndex++) {
+  for (let bundleIndex = 0; bundleIndex < sourceBundles.length; bundleIndex++) {
     const bundlePath = `$[${bundleIndex}]`;
-    const bundle = raw[bundleIndex];
+    const bundle = sourceBundles[bundleIndex];
     if (!isRecord(bundle)) return invalidType(bundlePath, 'object');
     if (!isRecord(bundle.user)) return invalidType(`${bundlePath}.user`, 'object');
     const user = bundle.user;
@@ -103,4 +111,14 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
     bundles.push({ user: { firstName: user.firstName, lastName: user.lastName, gender: user.gender, age: user.age }, tests });
   }
   return success(bundles);
+}
+
+function getImportBundles(raw: unknown): Result<readonly unknown[], ImportError> {
+  if (Array.isArray(raw)) return success(raw);
+  if (!isRecord(raw)) return invalidType('$', 'array, bundle, or versioned envelope');
+  if (!('schemaVersion' in raw)) return success([raw]);
+  if (raw.schemaVersion !== 1) return invalidValue('$.schemaVersion', 'supported schema version 1');
+  if (typeof raw.exportedAt !== 'string' || Number.isNaN(Date.parse(raw.exportedAt))) return invalidValue('$.exportedAt', 'ISO date');
+  if (!Array.isArray(raw.users)) return invalidType('$.users', 'array');
+  return success(raw.users);
 }
