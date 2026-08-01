@@ -63,6 +63,9 @@ function toCsvLine(headers: string[], row: Record<string, unknown>): string {
 // --------- CLI class ----------
 export class ReactionStatsCli {
   static runFromArgv(argv: string[]) {
+    console.warn(
+      'DEPRECATED: the statistics CLI is retained only for one-off analysis and is not maintained as browser-equivalent reporting.',
+    );
     const fileArg = argv[2];
     const outputArg = argv[3]; // Optional output file
 
