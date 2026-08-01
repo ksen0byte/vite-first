@@ -95,6 +95,13 @@ test('exposes the language selector name and checked state to keyboard users', a
   await expect(languageToggle).toBeChecked();
 });
 
+test('reduces motion when the operating system preference requests it', async ({ page }) => {
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  await page.goto('./');
+
+  await expect(page.locator('#logo')).toHaveCSS('transition-duration', '1e-05s');
+});
+
 test('selects CRT1-3 and starts the configured test flow', async ({ page }) => {
   await page.goto('./');
   await page.locator('#service-reaction').click();
