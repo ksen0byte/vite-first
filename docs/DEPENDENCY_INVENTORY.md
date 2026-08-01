@@ -40,3 +40,20 @@ be evaluated in the isolated dependency groups defined by the hardening plan.
 No package is a removal candidate solely from this table: CSS/build plugins are
 also consumed by configuration and generated output, and all runtime packages
 have confirmed source imports.
+
+## Verified after hardening
+
+The preceding inventory is retained as the pre-upgrade baseline. The following
+isolated updates were subsequently verified with `npm run check` and the
+Chromium browser suite:
+
+- Vite `6.4.3`, PostCSS `8.5.25`, and `tsx` `4.23.1`.
+- Tailwind `4.3.3`, DaisyUI `5.7.9`, and Sass `1.102.0`.
+- Dexie `4.4.4`, Chart.js `4.5.1`, KaTeX `0.16.47`, and `@types/katex` `0.16.8`.
+- ESLint `10.8.0`, `typescript-eslint` `8.65.0`, globals `17.8.0`, and
+  `postcss-cli` `11.0.1`.
+
+The production dependency audit is clean. The remaining full-audit findings
+are development-only transitive dependencies. The one-off statistics CLI is
+deprecated and is not maintained as browser-equivalent reporting; consequently
+its implementation drift is intentionally outside the current hardening scope.
