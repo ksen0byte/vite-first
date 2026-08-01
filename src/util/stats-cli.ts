@@ -42,9 +42,9 @@ type CsvRow = {
   entropyBits: number;
 
   // Loskutova
-  functionalLevel: number;
-  reactionStability: number;
-  functionalCapabilities: number;
+  functionalLevel: number | null;
+  reactionStability: number | null;
+  functionalCapabilities: number | null;
 };
 
 // --------- CSV helpers ----------

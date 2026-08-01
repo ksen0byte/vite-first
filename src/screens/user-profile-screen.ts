@@ -262,15 +262,15 @@ function testCardHTML(index: number, test: TestRecord): string {
                 ${errorBreakdownRowsHtml(multiHandStats, showHandBreakdown)}
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalLevel"></strong></td>
-                  <td>${stats.calculateFunctionalLevel().toFixed(2)} <span data-localize="au"></td>
+                  <td>${formatStatistic(stats.calculateFunctionalLevel())} <span data-localize="au"></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statReactionStability"></strong></td>
-                  <td>${stats.calculateReactionStability().toFixed(2)} <span data-localize="au"></td>
+                  <td>${formatStatistic(stats.calculateReactionStability())} <span data-localize="au"></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalCapabilities"></strong></td>
-                  <td>${stats.calculateFunctionalCapabilities().toFixed(2)} <span data-localize="au"></td>
+                  <td>${formatStatistic(stats.calculateFunctionalCapabilities())} <span data-localize="au"></td>
                 </tr>
               </tbody>
             </table>
@@ -337,6 +337,8 @@ function handBreakdownStatsValueHtml(
     </div>
   `;
 }
+
+const formatStatistic = (value: number | null): string => value === null ? 'N/A' : value.toFixed(2);
 
 function getTrialOutcomeLocalizationKey(outcome: keyof ReactionTimeStats["outcomeCountsByOutcome"]): string {
   return `trialOutcome${outcome}`;

@@ -71,7 +71,12 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
     const stats = new Stats([trial(250), trial(250), trial(250)]);
     expect(stats).toMatchObject({count: 3, meanVal: 250, stdevVal: 0, entropyVal: 0, modeVal: null});
   });
-  it.todo('returns finite Loskutova values when standard deviation is zero');
+  it('represents Loskutova values as unavailable when standard deviation is zero', () => {
+    const stats = new Stats([trial(250), trial(250), trial(250)]);
+    expect(stats.calculateFunctionalLevel()).toBeNull();
+    expect(stats.calculateReactionStability()).toBeNull();
+    expect(stats.calculateFunctionalCapabilities()).toBeNull();
+  });
 });
 
 describe('multi-hand CRT2-3 characterization', () => {

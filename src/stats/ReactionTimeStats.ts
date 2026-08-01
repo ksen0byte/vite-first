@@ -297,14 +297,15 @@ export class ReactionTimeStats {
    * @returns {number} The functional level based on the given formula.
    */
 
-  public calculateFunctionalLevel(): number {
-    if (this.modeVal == null || this.modeVal <= 0) {
-      return NaN;
+  public calculateFunctionalLevel(): number | null {
+    if (this.modeVal == null || this.modeVal <= 0 || this.stdevVal <= 0) {
+      return null;
     }
     const sigma = this.stdevVal;
     const M = this.modeVal;
 
-    return Math.log(2 * Math.sqrt(2 * Math.log(2) * sigma * M));
+    const value = Math.log(2 * Math.sqrt(2 * Math.log(2) * sigma * M));
+    return Number.isFinite(value) ? value : null;
   }
 
   /**
@@ -323,16 +324,17 @@ export class ReactionTimeStats {
    * @returns {number} The calculated reaction stability, normalized by the coefficient.
    */
 
-  public calculateReactionStability(): number {
+  public calculateReactionStability(): number | null {
     const modeBin = this.getModalClass();
     if (!modeBin) {
-      return NaN;
+      return null;
     }
     const x1 = modeBin.binStart;
     const x2 = modeBin.binEnd;
     const m = this.meanVal;
     const sigma = this.stdevVal;
 
+    if (sigma <= 0) return null;
     const z1 = (x2 - m) / (sigma);
     const z2 = (x1 - m) / (sigma);
     const modalClassProbability = cumulativeStdNormalProbability(z1) - cumulativeStdNormalProbability(z2);
@@ -340,7 +342,8 @@ export class ReactionTimeStats {
     const modalWidth = x2 - x1;
     const coefficient = this.LOSKUTOVA_COEFFICIENT / modalWidth;
 
-    return Math.abs(Math.log(modalClassProbability / (4 * Math.sqrt(2 * Math.log(2))))) / coefficient;
+    const value = Math.abs(Math.log(modalClassProbability / (4 * Math.sqrt(2 * Math.log(2))))) / coefficient;
+    return Number.isFinite(value) ? value : null;
   }
 
   /**
@@ -358,17 +361,17 @@ export class ReactionTimeStats {
    *
    * @returns {number} The calculated functional capabilities, normalized by the coefficient.
    */
-  public calculateFunctionalCapabilities(): number {
+  public calculateFunctionalCapabilities(): number | null {
     const modeBin = this.getModalClass();
     if (!modeBin) {
-      return NaN;
+      return null;
     }
     const x1 = modeBin.binStart;
     const x2 = modeBin.binEnd;
     const m = this.meanVal;
     const sigma = this.stdevVal;
-    if (m <= 0) {
-      return NaN;
+    if (m <= 0 || sigma <= 0) {
+      return null;
     }
 
     const z1 = (x2 - m) / (sigma);
@@ -379,7 +382,8 @@ export class ReactionTimeStats {
     const modalDiff = x2 - x1;
     const coefficient = this.LOSKUTOVA_COEFFICIENT / modalDiff;
 
-    return Math.abs(Math.log(modalClassProbability / (2 * Math.sqrt(2 * Math.log(2) * sigma * m))) / coefficient);
+    const value = Math.abs(Math.log(modalClassProbability / (2 * Math.sqrt(2 * Math.log(2) * sigma * m))) / coefficient);
+    return Number.isFinite(value) ? value : null;
   }
 
 
@@ -500,12 +504,14 @@ export class ReactionTimeStats {
       `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
       `${localize("cvLabel")}: ${this.cvVal.toFixed(2)}%`,
       `${localize("entropyLabel")}: ${this.entropyVal.toFixed(3)} ${localize("bits")}`,
-      `${localize("statFunctionalLevel")}: ${this.calculateFunctionalLevel().toFixed(2)}`,
-      `${localize("statReactionStability")}: ${this.calculateReactionStability().toFixed(2)}`,
-      `${localize("statFunctionalCapabilities")}: ${this.calculateFunctionalCapabilities().toFixed(2)}`,
+      `${localize("statFunctionalLevel")}: ${formatUnavailable(this.calculateFunctionalLevel())}`,
+      `${localize("statReactionStability")}: ${formatUnavailable(this.calculateReactionStability())}`,
+      `${localize("statFunctionalCapabilities")}: ${formatUnavailable(this.calculateFunctionalCapabilities())}`,
     ].join(" | ");
   }
 }
+
+const formatUnavailable = (value: number | null): string => value === null ? 'N/A' : value.toFixed(2);
 
 export class MultiHandReactionTimeStats {
   public readonly total: ReactionTimeStats;
