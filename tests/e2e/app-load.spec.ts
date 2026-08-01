@@ -227,6 +227,24 @@ for (const [name, testTypeId] of [
   });
 }
 
+test('records a successful SVMR response with minimum real-clock settings', async ({ page }) => {
+  test.setTimeout(45_000);
+
+  await startMinimumRealClockSession(page, '#pzmr-button');
+  await expect(page.locator('#stimuli-counter')).toHaveText('1/30', {timeout: 8_000});
+  await page.waitForTimeout(200);
+  await page.keyboard.press('Space');
+
+  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 35_000});
+  await page.locator('#end-finish-btn').click();
+  await expect(page.locator('#results-screen')).toBeVisible();
+  const successfulResponseCount = page.locator('#results-screen .stat')
+    .filter({has: page.locator('[data-localize="statCount"]')})
+    .first()
+    .locator('.stat-value');
+  await expect(successfulResponseCount).toHaveText('1');
+});
+
 test('completes an SVMR session through the real timer sequence', async ({ page }) => {
   await page.clock.install();
   await page.goto('./');
