@@ -63,3 +63,16 @@ export async function getAllUsers(): Promise<Result<User[], DbError>> {
     return failure({ _tag: 'DatabaseReadError', error });
   }
 }
+
+export async function deleteUserAndTests(firstName: string, lastName: string): Promise<Result<void, DbError>> {
+  try {
+    const userKey = `${firstName}|${lastName}`;
+    await db.transaction('rw', db.users, db.tests, async () => {
+      await db.users.delete([firstName, lastName]);
+      await db.tests.where('userKey').equals(userKey).delete();
+    });
+    return success(undefined);
+  } catch (error) {
+    return failure({_tag: 'DatabaseWriteError', error});
+  }
+}

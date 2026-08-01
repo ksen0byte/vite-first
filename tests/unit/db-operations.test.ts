@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {db} from '../../src/db/db.ts';
-import {getTestsForUser, saveTestRecord, upsertUser} from '../../src/db/operations.ts';
+import {deleteUserAndTests, getTestsForUser, saveTestRecord, upsertUser} from '../../src/db/operations.ts';
 import {TestSettings, TrialResult} from '../../src/config/domain.ts';
 
 const settings: TestSettings = {
@@ -53,5 +53,17 @@ describe('upsertUser', () => {
       _tag: 'Success',
       value: [{userKey: 'Ada|Example', trials: [trial]}],
     });
+  });
+
+  it('deletes a user and all associated tests atomically', async () => {
+    const user = {firstName: 'Ada', lastName: 'Example', gender: 'female' as const, age: 34};
+    await upsertUser(user);
+    await saveTestRecord(user, settings, [trial]);
+
+    const result = await deleteUserAndTests(user.firstName, user.lastName);
+
+    expect(result).toEqual({_tag: 'Success', value: undefined});
+    expect(await db.users.get([user.firstName, user.lastName])).toBeUndefined();
+    expect(await db.tests.where('userKey').equals('Ada|Example').count()).toBe(0);
   });
 });

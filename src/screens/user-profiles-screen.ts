@@ -1,8 +1,8 @@
 import {setupHeader} from '../components/header';
 import {setupFooter} from '../components/footer';
 import {localize, updateLanguageUI} from '../localization/localization';
-import {db, User, TestRecord} from "../db/db";
-import {getAllUsers, getTestsForUser} from "../db/operations";
+import {User, TestRecord} from "../db/db";
+import {deleteUserAndTests, getAllUsers, getTestsForUser} from "../db/operations";
 import Router from "../routing/router.ts";
 import {exportDataAsJson, readJsonFile} from "../util/export-utils";
 import {escapeHtml} from "../util/html.ts";
@@ -280,8 +280,6 @@ export class UsersScreen {
    * Deletes a user and their associated tests after confirmation.
    */
   private async deleteUser(firstName: string, lastName: string) {
-    const userKey = `${firstName}|${lastName}`;
-
     // Ask for confirmation before proceeding
     const confirmation = confirm(localize('deleteConfirmation').replace('%s', `${firstName} ${lastName}`));
     if (!confirmation) {
@@ -289,14 +287,8 @@ export class UsersScreen {
     }
 
     try {
-      // Delete user and associated tests
-      await db.transaction('rw', db.users, db.tests, async () => {
-        // Delete the user
-        await db.users.where('[firstName+lastName]').equals([firstName, lastName]).delete();
-
-        // Delete associated test records
-        await db.tests.where('userKey').equals(userKey).delete();
-      });
+      const result = await deleteUserAndTests(firstName, lastName);
+      if (result._tag === 'Failure') throw result.error;
 
       // Remove the user visually from the list
       this.users = this.users.filter(u => !(u.firstName === firstName && u.lastName === lastName));
