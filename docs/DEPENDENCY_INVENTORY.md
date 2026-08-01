@@ -57,3 +57,10 @@ The production dependency audit is clean. The remaining full-audit findings
 are development-only transitive dependencies. The one-off statistics CLI is
 deprecated and is not maintained as browser-equivalent reporting; consequently
 its implementation drift is intentionally outside the current hardening scope.
+
+Vite `8.2.0` was evaluated as a separate migration on Node `22.13.1`.
+Types, lint, unit tests, and the production build passed, but the Chromium
+timer-session E2E flows did not reach the finish screen under Playwright's
+controllable clock. The upgrade was reverted rather than weakening those
+regressions; Vite remains on the verified `6.4.3` line pending a reproducible
+test-runtime compatibility solution.
