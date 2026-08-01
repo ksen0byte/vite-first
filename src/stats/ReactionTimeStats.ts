@@ -166,6 +166,10 @@ export class ReactionTimeStats {
     const minVal = Math.min(...this.data);
     const maxVal = Math.max(...this.data);
 
+    if (minVal === maxVal) {
+      return [{binStart: minVal, binEnd: minVal + 1, frequency: this.data.length}];
+    }
+
     const numberOfClasses = this.getNumberOfClasses(this.data);
     const approxBinWidth = (maxVal - minVal) / numberOfClasses;
     // Round bin width up, so we definitely cover up to maxVal

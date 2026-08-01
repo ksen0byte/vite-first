@@ -67,7 +67,10 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
     });
   });
 
-  it.todo('handles multiple identical successful values without a zero-width histogram defect');
+  it('handles multiple identical successful values with a deterministic bin', () => {
+    const stats = new Stats([trial(250), trial(250), trial(250)]);
+    expect(stats).toMatchObject({count: 3, meanVal: 250, stdevVal: 0, entropyVal: 0, modeVal: null});
+  });
   it.todo('returns finite Loskutova values when standard deviation is zero');
 });
 
