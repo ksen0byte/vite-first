@@ -29,7 +29,7 @@ function headerHTML() {
               <!-- UA Label -->
               <span class="label-text" data-localize="languageUA">UA</span>
               <!-- Toggle Input -->
-              <input type="checkbox" class="toggle" id="language-toggle" />
+              <input type="checkbox" class="toggle" id="language-toggle" data-localize-aria="languageSelector" />
               <!-- EN Label -->
               <span class="label-text" data-localize="languageEN">EN</span>
             </label>

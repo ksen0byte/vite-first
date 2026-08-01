@@ -57,7 +57,19 @@ test('gives localized settings inputs accessible names', async ({ page }) => {
 
   await expect(page.getByLabel('Last Name')).toHaveAttribute('id', 'surname-input');
   await expect(page.getByLabel('Name', {exact: true})).toHaveAttribute('id', 'name-input');
-  await expect(page.getByLabel('Age')).toHaveAttribute('id', 'age-input');
+  await expect(page.getByLabel('Age', {exact: true})).toHaveAttribute('id', 'age-input');
+  await expect(page.getByLabel('Gender')).toHaveAttribute('id', 'gender-select');
+});
+
+test('exposes the language selector name and checked state to keyboard users', async ({ page }) => {
+  await page.goto('./');
+  const languageToggle = page.getByLabel('Language');
+
+  await languageToggle.focus();
+  await expect(languageToggle).toBeFocused();
+  await expect(languageToggle).not.toBeChecked();
+  await languageToggle.check();
+  await expect(languageToggle).toBeChecked();
 });
 
 test('Browser Back abandons an active test without a delayed route mutation', async ({ page }) => {

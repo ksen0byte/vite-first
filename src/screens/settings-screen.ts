@@ -32,6 +32,7 @@ function settingsScreenHTML(appContext: AppContext) {
                                    required min="10" max="99" placeholder="Age" inputmode="numeric" value="${appContext.personalData.age === 0 ? '' : appContext.personalData.age}" />
                         </label>
                         <label class="flex flex-col form-control max-w-xs">
+                            <span data-localize="selectGender">Gender</span>
                             <select class="select validator select-bordered" id="gender-select" required>
                                 <option value="" disabled ${(appContext.personalData.gender ? '' : 'selected')} data-localize="selectGender">Select Gender</option>
                                 <option value="male" ${appContext.personalData.gender === 'male' ? 'selected' : ''} data-localize="male"></option>

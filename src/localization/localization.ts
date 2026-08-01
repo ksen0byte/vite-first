@@ -16,6 +16,11 @@ export function updateLanguageUI(): void {
     }
   });
 
+  const ariaLocalizableElements = document.querySelectorAll<HTMLElement>('[data-localize-aria]');
+  ariaLocalizableElements.forEach((element) => {
+    element.setAttribute('aria-label', localize(element.dataset.localizeAria!));
+  });
+
   const mathElements = document.querySelectorAll<HTMLElement>("[data-localize-math]");
   mathElements.forEach((element) => {
     const key = element.dataset.localizeMath!;
@@ -44,6 +49,7 @@ export function localize(key: string): string {
 }
 
 const localization: LocalizationKeys = {
+  languageSelector: {en: "Language", uk: "Мова"},
   languageEN: {en: "EN", uk: "АНГЛ."}, // Localized label for "EN"
   languageUA: {en: "UA", uk: "УКР."},  // Localized label for "UA"
 
