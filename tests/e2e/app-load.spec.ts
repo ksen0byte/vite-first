@@ -88,6 +88,20 @@ test('gives localized settings inputs accessible names', async ({ page }) => {
   await expect(page.getByLabel('Gender')).toHaveAttribute('id', 'gender-select');
 });
 
+test('keeps the gender control aligned with adjacent personal-data inputs', async ({ page }) => {
+  await page.goto('./');
+  await page.locator('#service-reaction').click();
+
+  const [surnameBox, genderBox] = await Promise.all([
+    page.locator('#surname-input').boundingBox(),
+    page.locator('#gender-select').boundingBox(),
+  ]);
+
+  expect(surnameBox).not.toBeNull();
+  expect(genderBox).not.toBeNull();
+  expect(Math.abs(surnameBox!.y - genderBox!.y)).toBeLessThanOrEqual(1);
+});
+
 test('exposes the language selector name and checked state to keyboard users', async ({ page }) => {
   await page.goto('./');
   const languageToggle = page.getByLabel('Language');
