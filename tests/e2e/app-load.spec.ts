@@ -16,6 +16,7 @@ test('loads the dashboard without page errors and returns from settings', async 
 
   await expect(page.locator('#service-reaction')).toBeVisible();
   await expect(page.locator('#service-profiles')).toBeVisible();
+  await expect(page.getByRole('main')).toHaveAttribute('id', 'dashboard-content');
 
   await page.locator('#service-reaction').click();
   await expect(page.locator('#personal-data-form')).toBeVisible();

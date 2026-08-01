@@ -5,7 +5,7 @@ import { updateLanguageUI } from "../../localization/localization.ts";
 export function setupDashboardScreen(appContainer: HTMLElement) {
   appContainer.innerHTML = `
     <div class="bg-base-200 flex flex-col">
-      <div id="dashboard-content" class="container mx-auto p-4 flex-grow">
+      <main id="dashboard-content" class="container mx-auto p-4 flex-grow">
         <h1 class="text-3xl font-bold mb-6 text-center" data-localize="dashboardHeaderTitle">Tools and Services</h1>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -50,7 +50,7 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
           </div>
 
         </div>
-      </div>
+      </main>
     </div>
   `;
 
