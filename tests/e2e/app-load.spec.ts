@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import {readFile} from 'node:fs/promises';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -135,4 +136,28 @@ test('renders imported hostile names as literal text without injected markup', a
   await expect(page.locator('.card-title')).toContainText('<img src=x onerror=alert(1)>');
   await expect(page.locator('.users-list img')).toHaveCount(0);
   await expect(page.locator('.users-list svg[onload]')).toHaveCount(0);
+});
+
+test('exports imported user data as a versioned v1 envelope', async ({ page }) => {
+  page.on('dialog', (dialog) => dialog.accept());
+  await page.goto('./');
+  await page.locator('#service-profiles').click();
+
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.locator('#import-data-btn').click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles('tests/fixtures/import/current-export.json');
+  await expect(page.locator('.card-title')).toContainText('Ada Example');
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#export-data-btn').click();
+  const download = await downloadPromise;
+  const path = await download.path();
+  if (path === null) throw new Error('Expected export download path');
+  const exported: unknown = JSON.parse(await readFile(path, 'utf8'));
+
+  expect(exported).toMatchObject({
+    schemaVersion: 1,
+    users: [{user: {firstName: 'Ada', lastName: 'Example'}}],
+  });
 });
