@@ -19,7 +19,11 @@ Router.registerRoute('/', () => setupDashboardScreen(appContainer));
 Router.registerRoute('/settings', () => setupSettingsScreen(appContainer));
 Router.registerRoute('/testTypeSelection', () => setupTestTypeSelectionScreen(appContainer));
 Router.registerRoute('/beginTest', () => setupBeginTestScreen(appContainer));
-Router.registerRoute('/test', () => new TestScreen(appContainer).setupScreen());
+Router.registerRoute('/test', () => {
+  const testScreen = new TestScreen(appContainer);
+  testScreen.setupScreen();
+  return () => testScreen.destroy();
+});
 Router.registerRoute('/spam-warning', () => setupSpamWarningScreen(appContainer));
 Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(appContainer));
 Router.registerRoute('/users', async () => {
