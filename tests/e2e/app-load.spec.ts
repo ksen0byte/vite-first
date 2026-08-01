@@ -35,6 +35,20 @@ test('opens Settings from the keyboard-reachable reaction-test card', async ({ p
   await expect(page.locator('#personal-data-form')).toBeVisible();
 });
 
+test('retains the selected language across a Settings route round trip', async ({ page }) => {
+  await page.goto('./');
+  const heading = page.locator('#dashboard-content h1');
+  await expect(heading).toHaveText('Інструменти та сервіси');
+
+  await page.locator('#language-toggle').check();
+  await expect(heading).toHaveText('Tools and Services');
+
+  await page.locator('#service-reaction').click();
+  await expect(page.locator('#personal-data-form')).toBeVisible();
+  await page.goBack();
+  await expect(heading).toHaveText('Tools and Services');
+});
+
 test('rejects repeated non-Space SVMR keys without recording input or detecting spam', async ({ page }) => {
   await page.goto('./');
   await page.locator('#service-reaction').click();
