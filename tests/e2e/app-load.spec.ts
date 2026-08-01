@@ -24,6 +24,17 @@ test('loads the dashboard without page errors and returns from settings', async 
   expect(pageErrors).toEqual([]);
 });
 
+test('opens Settings from the keyboard-reachable reaction-test card', async ({ page }) => {
+  await page.goto('./');
+  const reactionCard = page.locator('#service-reaction');
+
+  await reactionCard.focus();
+  await expect(reactionCard).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('#personal-data-form')).toBeVisible();
+});
+
 test('rejects repeated non-Space SVMR keys without recording input or detecting spam', async ({ page }) => {
   await page.goto('./');
   await page.locator('#service-reaction').click();

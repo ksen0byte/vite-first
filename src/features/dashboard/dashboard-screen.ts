@@ -10,7 +10,7 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
-          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" id="service-reaction">
+          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-primary" id="service-reaction" role="button" tabindex="0">
             <figure class="px-10 pt-10">
               <span class="text-6xl">⏱️</span>
             </figure>
@@ -18,12 +18,12 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
               <h2 class="card-title" data-localize="dashboardOptimalMode">Reaction Test</h2>
               <p data-localize="dashboardReactionDesc">Classic SVMR test to measure CNS functional state.</p>
               <div class="card-actions">
-                <button class="btn btn-primary" data-localize="open">Open</button>
+                <span class="btn btn-primary" data-localize="open">Open</span>
               </div>
             </div>
           </div>
 
-          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer hidden" id="service-bio-age">
+          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-secondary hidden" id="service-bio-age" role="button" tabindex="0">
             <figure class="px-10 pt-10">
               <span class="text-6xl">🧬</span>
             </figure>
@@ -31,12 +31,12 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
               <h2 class="card-title" data-localize="screenBiologicalAgeCalculatorTitle">Biological Age Calculator</h2>
               <p data-localize="dashboardBioAgeDesc">Calculate Biological Age based on known reaction time.</p>
               <div class="card-actions">
-                <button class="btn btn-secondary" data-localize="open">Open</button>
+                <span class="btn btn-secondary" data-localize="open">Open</span>
               </div>
             </div>
           </div>
 
-          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" id="service-profiles">
+          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-accent" id="service-profiles" role="button" tabindex="0">
             <figure class="px-10 pt-10">
               <span class="text-6xl">📂</span>
             </figure>
@@ -44,7 +44,7 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
               <h2 class="card-title" data-localize="savedTestsBtnLabel">Database</h2>
               <p data-localize="dashboardProfilesDesc">Manage users and view history.</p>
               <div class="card-actions">
-                <button class="btn btn-accent" data-localize="open">Open</button>
+                <span class="btn btn-accent" data-localize="open">Open</span>
               </div>
             </div>
           </div>
@@ -56,10 +56,21 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
 
   setupHeader(appContainer);
   
-  // Event handlers
-  document.getElementById('service-reaction')?.addEventListener('click', () => Router.navigate('/settings'));
-  document.getElementById('service-bio-age')?.addEventListener('click', () => Router.navigate('/bio-age-calculator'));
-  document.getElementById('service-profiles')?.addEventListener('click', () => Router.navigate('/users'));
+  bindServiceCard('service-reaction', () => Router.navigate('/settings'));
+  bindServiceCard('service-bio-age', () => Router.navigate('/bio-age-calculator'));
+  bindServiceCard('service-profiles', () => Router.navigate('/users'));
 
   updateLanguageUI();
+}
+
+function bindServiceCard(id: string, navigate: () => void): void {
+  const card = document.getElementById(id);
+  if (card === null) return;
+  card.addEventListener('click', navigate);
+  card.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      navigate();
+    }
+  });
 }
