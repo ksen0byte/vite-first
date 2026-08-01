@@ -36,6 +36,16 @@ test('opens Settings from the keyboard-reachable reaction-test card', async ({ p
   await expect(page.locator('#personal-data-form')).toBeVisible();
 });
 
+test('does not retain focus in dashboard content after navigating away', async ({ page }) => {
+  await page.goto('./');
+  const reactionCard = page.locator('#service-reaction');
+  await reactionCard.focus();
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('#personal-data-form')).toBeVisible();
+  expect(await page.evaluate(() => document.activeElement?.id)).not.toBe('service-reaction');
+});
+
 test('retains the selected language across a Settings route round trip', async ({ page }) => {
   await page.goto('./');
   const heading = page.locator('#dashboard-content h1');
