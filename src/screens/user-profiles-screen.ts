@@ -5,8 +5,8 @@ import {db, User, TestRecord} from "../db/db";
 import {getAllUsers, getTestsForUser, upsertUser} from "../db/operations";
 import Router from "../routing/router.ts";
 import {exportDataAsJson, readJsonFile} from "../util/export-utils";
-import {TestSettings, TrialResult} from "../config/domain.ts";
 import {escapeHtml} from "../util/html.ts";
+import {parseImportedJson} from '../util/import-json.ts';
 
 /**
  * Exports all users and their test data as a JSON file
@@ -364,94 +364,48 @@ export class UsersScreen {
       const file = input.files?.[0];
       if (!file) return;
       try {
-        type ImportedUser = {
-          firstName: string;
-          lastName: string;
-          gender: User['gender'];
-          age: number;
-        };
-        type ImportedTestRecord = {
-          testSettings: TestSettings;
-          date?: string;
-          trials?: TrialResult[];    // New format
-          reactionTimes?: number[]; // Legacy format
-        };
-        type ImportedBundle = { user: ImportedUser; tests: ImportedTestRecord[] };
-
-        const readResult = await readJsonFile<ImportedBundle | ImportedBundle[]>(file);
+        const readResult = await readJsonFile(file);
         if (readResult._tag === 'Failure') {
           console.error('Error reading file:', readResult.error);
           alert(localize('importError'));
           return;
         }
-        const raw = readResult.value;
-        const items: ImportedBundle[] = Array.isArray(raw) ? raw : [raw];
+        const parsed = parseImportedJson(readResult.value);
+        if (parsed._tag === 'Failure') {
+          console.error('Invalid import:', parsed.error);
+          alert(localize('importError'));
+          return;
+        }
+        const items = parsed.value;
 
         let importedUsers = 0;
         let importedTests = 0;
 
         await db.transaction('rw', db.users, db.tests, async () => {
           for (const item of items) {
-            if (!item || typeof item !== 'object' || !item.user) continue;
-
-            const normalizedUser: User = {
-              firstName: item.user.firstName,
-              lastName: item.user.lastName,
-              gender: item.user.gender,
-              age: item.user.age
-            };
+            const normalizedUser: User = item.user;
 
             // Upsert user, but count only if it didn't exist before
             const existed = await db.users.get([normalizedUser.firstName, normalizedUser.lastName]);
-            await upsertUser(normalizedUser);
+            const upsertResult = await upsertUser(normalizedUser);
+            if (upsertResult._tag === 'Failure') throw upsertResult.error;
             if (!existed) {
               importedUsers += 1;
             }
 
             const userKey = `${normalizedUser.firstName}|${normalizedUser.lastName}`;
-            const tests: ImportedTestRecord[] = Array.isArray(item.tests) ? item.tests : [];
-
-            // Normalize tests; ignore incoming id to avoid collisions
-            const normalizedTests: Omit<TestRecord, 'id'>[] = tests
-              .map((t) => {
-                // 1. Determine which data source to use
-                let finalTrials: TrialResult[] = [];
-
-                if (Array.isArray(t.trials)) {
-                  // Normalize in case it's missing expectedAction/actualAction from old exports
-                  finalTrials = t.trials.map(trial => ({
-                    ...trial,
-                    expectedAction: (trial as any).expectedAction || 'DEFAULT',
-                    actualAction: (trial as any).actualAction || 'DEFAULT'
-                  }));
-                } else if (Array.isArray(t.reactionTimes)) {
-                  // Legacy conversion
-                  finalTrials = t.reactionTimes.map((rt, index) => ({
-                    trialIndex: index,
-                    stimulus: 'circle',
-                    reactionTime: rt,
-                    outcome: "Success",
-                    expectedAction: "DEFAULT",
-                    actualAction: "DEFAULT",
-                  }));
-                } else {
-                  return null; // Skip invalid records
-                }
-
-                return {
-                  userKey,
-                  testSettings: t.testSettings,
-                  trials: finalTrials, // Always store as trials
-                  date: (t.date ?? new Date().toISOString())
-                };
-              })
-              .filter((t): t is Omit<TestRecord, 'id'> => t !== null);
+            const normalizedTests: Omit<TestRecord, 'id'>[] = item.tests.map((test) => ({
+              userKey,
+              testSettings: test.testSettings,
+              trials: [...test.trials],
+              date: test.date,
+            }));
 
             if (normalizedTests.length > 0) {
               // Deduplicate against existing tests for this userKey
               const existing = await db.tests.where('userKey').equals(userKey).toArray();
 
-              const makeSig = (r: Omit<TestRecord, 'id'> | TestRecord | any): string =>
+              const makeSig = (r: Pick<TestRecord, 'userKey' | 'date' | 'testSettings' | 'trials'>): string =>
                 JSON.stringify({
                   userKey: r.userKey,
                   date: r.date,

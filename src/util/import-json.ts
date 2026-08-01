@@ -1,158 +1,106 @@
-// src/util/import-json.ts
+import {Gender, TestMode, TestSettings, TestType, TrialResult} from '../config/domain.ts';
+import {User} from '../db/db.ts';
+import {Result, failure, success} from './result.ts';
 
-import {TrialResult} from "../config/domain.ts";
+export type ImportError =
+  | { readonly _tag: 'InvalidType'; readonly path: string; readonly expected: string }
+  | { readonly _tag: 'InvalidValue'; readonly path: string; readonly expected: string };
 
-// --- Domain types (runtime-validated) ---
-
-export type Gender = "male" | "female" | "other" | "unknown";
-
-export interface ImportedUser {
-  firstName: string;
-  lastName: string;
-  gender: Gender | string; // allow unknown strings from data
-  age: number;
+export interface NormalizedImportTest {
+  readonly sourceId?: number;
+  readonly testSettings: TestSettings;
+  readonly trials: readonly TrialResult[];
+  readonly date: string;
 }
 
-export interface ImportedTestSettings {
-  testMode: string;
-  stimulusSize: number;
-  exposureTime: number;
-  exposureDelay: [number, number] | number[]; // allow arrays, validate later
-  stimulusCount: number;
-  testType: string;
+export interface NormalizedImportBundle {
+  readonly user: User;
+  readonly tests: readonly NormalizedImportTest[];
 }
 
-export interface ImportedTest {
-  userKey: string;
-  testSettings: ImportedTestSettings;
-  reactionTimes: number[];
-  trials?: TrialResult[];
-  date: string; // ISO
-  id: number;
-}
+export type NormalizedImport = readonly NormalizedImportBundle[];
 
-export interface ImportedUserBlock {
-  user: ImportedUser;
-  tests: ImportedTest[];
-}
+const testModes: readonly TestMode[] = ['shapes', 'words', 'colors', 'combined'];
+const testTypes: readonly TestType[] = ['svmr', 'crt1-3', 'crt2-3'];
+const genders: readonly Gender[] = ['male', 'female'];
+const outcomes = ['Success', 'Miss', 'FalseAlarm', 'CorrectRejection', 'MixUp', 'FalseStart'] as const;
+const actions = ['LEFT', 'RIGHT', 'DEFAULT', 'NONE'] as const;
 
-export type ImportedJson = ImportedUserBlock[];
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
-// --- Errors ---
+const isOneOf = <T extends string>(value: unknown, values: readonly T[]): value is T =>
+  typeof value === 'string' && values.includes(value as T);
 
-export class ImportValidationError extends Error {
-  constructor(message: string, public readonly path?: string) {
-    super(path ? `${message} (at ${path})` : message);
-    this.name = "ImportValidationError";
-  }
-}
+const invalidType = (path: string, expected: string): Result<never, ImportError> =>
+  failure({ _tag: 'InvalidType', path, expected });
 
-// --- Small guard helpers ---
+const invalidValue = (path: string, expected: string): Result<never, ImportError> =>
+  failure({ _tag: 'InvalidValue', path, expected });
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === "object" && v !== null && !Array.isArray(v);
-}
+export function parseImportedJson(raw: unknown): Result<NormalizedImport, ImportError> {
+  if (!Array.isArray(raw)) return invalidType('$', 'array');
+  const bundles: NormalizedImportBundle[] = [];
 
-function asString(v: unknown, path: string): string {
-  if (typeof v !== "string") throw new ImportValidationError("Expected string", path);
-  return v;
-}
+  for (let bundleIndex = 0; bundleIndex < raw.length; bundleIndex++) {
+    const bundlePath = `$[${bundleIndex}]`;
+    const bundle = raw[bundleIndex];
+    if (!isRecord(bundle)) return invalidType(bundlePath, 'object');
+    if (!isRecord(bundle.user)) return invalidType(`${bundlePath}.user`, 'object');
+    const user = bundle.user;
+    if (typeof user.firstName !== 'string') return invalidType(`${bundlePath}.user.firstName`, 'string');
+    if (typeof user.lastName !== 'string') return invalidType(`${bundlePath}.user.lastName`, 'string');
+    if (!isOneOf(user.gender, genders)) return invalidValue(`${bundlePath}.user.gender`, 'male or female');
+    if (typeof user.age !== 'number' || !Number.isFinite(user.age)) return invalidValue(`${bundlePath}.user.age`, 'finite number');
+    if (!Array.isArray(bundle.tests)) return invalidType(`${bundlePath}.tests`, 'array');
 
-function asNumber(v: unknown, path: string): number {
-  if (typeof v !== "number" || !Number.isFinite(v)) {
-    throw new ImportValidationError("Expected finite number", path);
-  }
-  return v;
-}
-
-function asArray(v: unknown, path: string): unknown[] {
-  if (!Array.isArray(v)) throw new ImportValidationError("Expected array", path);
-  return v;
-}
-
-function asNumberArray(v: unknown, path: string): number[] {
-  const arr = asArray(v, path);
-  const out: number[] = [];
-  for (let i = 0; i < arr.length; i++) {
-    const n = arr[i];
-    if (typeof n !== "number" || !Number.isFinite(n)) {
-      throw new ImportValidationError("Expected array of finite numbers", `${path}[${i}]`);
-    }
-    out.push(n);
-  }
-  return out;
-}
-
-function asExposureDelay(v: unknown, path: string): [number, number] {
-  const arr = asNumberArray(v, path);
-  if (arr.length !== 2) throw new ImportValidationError("exposureDelay must have length 2", path);
-  return [arr[0], arr[1]];
-}
-
-// --- Main parser ---
-
-/**
- * Parse + validate the JSON content produced by readJsonFile<unknown>().
- * Throws ImportValidationError with a path for easier debugging.
- */
-export function parseImportedJson(raw: unknown): ImportedJson {
-  const root = asArray(raw, "$");
-  const blocks: ImportedUserBlock[] = [];
-
-  for (let i = 0; i < root.length; i++) {
-    const node = root[i];
-    const basePath = `$[${i}]`;
-    if (!isRecord(node)) throw new ImportValidationError("Expected object", basePath);
-
-    // user
-    const userRaw = node["user"];
-    if (!isRecord(userRaw)) throw new ImportValidationError("Expected object", `${basePath}.user`);
-
-    const user: ImportedUser = {
-      firstName: asString(userRaw["firstName"], `${basePath}.user.firstName`),
-      lastName: asString(userRaw["lastName"], `${basePath}.user.lastName`),
-      gender: asString(userRaw["gender"], `${basePath}.user.gender`),
-      age: asNumber(userRaw["age"], `${basePath}.user.age`),
-    };
-
-    // tests
-    const testsRaw = asArray(node["tests"], `${basePath}.tests`);
-    const tests: ImportedTest[] = [];
-
-    for (let j = 0; j < testsRaw.length; j++) {
-      const t = testsRaw[j];
-      const tPath = `${basePath}.tests[${j}]`;
-      if (!isRecord(t)) throw new ImportValidationError("Expected object", tPath);
-
-      const settingsRaw = t["testSettings"];
-      if (!isRecord(settingsRaw)) throw new ImportValidationError("Expected object", `${tPath}.testSettings`);
-
-      const testSettings: ImportedTestSettings = {
-        testMode: asString(settingsRaw["testMode"], `${tPath}.testSettings.testMode`),
-        stimulusSize: asNumber(settingsRaw["stimulusSize"], `${tPath}.testSettings.stimulusSize`),
-        exposureTime: asNumber(settingsRaw["exposureTime"], `${tPath}.testSettings.exposureTime`),
-        exposureDelay: asExposureDelay(settingsRaw["exposureDelay"], `${tPath}.testSettings.exposureDelay`),
-        stimulusCount: asNumber(settingsRaw["stimulusCount"], `${tPath}.testSettings.stimulusCount`),
-        testType: asString(settingsRaw["testType"], `${tPath}.testSettings.testType`),
-      };
-
-      const reactionTimes = t["reactionTimes"] ? asNumberArray(t["reactionTimes"], `${tPath}.reactionTimes`) : [];
-      const trials = t["trials"] ? asArray(t["trials"], `${tPath}.trials`) as TrialResult[] : undefined;
-
-      const test: ImportedTest = {
-        userKey: asString(t["userKey"], `${tPath}.userKey`),
-        testSettings,
-        reactionTimes,
+    const tests: NormalizedImportTest[] = [];
+    for (let testIndex = 0; testIndex < bundle.tests.length; testIndex++) {
+      const testPath = `${bundlePath}.tests[${testIndex}]`;
+      const test = bundle.tests[testIndex];
+      if (!isRecord(test) || !isRecord(test.testSettings)) return invalidType(testPath, 'test record');
+      const settings = test.testSettings;
+      if (!isOneOf(settings.testMode, testModes)) return invalidValue(`${testPath}.testSettings.testMode`, 'test mode');
+      if (!isOneOf(settings.testType, testTypes)) return invalidValue(`${testPath}.testSettings.testType`, 'test type');
+      if (!Array.isArray(settings.exposureDelay) || settings.exposureDelay.length !== 2 || !settings.exposureDelay.every((value) => typeof value === 'number' && Number.isFinite(value)) || settings.exposureDelay[0] > settings.exposureDelay[1]) return invalidValue(`${testPath}.testSettings.exposureDelay`, 'ordered finite pair');
+      if (!isRecord(settings.usePregenerated) || typeof settings.usePregenerated.exposureDelay !== 'boolean' || typeof settings.usePregenerated.stimuli !== 'boolean') return invalidValue(`${testPath}.testSettings.usePregenerated`, 'boolean flags');
+      if (![settings.stimulusSize, settings.exposureTime, settings.stimulusCount].every((value) => typeof value === 'number' && Number.isFinite(value)) || !Number.isInteger(settings.stimulusCount)) return invalidValue(`${testPath}.testSettings`, 'finite numeric settings and integer stimulus count');
+      if (typeof test.date !== 'string' || Number.isNaN(Date.parse(test.date))) return invalidValue(`${testPath}.date`, 'ISO date');
+      const trials: TrialResult[] = [];
+      if (Array.isArray(test.trials)) {
+        for (let trialIndex = 0; trialIndex < test.trials.length; trialIndex++) {
+        const trialPath = `${testPath}.trials[${trialIndex}]`;
+        const trial = test.trials[trialIndex];
+        if (!isRecord(trial) || typeof trial.trialIndex !== 'number' || !Number.isInteger(trial.trialIndex) || typeof trial.stimulus !== 'string' || typeof trial.reactionTime !== 'number' || !Number.isFinite(trial.reactionTime)) return invalidType(trialPath, 'trial record');
+        if (!isOneOf(trial.outcome, outcomes)) return invalidValue(`${trialPath}.outcome`, 'trial outcome');
+        const expectedAction = trial.expectedAction ?? 'DEFAULT';
+        const actualAction = trial.actualAction ?? 'DEFAULT';
+        if (!isOneOf(expectedAction, actions) || !isOneOf(actualAction, actions)) return invalidValue(`${trialPath}.action`, 'trial action');
+        trials.push({ trialIndex: trial.trialIndex, stimulus: trial.stimulus, reactionTime: trial.reactionTime, outcome: trial.outcome, expectedAction, actualAction });
+        }
+      } else if (Array.isArray(test.reactionTimes) && test.reactionTimes.every((value) => typeof value === 'number' && Number.isFinite(value))) {
+        for (let trialIndex = 0; trialIndex < test.reactionTimes.length; trialIndex++) {
+          trials.push({ trialIndex, stimulus: 'circle', reactionTime: test.reactionTimes[trialIndex] as number, outcome: 'Success', expectedAction: 'DEFAULT', actualAction: 'DEFAULT' });
+        }
+      } else {
+        return invalidType(`${testPath}.trials`, 'array');
+      }
+      tests.push({
+        ...(typeof test.id === 'number' && Number.isInteger(test.id) ? {sourceId: test.id} : {}),
+        testSettings: {
+          testMode: settings.testMode,
+          stimulusSize: settings.stimulusSize as number,
+          exposureTime: settings.exposureTime as number,
+          exposureDelay: [settings.exposureDelay[0] as number, settings.exposureDelay[1] as number],
+          stimulusCount: settings.stimulusCount as number,
+          testType: settings.testType,
+          usePregenerated: settings.usePregenerated as TestSettings['usePregenerated'],
+        },
         trials,
-        date: asString(t["date"], `${tPath}.date`),
-        id: asNumber(t["id"], `${tPath}.id`),
-      };
-
-      tests.push(test);
+        date: test.date,
+      });
     }
-
-    blocks.push({ user, tests });
+    bundles.push({ user: { firstName: user.firstName, lastName: user.lastName, gender: user.gender, age: user.age }, tests });
   }
-
-  return blocks;
+  return success(bundles);
 }
