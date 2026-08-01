@@ -43,6 +43,7 @@ export class TestScreen {
   // State
   private state: TestState = toIdle();
   private reactionTimes: Map<number, TrialResult> = new Map();
+  private isDestroyed = false;
 
   // spam prevention
   private readonly spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
@@ -60,6 +61,7 @@ export class TestScreen {
    * Set up the Test Screen UI and initialize all logic (countdown, timers, events).
    */
   public setupScreen(): void {
+    this.isDestroyed = false;
     this.stopTest(); // Ensure a clean state if re-initializing
     this.renderUI(this.appContext.debugMode);
     this.getElements();
@@ -74,8 +76,10 @@ export class TestScreen {
    * Clears timers, event listeners, etc.
    */
   public destroy(): void {
+    if (this.isDestroyed) return;
+    this.isDestroyed = true;
     document.removeEventListener("keydown", this.handleKeyDownBound);
-    this.timerManager.stop();
+    this.timerManager?.stopAndReset();
     clearAllTimeouts();
   }
 
@@ -220,6 +224,7 @@ export class TestScreen {
    * Repeatedly displays stimuli, tracks reaction times, and completes on finishing all stimuli.
    */
   private runTest(): void {
+    if (this.isDestroyed) return;
     this.stimulusManager.clearContainer();
     this.scheduleNextStimulus(0);
   }
@@ -240,6 +245,7 @@ export class TestScreen {
   }
 
   private showStimulus(index: number): void {
+    if (this.isDestroyed) return;
     if (this.state._tag !== 'Delayed' || this.state.stimulusIndex !== index) return;
     this.stimuliCounter.set(index + 1);
     const stimulus: Stimulus = this.stimulusManager.showStimulus(index);
@@ -252,6 +258,7 @@ export class TestScreen {
   }
 
   private onStimulusTimeout(index: number): void {
+    if (this.isDestroyed) return;
     if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
 
     clearAllTimeouts();
