@@ -86,3 +86,20 @@ Status meanings:
 - No executable/documentation conflicts were found in this H0.1 inspection.
 - This document records behavior; it does not approve methodology changes.
 - Biological-age files are intentionally outside this matrix except for future route-load smoke coverage.
+
+## Verified hardening evidence (2026-08-01)
+
+This addendum supersedes only the matching baseline rows above where a named
+automated test now exists. It does not approve methodology changes.
+
+| Behavior | Verified evidence |
+| --- | --- |
+| Finished state retains the recorded per-trial map. | `test-transitions.test.ts: keeps recorded trial results when the final stimulus finishes` |
+| SVMR, CRT1-3, CRT2-3 expected actions and CRT2-3 response outcomes. | `test-response.test.ts: maps expected actions`; `test-response.test.ts: classifies responses` |
+| Color and shape predicates. | `stimulus-sequences.test.ts: classifies colors`; `stimulus-sequences.test.ts: classifies shapes` |
+| Existing-name demographic update preserves tests. | `db-operations.test.ts: updates demographics for an existing name while retaining associated tests` |
+| Current export parsing and legacy reaction-time normalization. | `import-json.test.ts` |
+| Atomic import and duplicate reporting. | `integration/import-users.test.ts: imports a validated export once and reports its duplicates on repeat` |
+| Success-only statistics and error breakdown. | `reaction-time-stats.test.ts: counts every error outcome without treating it as a successful reaction` |
+| Identical-value histogram safety and unavailable zero-deviation values. | `reaction-time-stats.test.ts: handles multiple identical successful values with a deterministic bin`; `reaction-time-stats.test.ts: represents Loskutova values as unavailable when standard deviation is zero` |
+| Route cleanup, test session scheduling, stored-content escaping, and rejected non-Space SVMR keys. | `router.test.ts`; `schedule-timeout.test.ts`; `html.test.ts`; `app-load.spec.ts` |
