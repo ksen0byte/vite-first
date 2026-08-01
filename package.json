@@ -20,7 +20,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/katex": "^0.16.7",
+    "@types/katex": "^0.16.8",
     "@vitest/coverage-v8": "^4.1.10",
     "daisyui": "^5.7.9",
     "eslint": "^10.0.3",
@@ -39,7 +39,7 @@
   "dependencies": {
     "chart.js": "^4.5.1",
     "dexie": "^4.4.4",
-    "katex": "^0.16.25",
+    "katex": "^0.16.47",
     "nouislider": "^15.8.1",
     "simple-statistics": "^7.8.7"
   }
