@@ -2,6 +2,9 @@
 import Dexie, {Table} from 'dexie';
 import {TestSettings, TrialResult} from "../config/domain.ts";
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 // User profile interface
 export interface User {
   firstName: string;
@@ -40,14 +43,12 @@ export class CnsTestDatabase extends Dexie {
       tests: '++id, userKey, date'
     }).upgrade(async tx => {
       console.log("Migration to version 2 started...");
-      // Use 'any' here because the record actually contains 'reactionTimes'
-      // which is no longer in your TestRecord interface.
-      await tx.table("tests").toCollection().modify((test: any) => {
-        if (Array.isArray(test.reactionTimes)) {
-          test.trials = test.reactionTimes.map((rt: number, index: number) => ({
+      await tx.table("tests").toCollection().modify((test: Record<string, unknown>) => {
+        if (Array.isArray(test.reactionTimes) && test.reactionTimes.every((value) => typeof value === 'number')) {
+          test.trials = test.reactionTimes.map((reactionTime, index) => ({
             trialIndex: index,
             stimulus: 'circle',
-            reactionTime: rt,
+            reactionTime,
             outcome: "Success",
             expectedAction: 'DEFAULT',
             actualAction: 'DEFAULT'
@@ -63,13 +64,16 @@ export class CnsTestDatabase extends Dexie {
       tests: '++id, userKey, date'
     }).upgrade(async tx => {
       console.log("Migration to version 3 started...");
-      await tx.table("tests").toCollection().modify((test: any) => {
+      await tx.table("tests").toCollection().modify((test: Record<string, unknown>) => {
         if (Array.isArray(test.trials)) {
-          test.trials = test.trials.map((trial: any) => ({
-            ...trial,
-            expectedAction: trial.expectedAction || 'DEFAULT',
-            actualAction: trial.actualAction || 'DEFAULT'
-          }));
+          test.trials = test.trials.map((trial) => {
+            if (!isRecord(trial)) return trial;
+            return {
+              ...trial,
+              expectedAction: trial.expectedAction || 'DEFAULT',
+              actualAction: trial.actualAction || 'DEFAULT',
+            };
+          });
         }
       });
     });
