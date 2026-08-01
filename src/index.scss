@@ -75,7 +75,6 @@
 
   table, th, td {
     border: 1px solid #000 !important;
-    //padding: 0.1rem 0.2rem !important;
     height: var(--print-table-cell-height, 1.6em) !important;
     vertical-align: middle !important;
   }
@@ -116,7 +115,6 @@
     padding: 0.5rem !important;
     height: var(--print-chart-height, 400px) !important;
     min-height: unset !important;
-    // center the chart
     display: flex;
     justify-content: center;
     align-items: center;
