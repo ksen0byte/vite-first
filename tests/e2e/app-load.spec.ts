@@ -126,6 +126,24 @@ test('completes an SVMR session through the real timer sequence', async ({ page 
   await expect(page.locator('#results-screen')).toBeVisible();
 });
 
+test('retries a completed SVMR session with a fresh countdown and counter', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('./');
+  await page.locator('#service-reaction').click();
+  await page.locator('#surname-input').fill('Example');
+  await page.locator('#name-input').fill('Ada');
+  await page.locator('#age-input').fill('34');
+  await page.locator('#gender-select').selectOption('female');
+  await page.locator('#start-test-btn').click();
+  await page.locator('#pzmr-button').click();
+  await page.locator('#test-next-btn').click();
+
+  await page.clock.fastForward(100_000);
+  await page.locator('#end-retry-btn').click();
+  await expect(page.locator('#test-stimulus-container')).toHaveText('3');
+  await expect(page.locator('#stimuli-counter')).toHaveText('0/30');
+});
+
 test('Browser Back abandons an active test without a delayed route mutation', async ({ page }) => {
   await page.goto('./');
   await page.locator('#service-reaction').click();
