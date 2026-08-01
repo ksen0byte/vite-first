@@ -6,7 +6,7 @@ does not constitute clinical, timing, or scientific equivalence validation.
 | Area | Supported / tested scope |
 | --- | --- |
 | Browser | Chromium desktop through Playwright 1.62.1 `Desktop Chrome` in CI. |
-| Viewport | Desktop/laptop viewport supplied by Playwright’s `Desktop Chrome` device profile. Layouts outside that profile require manual review before support is claimed. |
+| Viewport | Desktop/laptop viewport supplied by Playwright's `Desktop Chrome` device profile. Layouts outside that profile require manual review before support is claimed. |
 | Input | A physical keyboard is required for test responses. The supported trial keys are documented in the test-screen documentation and enforced by regression tests. |
 | Storage | IndexedDB and LocalStorage must be available; profiles, tests, language preference, and import/export flows depend on browser storage. |
 | JavaScript | JavaScript must be enabled. The application is a client-side Vite application. |
