@@ -58,7 +58,8 @@ class Router {
   }
 
   private static normalizeBasePath(basePath: string): string {
-    return `/${basePath.replace(/^\/+|\/+$/g, '')}/`;
+    const normalizedBasePath = basePath.replace(/^\/+|\/+$/g, '');
+    return normalizedBasePath ? `/${normalizedBasePath}/` : '/';
   }
 
   private static getFullPath(path: string): string {
