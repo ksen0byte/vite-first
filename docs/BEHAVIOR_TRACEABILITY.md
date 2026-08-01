@@ -61,7 +61,7 @@ Status meanings:
 | `isAnimal` recognizes the current English and Ukrainian animal sets. | `isAnimal`, `ANIMALS_EN`, `ANIMALS_UA` | Characterized | `stimulus-sequences.test.ts: classifies English/Ukrainian animal examples; rejects non-matching categories` | Not reviewed. |
 | `isPlant` recognizes the current English and Ukrainian plant sets. | `isPlant`, `PLANTS_EN`, `PLANTS_UA` | Characterized | `stimulus-sequences.test.ts: classifies English/Ukrainian plant examples; rejects non-matching categories` | Not reviewed. |
 | `isNonLiving` recognizes the current English and Ukrainian non-living sets. | `isNonLiving`, `NON_LIVING_EN`, `NON_LIVING_UA` | Characterized | `stimulus-sequences.test.ts: classifies English/Ukrainian non-living examples; rejects non-matching categories` | Not reviewed. |
-| The delay, shape, color, word, and combined sequence contents are characterization values and must not be edited during H2.1/H2.2. | `EXPOSITION_DELAY_SEQUENCE`, `SHAPE_SEQUENCE`, `COLOR_SEQUENCE`, `WORD_SEQUENCE_*`, `COMBINED_SEQUENCE_*` | Unverified | `stimulus-sequences.test.ts: records sequence lengths` | Not reviewed. |
+| The delay, shape, color, word, and combined sequence contents are characterization values and must not be edited during H2.1/H2.2. | `EXPOSITION_DELAY_SEQUENCE`, `SHAPE_SEQUENCE`, `COLOR_SEQUENCE`, `WORD_SEQUENCE_*`, `COMBINED_SEQUENCE_*` | Characterized | `stimulus-sequences.test.ts: records the current characterization lengths` | Not reviewed. |
 
 ## Persistence, import/export, and summary statistics
 
@@ -70,9 +70,9 @@ Status meanings:
 | Profile identity currently uses `[firstName+lastName]`. | `src/db/db.ts`, `src/db/operations.ts: upsertUser` | Characterized | `user-operations.test.ts: existing identity key` | Not reviewed. |
 | A repeat profile submission currently returns an existing profile without applying new age or gender. | `upsertUser` | Owner decision required — resolved by DEC-002 | `user-operations.test.ts: updates existing demographics` | Not reviewed. |
 | Export is a user bundle with its associated test records. | `exportAllUsersData`, `exportUserData` in `user-profiles-screen.ts` | Unverified | `import-json.test.ts: current export fixture` | Not reviewed. |
-| Import parsing and UI normalization are currently split; parser validation throws `ImportValidationError`. | `src/util/import-json.ts`, `UsersScreen.importAllUsersData` | Unverified | `import-json.test.ts: parser fixtures` | Not reviewed. |
-| Only `Success` trials contribute reaction-time data; `Miss`, `FalseAlarm`, `FalseStart`, and `MixUp` are error outcomes. | `README.md`, `ReactionTimeStats` | Unverified | `reaction-time-stats.test.ts: outcome filtering` | Not reviewed. |
-| `CorrectRejection` is displayed in outcome breakdown but is not included in the aggregate error count. | `README.md`, `ReactionTimeStats` | Unverified | `reaction-time-stats.test.ts: correct rejection breakdown` | Not reviewed. |
+| Import parsing uses one runtime parser before database execution; malformed input returns a typed failure. | `parseImportedJson`, `UsersScreen.importAllUsersData`, `importUsers` | Characterized | `import-json.test.ts: accepts current exporter fixture; rejects malformed fixtures`; `import-users.test.ts: imports a validated export once` | Not reviewed. |
+| Only `Success` trials contribute reaction-time data; `Miss`, `FalseAlarm`, `FalseStart`, and `MixUp` are error outcomes. | `ReactionTimeStats` | Characterized | `reaction-time-stats.test.ts: counts every error outcome without treating it as a successful reaction` | Not reviewed. |
+| `CorrectRejection` is displayed in outcome breakdown but is not included in the aggregate error count. | `ReactionTimeStats` | Characterized | `reaction-time-stats.test.ts: counts every error outcome without treating it as a successful reaction` | Not reviewed. |
 
 ## Approved owner decisions
 
