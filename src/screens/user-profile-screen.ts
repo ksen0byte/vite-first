@@ -8,6 +8,7 @@ import {TestMode} from "../config/domain.ts";
 import Router, {Cleanup} from "../routing/router.ts";
 import {Chart} from "chart.js";
 import {printConfig} from "../config/settings.ts";
+import {escapeHtml} from "../util/html.ts";
 
 let chartInstances: Chart[] = [];
 
@@ -74,8 +75,8 @@ function printHeaderHtml(user: User): string {
   <div id="print-header" class="hidden print:block mb-4">
     <h1 class="text-2xl font-bold mb-2" data-localize="printReportTitle"></h1>
     <div class="flex gap-4 text-sm">
-      <span><strong data-localize="surnameLabel"></strong>: ${lastName}</span>
-      <span><strong data-localize="nameLabel"></strong>: ${firstName}</span>
+      <span><strong data-localize="surnameLabel"></strong>: ${escapeHtml(lastName)}</span>
+      <span><strong data-localize="nameLabel"></strong>: ${escapeHtml(firstName)}</span>
       <span><strong data-localize="ageLabel"></strong>: ${age}</span>
       <span><strong data-localize="selectGender"></strong>: ${genderText}</span>
       <span><strong data-localize="printReportDate"></strong>: ${currentDate}</span>
@@ -91,8 +92,8 @@ function personalDataCardHtml(user: User) {
   <div class="card shadow-md bg-base-100 print:hidden">
     <div class="card-body">
       <div class="flex space-x-2">
-        <p class="text-lg"><strong data-localize="surnameLabel"></strong>: <span>${lastName}</span></p>
-        <p class="text-lg"><strong data-localize="nameLabel"></strong>: <span>${firstName}</span></p>
+        <p class="text-lg"><strong data-localize="surnameLabel"></strong>: <span>${escapeHtml(lastName)}</span></p>
+        <p class="text-lg"><strong data-localize="nameLabel"></strong>: <span>${escapeHtml(firstName)}</span></p>
         <p class="text-lg"><strong data-localize="ageLabel"></strong>: <span>${age}</span></p>
         <p class="text-lg ${gender === "male" ? "" : "hidden"}"><strong data-localize="selectGender"></strong>: <span data-localize="male"></span></p>
         <p class="text-lg ${gender === "female" ? "" : "hidden"}"><strong data-localize="selectGender"></strong>: <span data-localize="female"></span></p>

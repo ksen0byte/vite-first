@@ -10,6 +10,7 @@ import {getRandomShapeSvg} from "../components/Shapes.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
 import {getColorRectangleHtml} from "../components/ColorRectangles.ts";
+import {escapeHtml} from "../util/html.ts";
 
 function settingsScreenHTML(appContext: AppContext) {
   return `<main class="flex-grow" id="main">
@@ -20,11 +21,11 @@ function settingsScreenHTML(appContext: AppContext) {
                     <div class="flex space-x-2">
                         <label class="flex flex-col form-control max-w-xs">
                             <input class="input validator input-bordered w-full max-w-xs" type="text" id="surname-input" data-localize="surnameLabel"
-                                   required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${appContext.personalData.lastName ?? ''}" />
+                                   required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${escapeHtml(appContext.personalData.lastName)}" />
                         </label>
                         <label class="flex flex-col form-control max-w-xs">
                             <input class="input validator input-bordered w-full max-w-xs" type="text" id="name-input" data-localize="nameLabel"
-                                   required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${appContext.personalData.firstName ?? ''}" />
+                                   required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${escapeHtml(appContext.personalData.firstName)}" />
                         </label>
                         <label class="flex flex-col form-control max-w-xs">
                             <input class="input validator input-bordered max-w-20" type="number" id="age-input" data-localize="ageLabel"

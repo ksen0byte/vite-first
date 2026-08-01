@@ -6,6 +6,7 @@ import {getAllUsers, getTestsForUser, upsertUser} from "../db/operations";
 import Router from "../routing/router.ts";
 import {exportDataAsJson, readJsonFile} from "../util/export-utils";
 import {TestSettings, TrialResult} from "../config/domain.ts";
+import {escapeHtml} from "../util/html.ts";
 
 /**
  * Exports all users and their test data as a JSON file
@@ -181,22 +182,24 @@ export class UsersScreen {
    */
   private userCardHTML(user: User): string {
     const {firstName, lastName, gender, age} = user;
+    const escapedFirstName = escapeHtml(firstName);
+    const escapedLastName = escapeHtml(lastName);
 
     return `
       <div class="card shadow-md bg-base-100">
         <div class="card-body">
           <div class="flex justify-between">
-            <h2 class="card-title">${firstName} ${lastName}</h2>
+            <h2 class="card-title">${escapedFirstName} ${escapedLastName}</h2>
             <div class="flex justify-between gap-x-2">
-                <button class="btn btn-sm btn-outline btn-primary export-user-btn" data-first-name="${firstName}" data-last-name="${lastName}">
+                <button class="btn btn-sm btn-outline btn-primary export-user-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /> </svg>
                   <span data-localize="exportData"></span>
                 </button>
-                <button class="btn btn-sm btn-outline btn-info view-profile-btn" data-first-name="${firstName}" data-last-name="${lastName}">
+                <button class="btn btn-sm btn-outline btn-info view-profile-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /> </svg>
                   <span data-localize="viewProfileButton"></span>
                 </button>
-                <button class="btn btn-sm btn-outline btn-error delete-user-btn" data-first-name="${firstName}" data-last-name="${lastName}">
+                <button class="btn btn-sm btn-outline btn-error delete-user-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /> </svg>
                   <span data-localize="deleteButton"></span>
                 </button>
