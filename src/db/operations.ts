@@ -10,25 +10,16 @@ export type DbError =
 
 export async function upsertUser(user: User): Promise<Result<User, DbError>> {
   try {
-    // Check if the user already exists
-    const existingUser = await db.users.get([user.firstName, user.lastName]);
-    if (existingUser) {
-      return success(existingUser);
-    }
-
-    // If not, add the user
-    await db.users.put({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      gender: user.gender,
-      age: user.age
+    const savedUser = await db.transaction('rw', db.users, async () => {
+      const existingUser = await db.users.get([user.firstName, user.lastName]);
+      const nextUser: User = existingUser === undefined
+        ? user
+        : {...existingUser, gender: user.gender, age: user.age};
+      await db.users.put(nextUser);
+      return db.users.get([user.firstName, user.lastName]);
     });
-
-    const newUser = await db.users.get([user.firstName, user.lastName]);
-    if (newUser) {
-      return success(newUser);
-    }
-    return failure({ _tag: 'DatabaseReadError', error: 'Failed to retrieve user after insert' });
+    if (savedUser !== undefined) return success(savedUser);
+    return failure({ _tag: 'DatabaseReadError', error: 'Failed to retrieve user after write' });
   } catch (error) {
     return failure({ _tag: 'DatabaseWriteError', error });
   }
