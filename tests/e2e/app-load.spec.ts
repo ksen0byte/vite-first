@@ -64,10 +64,12 @@ test('retains the selected language across a Settings route round trip', async (
   const heading = page.locator('#dashboard-content h1');
   await expect(heading).toHaveText('Інструменти та сервіси');
   await expect(page.locator('html')).toHaveAttribute('lang', 'uk');
+  await expect(page).toHaveTitle('Визначення функціонального стану ЦНС людини');
 
   await page.locator('#language-toggle').check();
   await expect(heading).toHaveText('Tools and Services');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page).toHaveTitle('Assessment of Human CNS Functional State');
 
   await page.locator('#service-reaction').click();
   await expect(page.locator('#personal-data-form')).toBeVisible();

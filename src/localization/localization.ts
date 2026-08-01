@@ -5,6 +5,7 @@ import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.t
 
 export function updateLanguageUI(): void {
   document.documentElement.lang = LanguageManager.getCurrentLanguage();
+  document.title = localize('appTitle');
 
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
   localizableElements.forEach((element) => {
