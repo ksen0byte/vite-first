@@ -81,10 +81,18 @@ export const toFinished = (reactionTimes: Map<number, TrialResult>): FinishedSta
 
 // Domain logic helpers
 
-export function getNextDelay(settings: TestSettings, stimulusIndex: number): number {
+export function getNextDelayForRandom(
+  settings: TestSettings,
+  stimulusIndex: number,
+  randomValue: number,
+): number {
   if (settings.usePregenerated.exposureDelay) {
     return getStimulusFromSequence(EXPOSITION_DELAY_SEQUENCE, stimulusIndex);
   }
   const [min, max] = settings.exposureDelay;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(randomValue * (max - min + 1)) + min;
+}
+
+export function getNextDelay(settings: TestSettings, stimulusIndex: number): number {
+  return getNextDelayForRandom(settings, stimulusIndex, Math.random());
 }

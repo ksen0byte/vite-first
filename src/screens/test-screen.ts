@@ -1,5 +1,5 @@
 // test-screen.ts
-import {AppContext, DebugMode, HandAction, TestType, TrialOutcome, TrialResult} from "../config/domain.ts";
+import {AppContext, DebugMode, HandAction, TrialOutcome, TrialResult} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
 import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
@@ -20,14 +20,7 @@ import {
   getNextDelay
 } from "../domain/test-state.ts";
 import {Stimulus} from "../domain/types.ts";
-import {
-  isAnimal,
-  isCircle,
-  isGreen,
-  isPlant,
-  isRed,
-  isSquare
-} from "../domain/stimulus-sequences.ts";
+import {classifyResponse, getExpectedAction, isAcceptedTrialInput, mapInputCode} from "../domain/test-response.ts";
 
 export class TestScreen {
   private readonly appContainer: HTMLElement;
@@ -216,11 +209,9 @@ export class TestScreen {
       this.handleHome();
       return;
     }
-    const allowedCodes = [
-      "Space", "ControlRight", "ShiftRight", "ArrowRight", "ControlLeft", "ShiftLeft", "ArrowLeft"
-    ];
-    if (allowedCodes.includes(event.code)) {
-      this.handleUserInput(event.code);
+    const testType = this.appContext.testSettings.testType;
+    if (isAcceptedTrialInput(testType, event.code)) {
+      this.handleUserInput(mapInputCode(event.code));
     }
   }
 
@@ -270,7 +261,7 @@ export class TestScreen {
     if (this.state._tag === 'ShowingStimulus') {
       const stimulus = this.state.stimulusValue;
       const testType = this.appContext.testSettings.testType;
-      const expectedAction = this.getExpectedAction(stimulus, testType);
+      const expectedAction = getExpectedAction(stimulus, testType);
       const shouldHaveReacted = expectedAction !== "NONE";
 
       if (!hasReacted && shouldHaveReacted) {
@@ -286,30 +277,7 @@ export class TestScreen {
     this.scheduleNextStimulus(index + 1);
   }
 
-  private getExpectedAction(stimulus: Stimulus, testType: TestType): HandAction {
-    if (testType === "svmr") return "DEFAULT";
-    if (testType === "crt1-3") {
-      return (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)) ? "DEFAULT" : "NONE";
-    }
-    if (testType === "crt2-3") {
-      if (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)) return "RIGHT";
-      if (isGreen(stimulus) || isCircle(stimulus) || isPlant(stimulus)) return "LEFT";
-      return "NONE";
-    }
-    return "NONE";
-  }
-
-  private mapInputCode(code: string): HandAction {
-    const defaultCodes = ["Space"];
-    const rightCodes = ["ControlRight", "ShiftRight", "ArrowRight"];
-    const leftCodes = ["ControlLeft", "ShiftLeft", "ArrowLeft"];
-    if (defaultCodes.includes(code)) return "DEFAULT";
-    if (rightCodes.includes(code)) return "RIGHT";
-    if (leftCodes.includes(code)) return "LEFT";
-    return "NONE";
-  }
-
-  private handleUserInput(code: string): void {
+  private handleUserInput(actualAction: HandAction): void {
     // 1. Immediate Guard: Exit if state is invalid
     const invalidStates = ['SpamDetected', 'Finished', 'CountingDown'];
     if (invalidStates.includes(this.state._tag)) return;
@@ -318,8 +286,6 @@ export class TestScreen {
     if (++this.spamInputCount > this.spamPreventionConfig.maxInputsPerStimulus) {
       return this.onSpamDetected();
     }
-
-    const actualAction = this.mapInputCode(code);
 
     // 3. State Guard: Only process inputs during stimulus
     if (this.state._tag === 'Delayed') {
@@ -344,23 +310,8 @@ export class TestScreen {
   private processTestResponse(stimulus: Stimulus, rt: number, actualAction: HandAction): void {
     const {testType} = this.appContext.testSettings;
 
-    const expectedAction = this.getExpectedAction(stimulus, testType);
-
-    let outcome: TrialOutcome;
-
-    if (testType === "crt2-3") {
-      if (expectedAction === "NONE") {
-        outcome = "FalseAlarm";
-      } else if (actualAction === expectedAction) {
-        outcome = "Success";
-      } else {
-        outcome = "MixUp";
-      }
-    } else {
-      // SVMR or CRT1-3 only uses DEFAULT (Space/)
-      const shouldHaveReacted = expectedAction !== "NONE";
-      outcome = shouldHaveReacted ? "Success" : "FalseAlarm";
-    }
+    const expectedAction = getExpectedAction(stimulus, testType);
+    const outcome = classifyResponse(testType, expectedAction, actualAction);
 
     console.log(`${outcome}: ${stimulus} (expected: ${expectedAction}, actual: ${actualAction})`);
     this.recordReactionTime(stimulus, rt, outcome, expectedAction, actualAction);
