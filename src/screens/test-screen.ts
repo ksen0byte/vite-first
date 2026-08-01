@@ -2,7 +2,7 @@
 import {AppContext, DebugMode, HandAction, TrialOutcome, TrialResult} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
-import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
+import {BrowserScheduler} from "../util/scheduleTimeout.ts";
 import {StimulusManager} from "../components/StimulusManager.ts";
 import {StimuliCounter} from "../components/StimuliCounter.ts";
 import {TimerManager} from "../components/Timer.ts";
@@ -44,6 +44,7 @@ export class TestScreen {
   private state: TestState = toIdle();
   private reactionTimes: Map<number, TrialResult> = new Map();
   private isDestroyed = false;
+  private readonly scheduler = new BrowserScheduler();
 
   // spam prevention
   private readonly spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
@@ -80,7 +81,7 @@ export class TestScreen {
     this.isDestroyed = true;
     document.removeEventListener("keydown", this.handleKeyDownBound);
     this.timerManager?.stopAndReset();
-    clearAllTimeouts();
+    this.scheduler.cancelAll();
   }
 
   private transitionTo(newState: TestState): void {
@@ -163,7 +164,8 @@ export class TestScreen {
       this.stimulusContainer,
       ["3", "2", "1", localize("testScreenTestStart")],
       1000,
-      () => this.runTest()
+      () => this.runTest(),
+      this.scheduler,
     );
   }
 
@@ -188,7 +190,7 @@ export class TestScreen {
 
   private stopTest(): void {
     this.timerManager?.stopAndReset();
-    clearAllTimeouts();
+    this.scheduler.cancelAll();
     this.reactionTimes.clear();
     this.spamInputCount = 0;
     this.stimuliCounter?.reset();
@@ -239,7 +241,7 @@ export class TestScreen {
     const delay = getNextDelay(this.appContext.testSettings, index);
     this.transitionTo(toDelayed(index, delay));
 
-    scheduleTimeout(() => {
+    this.scheduler.schedule(() => {
       this.showStimulus(index);
     }, delay);
   }
@@ -252,7 +254,7 @@ export class TestScreen {
     this.timerManager.restart();
     this.transitionTo(toShowingStimulus(index, performance.now(), stimulus));
 
-    scheduleTimeout(() => {
+    this.scheduler.schedule(() => {
       this.onStimulusTimeout(index);
     }, this.appContext.testSettings.exposureTime);
   }
@@ -261,7 +263,7 @@ export class TestScreen {
     if (this.isDestroyed) return;
     if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
 
-    clearAllTimeouts();
+    this.scheduler.cancelAll();
 
     const hasReacted = this.reactionTimes.has(this.state.stimulusIndex);
 
@@ -346,7 +348,7 @@ export class TestScreen {
   private onSpamDetected(): void {
     this.transitionTo(toSpamDetected());
     this.timerManager.stopAndReset();
-    clearAllTimeouts();
+    this.scheduler.cancelAll();
     this.destroy();
     Router.navigate("/spam-warning");
   }
