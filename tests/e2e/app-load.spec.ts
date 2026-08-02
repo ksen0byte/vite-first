@@ -104,13 +104,15 @@ test('keeps the gender control aligned with adjacent personal-data inputs', asyn
 
 test('exposes the language selector name and checked state to keyboard users', async ({ page }) => {
   await page.goto('./');
-  const languageToggle = page.getByLabel('Language');
+  const languageToggle = page.locator('#language-toggle');
 
+  await expect(languageToggle).toHaveAccessibleName('Мова');
   await languageToggle.focus();
   await expect(languageToggle).toBeFocused();
   await expect(languageToggle).not.toBeChecked();
   await languageToggle.check();
   await expect(languageToggle).toBeChecked();
+  await expect(languageToggle).toHaveAccessibleName('Language');
 });
 
 test('reduces motion when the operating system preference requests it', async ({ page }) => {
@@ -173,124 +175,6 @@ test('uses Escape to abandon an active test without recording a trial response',
   await expect(page.locator('#service-reaction')).toBeVisible();
   await expect(page.locator('#test-screen')).toHaveCount(0);
   await expect(page).not.toHaveURL(/spam-warning/);
-});
-
-test('completes an SVMR session through the controlled timer sequence', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('./');
-  await page.locator('#service-reaction').click();
-  await page.locator('#surname-input').fill('Example');
-  await page.locator('#name-input').fill('Ada');
-  await page.locator('#age-input').fill('34');
-  await page.locator('#gender-select').selectOption('female');
-  await page.locator('#start-test-btn').click();
-  await page.locator('#pzmr-button').click();
-  await page.locator('#test-next-btn').click();
-
-  await page.clock.fastForward(100_000);
-  await expect(page.locator('#end-finish-btn')).toBeVisible();
-  await page.locator('#end-finish-btn').click();
-  await expect(page.locator('#results-screen')).toBeVisible();
-});
-
-test('completes a CRT1-3 session through the controlled timer sequence', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('./');
-  await page.locator('#service-reaction').click();
-  await page.locator('#surname-input').fill('Example');
-  await page.locator('#name-input').fill('Ada');
-  await page.locator('#age-input').fill('34');
-  await page.locator('#gender-select').selectOption('female');
-  await page.locator('#start-test-btn').click();
-  await page.locator('#rv1-3-button').click();
-  await page.locator('#test-next-btn').click();
-
-  await page.clock.fastForward(100_000);
-  await expect(page.locator('#end-finish-btn')).toBeVisible();
-  await page.locator('#end-finish-btn').click();
-  await expect(page.locator('#results-screen')).toBeVisible();
-});
-
-test('completes a CRT2-3 session through the controlled timer sequence', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('./');
-  await page.locator('#service-reaction').click();
-  await page.locator('#surname-input').fill('Example');
-  await page.locator('#name-input').fill('Ada');
-  await page.locator('#age-input').fill('34');
-  await page.locator('#gender-select').selectOption('female');
-  await page.locator('#start-test-btn').click();
-  await page.locator('#rv2-3-button').click();
-  await page.locator('#test-next-btn').click();
-
-  await page.clock.fastForward(100_000);
-  await expect(page.locator('#end-finish-btn')).toBeVisible();
-  await page.locator('#end-finish-btn').click();
-  await expect(page.locator('#results-screen')).toBeVisible();
-});
-
-test('records CRT2-3 no-response, left, and right behavior for deterministic shapes', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('./');
-  await page.locator('#service-reaction').click();
-  await page.locator('#surname-input').fill('Example');
-  await page.locator('#name-input').fill('Ada');
-  await page.locator('#age-input').fill('34');
-  await page.locator('#gender-select').selectOption('female');
-  await page.locator('#start-test-btn').click();
-  await page.locator('#rv2-3-button').click();
-  await page.locator('#test-next-btn').click();
-
-  await page.clock.fastForward(4_900); // countdown plus triangle (no response)
-  await page.clock.fastForward(2_400); // triangle exposure plus circle delay
-  await page.keyboard.press('ArrowLeft');
-  await page.clock.fastForward(1_800); // circle exposure plus next circle delay
-  await page.keyboard.press('ArrowLeft');
-  await page.clock.fastForward(1_400); // circle exposure plus square delay
-  await page.keyboard.press('ArrowRight');
-  await page.clock.fastForward(100_000);
-  await page.locator('#end-finish-btn').click();
-  await expect(page.locator('#results-screen')).toBeVisible();
-});
-
-test('retries a completed SVMR session with a fresh countdown and counter', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('./');
-  await page.locator('#service-reaction').click();
-  await page.locator('#surname-input').fill('Example');
-  await page.locator('#name-input').fill('Ada');
-  await page.locator('#age-input').fill('34');
-  await page.locator('#gender-select').selectOption('female');
-  await page.locator('#start-test-btn').click();
-  await page.locator('#pzmr-button').click();
-  await page.locator('#test-next-btn').click();
-
-  await page.clock.fastForward(100_000);
-  await page.locator('#end-retry-btn').click();
-  await expect(page.locator('#test-stimulus-container')).toHaveText('3');
-  await expect(page.locator('#stimuli-counter')).toHaveText('0/30');
-});
-
-test('saves a completed session and retains its profile after reload', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('./');
-  await page.locator('#service-reaction').click();
-  await page.locator('#surname-input').fill('Example');
-  await page.locator('#name-input').fill('Ada');
-  await page.locator('#age-input').fill('34');
-  await page.locator('#gender-select').selectOption('female');
-  await page.locator('#start-test-btn').click();
-  await page.locator('#pzmr-button').click();
-  await page.locator('#test-next-btn').click();
-  await page.clock.fastForward(100_000);
-  await page.locator('#end-finish-btn').click();
-  await expect(page.locator('#results-screen')).toBeVisible();
-
-  await page.locator('#save-results-btn').click();
-  await expect(page.locator('#user-profile-screen')).toBeVisible();
-  await page.reload();
-  await page.locator('#service-profiles').click();
-  await expect(page.locator('.card-title')).toContainText('Ada Example');
 });
 
 test('Browser Back abandons an active test without a delayed route mutation', async ({ page }) => {

@@ -50,9 +50,14 @@ async function finishAndExpectOneSuccess(page: Page, timeout = 35_000): Promise<
 }
 
 test.beforeEach(async ({page}) => {
-  await page.addInitScript(() => {
+  await page.goto('./');
+  await page.evaluate(async () => {
     localStorage.clear();
-    indexedDB.deleteDatabase('CnsTestDatabase');
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase('CnsTestDatabase');
+      request.addEventListener('success', () => resolve());
+      request.addEventListener('error', () => reject(request.error));
+    });
   });
 });
 
@@ -96,4 +101,18 @@ test('records a successful CRT2-3 response with real timers', async ({page}) => 
   await page.waitForTimeout(200);
   await page.keyboard.press('ArrowLeft');
   await finishAndExpectOneSuccess(page, 50_000);
+});
+
+test('saves a completed SVMR session and retains its profile after reload with real timers', async ({page}) => {
+  test.setTimeout(50_000);
+  await startSession(page, '#pzmr-button');
+  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 35_000});
+  await page.locator('#end-finish-btn').click();
+  await expect(page.locator('#results-screen')).toBeVisible();
+
+  await page.locator('#save-results-btn').click();
+  await expect(page.locator('#user-profile-screen')).toBeVisible();
+  await page.goto('./');
+  await page.locator('#service-profiles').click();
+  await expect(page.locator('.card-title')).toContainText('Ada Example');
 });
