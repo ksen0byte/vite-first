@@ -41,7 +41,7 @@
   "dependencies": {
     "chart.js": "^4.5.1",
     "dexie": "^4.4.4",
-    "katex": "^0.16.47",
+    "katex": "^0.18.1",
     "nouislider": "^15.8.1",
     "simple-statistics": "^7.9.3"
   }
