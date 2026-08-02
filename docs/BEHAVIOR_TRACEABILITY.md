@@ -40,7 +40,7 @@ Status meanings:
 | A shown stimulus remains visible until its exposure timeout after a response. | `handleUserInput`, `onStimulusTimeout` | Characterized | `test-transitions.test.ts: response does not hide stimulus` | Not reviewed. |
 | Input during `CountingDown`, `SpamDetected`, or `Finished` is ignored. | `handleUserInput` | Characterized | `test-transitions.test.ts: state input guard` | Not reviewed. |
 | Input during `Delayed` records one `FalseStart` with reaction time `-1`; the delay remains active. | `handleUserInput`, `recordReactionTime` | Characterized | `test-transitions.test.ts: false start leaves delayed state` | Not reviewed. |
-| An input before the 100 ms shown-stimulus threshold is ignored. | `handleUserInput`, `spamPreventionConfig.clickAllowedFromMs` | Unverified | `test-transitions.test.ts: early shown input ignored` | Not reviewed. |
+| An input before the 100 ms shown-stimulus threshold is ignored. | `handleUserInput`, `spamPreventionConfig.clickAllowedFromMs` | Characterized | `test-screen-clock.test.ts: ignores an input before the 100 ms threshold` | Not reviewed. |
 | The timer starts when the stimulus is shown and stops after an accepted shown-stimulus response or expiry. | `showStimulus`, `handleUserInput`, `onStimulusTimeout` | Unverified | `test-transitions.test.ts: timer lifecycle` | Not reviewed. |
 | A trial index receives at most one stored result. | `recordReactionTime` | Characterized | `test-transitions.test.ts: duplicate trial result ignored` | Not reviewed. |
 | A target with no response becomes `Miss`; a distractor with no response becomes `CorrectRejection`. | `onStimulusTimeout`, `getExpectedAction` | Characterized | `test-response.test.ts: timeout outcomes` | Not reviewed. |

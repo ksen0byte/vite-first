@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed only. Do not implement this design until the project owner approves it.
+Approved by the project owner and implemented on 2026-08-02.
 It exists because Playwright's browser clock can advance an individual timer but
 does not reliably drain the test session's nested, asynchronously scheduled
 timer chain in one deterministic E2E operation.
@@ -55,8 +55,9 @@ implementation that explicitly drains scheduled work in chronological order.
 3. Existing Chromium E2E flows still run against the browser-backed clock.
 4. `npm run check` and the relevant browser suite pass with no timing shortcut.
 
-## Owner decision required
+## Approved decision
 
-Approve or reject introducing the runtime clock port described above. Approval
-does not authorize any clinical/timing methodology change; it authorizes only
-the testability-oriented dependency boundary.
+The project owner approved the runtime clock port. The implementation keeps
+`BrowserScheduler` as the production default and adds a deterministic scheduler
+used only by tests. Approval does not authorize any clinical/timing methodology
+change; it authorizes only the testability-oriented dependency boundary.
