@@ -1,8 +1,8 @@
 // test-screen.ts
-import {AppContext, DebugMode, HandAction, TestType, TrialOutcome, TrialResult} from "../config/domain.ts";
+import {AppContext, DebugMode, HandAction, TrialOutcome, TrialResult} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
-import {clearAllTimeouts, scheduleTimeout} from "../util/scheduleTimeout.ts";
+import {BrowserScheduler, Scheduler} from "../util/scheduleTimeout.ts";
 import {StimulusManager} from "../components/StimulusManager.ts";
 import {StimuliCounter} from "../components/StimuliCounter.ts";
 import {TimerManager} from "../components/Timer.ts";
@@ -20,14 +20,7 @@ import {
   getNextDelay
 } from "../domain/test-state.ts";
 import {Stimulus} from "../domain/types.ts";
-import {
-  isAnimal,
-  isCircle,
-  isGreen,
-  isPlant,
-  isRed,
-  isSquare
-} from "../domain/stimulus-sequences.ts";
+import {classifyResponse, getExpectedAction, isAcceptedTrialInput, mapInputCode} from "../domain/test-response.ts";
 
 export class TestScreen {
   private readonly appContainer: HTMLElement;
@@ -50,14 +43,17 @@ export class TestScreen {
   // State
   private state: TestState = toIdle();
   private reactionTimes: Map<number, TrialResult> = new Map();
+  private isDestroyed = false;
+  private readonly scheduler: Scheduler;
 
   // spam prevention
   private readonly spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
   private spamInputCount: number = 0;
 
-  constructor(appContainer: HTMLElement) {
+  constructor(appContainer: HTMLElement, scheduler: Scheduler = new BrowserScheduler()) {
     this.appContainer = appContainer;
     this.appContext = AppContextManager.getContext();
+    this.scheduler = scheduler;
 
     // Store the bound reference
     this.handleKeyDownBound = this.handleAppKeyDown.bind(this);
@@ -67,6 +63,7 @@ export class TestScreen {
    * Set up the Test Screen UI and initialize all logic (countdown, timers, events).
    */
   public setupScreen(): void {
+    this.isDestroyed = false;
     this.stopTest(); // Ensure a clean state if re-initializing
     this.renderUI(this.appContext.debugMode);
     this.getElements();
@@ -81,9 +78,11 @@ export class TestScreen {
    * Clears timers, event listeners, etc.
    */
   public destroy(): void {
+    if (this.isDestroyed) return;
+    this.isDestroyed = true;
     document.removeEventListener("keydown", this.handleKeyDownBound);
-    this.timerManager.stop();
-    clearAllTimeouts();
+    this.timerManager?.stopAndReset();
+    this.scheduler.cancelAll();
   }
 
   private transitionTo(newState: TestState): void {
@@ -166,7 +165,8 @@ export class TestScreen {
       this.stimulusContainer,
       ["3", "2", "1", localize("testScreenTestStart")],
       1000,
-      () => this.runTest()
+      () => this.runTest(),
+      this.scheduler,
     );
   }
 
@@ -191,7 +191,7 @@ export class TestScreen {
 
   private stopTest(): void {
     this.timerManager?.stopAndReset();
-    clearAllTimeouts();
+    this.scheduler.cancelAll();
     this.reactionTimes.clear();
     this.spamInputCount = 0;
     this.stimuliCounter?.reset();
@@ -216,11 +216,9 @@ export class TestScreen {
       this.handleHome();
       return;
     }
-    const allowedCodes = [
-      "Space", "ControlRight", "ShiftRight", "ArrowRight", "ControlLeft", "ShiftLeft", "ArrowLeft"
-    ];
-    if (allowedCodes.includes(event.code)) {
-      this.handleUserInput(event.code);
+    const testType = this.appContext.testSettings.testType;
+    if (isAcceptedTrialInput(testType, event.code)) {
+      this.handleUserInput(mapInputCode(event.code));
     }
   }
 
@@ -229,6 +227,7 @@ export class TestScreen {
    * Repeatedly displays stimuli, tracks reaction times, and completes on finishing all stimuli.
    */
   private runTest(): void {
+    if (this.isDestroyed) return;
     this.stimulusManager.clearContainer();
     this.scheduleNextStimulus(0);
   }
@@ -243,34 +242,36 @@ export class TestScreen {
     const delay = getNextDelay(this.appContext.testSettings, index);
     this.transitionTo(toDelayed(index, delay));
 
-    scheduleTimeout(() => {
+    this.scheduler.schedule(() => {
       this.showStimulus(index);
     }, delay);
   }
 
   private showStimulus(index: number): void {
+    if (this.isDestroyed) return;
     if (this.state._tag !== 'Delayed' || this.state.stimulusIndex !== index) return;
     this.stimuliCounter.set(index + 1);
     const stimulus: Stimulus = this.stimulusManager.showStimulus(index);
     this.timerManager.restart();
-    this.transitionTo(toShowingStimulus(index, performance.now(), stimulus));
+    this.transitionTo(toShowingStimulus(index, this.scheduler.now(), stimulus));
 
-    scheduleTimeout(() => {
+    this.scheduler.schedule(() => {
       this.onStimulusTimeout(index);
     }, this.appContext.testSettings.exposureTime);
   }
 
   private onStimulusTimeout(index: number): void {
+    if (this.isDestroyed) return;
     if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
 
-    clearAllTimeouts();
+    this.scheduler.cancelAll();
 
     const hasReacted = this.reactionTimes.has(this.state.stimulusIndex);
 
     if (this.state._tag === 'ShowingStimulus') {
       const stimulus = this.state.stimulusValue;
       const testType = this.appContext.testSettings.testType;
-      const expectedAction = this.getExpectedAction(stimulus, testType);
+      const expectedAction = getExpectedAction(stimulus, testType);
       const shouldHaveReacted = expectedAction !== "NONE";
 
       if (!hasReacted && shouldHaveReacted) {
@@ -286,30 +287,7 @@ export class TestScreen {
     this.scheduleNextStimulus(index + 1);
   }
 
-  private getExpectedAction(stimulus: Stimulus, testType: TestType): HandAction {
-    if (testType === "svmr") return "DEFAULT";
-    if (testType === "crt1-3") {
-      return (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)) ? "DEFAULT" : "NONE";
-    }
-    if (testType === "crt2-3") {
-      if (isRed(stimulus) || isSquare(stimulus) || isAnimal(stimulus)) return "RIGHT";
-      if (isGreen(stimulus) || isCircle(stimulus) || isPlant(stimulus)) return "LEFT";
-      return "NONE";
-    }
-    return "NONE";
-  }
-
-  private mapInputCode(code: string): HandAction {
-    const defaultCodes = ["Space"];
-    const rightCodes = ["ControlRight", "ShiftRight", "ArrowRight"];
-    const leftCodes = ["ControlLeft", "ShiftLeft", "ArrowLeft"];
-    if (defaultCodes.includes(code)) return "DEFAULT";
-    if (rightCodes.includes(code)) return "RIGHT";
-    if (leftCodes.includes(code)) return "LEFT";
-    return "NONE";
-  }
-
-  private handleUserInput(code: string): void {
+  private handleUserInput(actualAction: HandAction): void {
     // 1. Immediate Guard: Exit if state is invalid
     const invalidStates = ['SpamDetected', 'Finished', 'CountingDown'];
     if (invalidStates.includes(this.state._tag)) return;
@@ -318,8 +296,6 @@ export class TestScreen {
     if (++this.spamInputCount > this.spamPreventionConfig.maxInputsPerStimulus) {
       return this.onSpamDetected();
     }
-
-    const actualAction = this.mapInputCode(code);
 
     // 3. State Guard: Only process inputs during stimulus
     if (this.state._tag === 'Delayed') {
@@ -330,7 +306,7 @@ export class TestScreen {
     if (this.state._tag !== 'ShowingStimulus') return;
 
     // 4. Threshold Guard
-    const reactionTime = performance.now() - this.state.startTime;
+    const reactionTime = this.scheduler.now() - this.state.startTime;
     if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
       console.warn(`Input ignored: RT ${reactionTime}ms below threshold.`);
       return;
@@ -344,23 +320,8 @@ export class TestScreen {
   private processTestResponse(stimulus: Stimulus, rt: number, actualAction: HandAction): void {
     const {testType} = this.appContext.testSettings;
 
-    const expectedAction = this.getExpectedAction(stimulus, testType);
-
-    let outcome: TrialOutcome;
-
-    if (testType === "crt2-3") {
-      if (expectedAction === "NONE") {
-        outcome = "FalseAlarm";
-      } else if (actualAction === expectedAction) {
-        outcome = "Success";
-      } else {
-        outcome = "MixUp";
-      }
-    } else {
-      // SVMR or CRT1-3 only uses DEFAULT (Space/)
-      const shouldHaveReacted = expectedAction !== "NONE";
-      outcome = shouldHaveReacted ? "Success" : "FalseAlarm";
-    }
+    const expectedAction = getExpectedAction(stimulus, testType);
+    const outcome = classifyResponse(testType, expectedAction, actualAction);
 
     console.log(`${outcome}: ${stimulus} (expected: ${expectedAction}, actual: ${actualAction})`);
     this.recordReactionTime(stimulus, rt, outcome, expectedAction, actualAction);
@@ -388,7 +349,7 @@ export class TestScreen {
   private onSpamDetected(): void {
     this.transitionTo(toSpamDetected());
     this.timerManager.stopAndReset();
-    clearAllTimeouts();
+    this.scheduler.cancelAll();
     this.destroy();
     Router.navigate("/spam-warning");
   }

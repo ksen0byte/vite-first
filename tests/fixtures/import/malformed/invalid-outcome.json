@@ -1,0 +1,11 @@
+[
+  {
+    "user": { "firstName": "Ada", "lastName": "Example", "gender": "female", "age": 34 },
+    "tests": [
+      {
+        "testSettings": { "testMode": "shapes", "stimulusSize": 25, "exposureTime": 700, "exposureDelay": [500, 1900], "stimulusCount": 3, "testType": "svmr", "usePregenerated": { "exposureDelay": true, "stimuli": true } },
+        "trials": [{ "trialIndex": 0, "stimulus": "circle", "reactionTime": 250, "outcome": "Incorrect", "expectedAction": "DEFAULT", "actualAction": "DEFAULT" }]
+      }
+    ]
+  }
+]

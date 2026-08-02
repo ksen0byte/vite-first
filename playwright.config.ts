@@ -1,0 +1,22 @@
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  retries: 1,
+  use: {
+    baseURL: 'http://127.0.0.1:4173/vite-first/',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium-desktop',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
+  webServer: {
+    command: 'npm run dev -- --host 127.0.0.1 --port 4173 --strictPort',
+    url: 'http://127.0.0.1:4173/vite-first/',
+    reuseExistingServer: !process.env.CI,
+  },
+});

@@ -5,14 +5,15 @@ import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {TestMode} from "../config/domain.ts";
-import Router from "../routing/router.ts";
+import Router, {Cleanup} from "../routing/router.ts";
 import {Chart} from "chart.js";
 import {printConfig} from "../config/settings.ts";
+import {escapeHtml} from "../util/html.ts";
 
 let chartInstances: Chart[] = [];
 
-export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]) {
-  const sortedTests = tests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]): Cleanup {
+  const sortedTests = [...tests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Set CSS variables for print configuration
   document.documentElement.style.setProperty('--print-chart-width', `${printConfig.chart.width}px`);
@@ -39,8 +40,14 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
     {buttonFn: () => document.getElementById("print-btn")! as HTMLButtonElement, callback: () => handlePrint(user)},
   ]);
   chartInstances = renderHistograms(sortedTests);
-  setupPrintHandlers();
+  const cleanupPrintHandlers = setupPrintHandlers();
   updateLanguageUI();
+
+  return () => {
+    cleanupPrintHandlers();
+    chartInstances.forEach((chart) => chart.destroy());
+    chartInstances = [];
+  };
 }
 
 function handlePrint(user: User): void {
@@ -68,8 +75,8 @@ function printHeaderHtml(user: User): string {
   <div id="print-header" class="hidden print:block mb-4">
     <h1 class="text-2xl font-bold mb-2" data-localize="printReportTitle"></h1>
     <div class="flex gap-4 text-sm">
-      <span><strong data-localize="surnameLabel"></strong>: ${lastName}</span>
-      <span><strong data-localize="nameLabel"></strong>: ${firstName}</span>
+      <span><strong data-localize="surnameLabel"></strong>: ${escapeHtml(lastName)}</span>
+      <span><strong data-localize="nameLabel"></strong>: ${escapeHtml(firstName)}</span>
       <span><strong data-localize="ageLabel"></strong>: ${age}</span>
       <span><strong data-localize="selectGender"></strong>: ${genderText}</span>
       <span><strong data-localize="printReportDate"></strong>: ${currentDate}</span>
@@ -85,8 +92,8 @@ function personalDataCardHtml(user: User) {
   <div class="card shadow-md bg-base-100 print:hidden">
     <div class="card-body">
       <div class="flex space-x-2">
-        <p class="text-lg"><strong data-localize="surnameLabel"></strong>: <span>${lastName}</span></p>
-        <p class="text-lg"><strong data-localize="nameLabel"></strong>: <span>${firstName}</span></p>
+        <p class="text-lg"><strong data-localize="surnameLabel"></strong>: <span>${escapeHtml(lastName)}</span></p>
+        <p class="text-lg"><strong data-localize="nameLabel"></strong>: <span>${escapeHtml(firstName)}</span></p>
         <p class="text-lg"><strong data-localize="ageLabel"></strong>: <span>${age}</span></p>
         <p class="text-lg ${gender === "male" ? "" : "hidden"}"><strong data-localize="selectGender"></strong>: <span data-localize="male"></span></p>
         <p class="text-lg ${gender === "female" ? "" : "hidden"}"><strong data-localize="selectGender"></strong>: <span data-localize="female"></span></p>
@@ -255,15 +262,15 @@ function testCardHTML(index: number, test: TestRecord): string {
                 ${errorBreakdownRowsHtml(multiHandStats, showHandBreakdown)}
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalLevel"></strong></td>
-                  <td>${stats.calculateFunctionalLevel().toFixed(2)} <span data-localize="au"></td>
+                  <td>${formatStatistic(stats.calculateFunctionalLevel())} <span data-localize="au"></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statReactionStability"></strong></td>
-                  <td>${stats.calculateReactionStability().toFixed(2)} <span data-localize="au"></td>
+                  <td>${formatStatistic(stats.calculateReactionStability())} <span data-localize="au"></td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalCapabilities"></strong></td>
-                  <td>${stats.calculateFunctionalCapabilities().toFixed(2)} <span data-localize="au"></td>
+                  <td>${formatStatistic(stats.calculateFunctionalCapabilities())} <span data-localize="au"></td>
                 </tr>
               </tbody>
             </table>
@@ -331,6 +338,8 @@ function handBreakdownStatsValueHtml(
   `;
 }
 
+const formatStatistic = (value: number | null): string => value === null ? 'N/A' : value.toFixed(2);
+
 function getTrialOutcomeLocalizationKey(outcome: keyof ReactionTimeStats["outcomeCountsByOutcome"]): string {
   return `trialOutcome${outcome}`;
 }
@@ -384,15 +393,16 @@ function renderHistograms(tests: TestRecord[]): Chart[] {
   return charts;
 }
 
-function setupPrintHandlers() {
+function setupPrintHandlers(): Cleanup {
   const beforePrintHandler = () => {
     chartInstances.forEach(chart => {
       chart.resize(printConfig.chart.width, printConfig.chart.height);
     });
   };
 
+  let resizeTimeout: ReturnType<typeof setTimeout> | undefined;
   const afterPrintHandler = () => {
-    setTimeout(() => {
+    resizeTimeout = setTimeout(() => {
       chartInstances.forEach(chart => {
         chart.resize();
       });
@@ -401,4 +411,10 @@ function setupPrintHandlers() {
 
   window.addEventListener('beforeprint', beforePrintHandler);
   window.addEventListener('afterprint', afterPrintHandler);
+
+  return () => {
+    window.removeEventListener('beforeprint', beforePrintHandler);
+    window.removeEventListener('afterprint', afterPrintHandler);
+    if (resizeTimeout !== undefined) clearTimeout(resizeTimeout);
+  };
 }

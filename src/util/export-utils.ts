@@ -49,7 +49,7 @@ export async function exportDataAsJson<T>(data: T, filename: string): Promise<Re
  * - Validates MIME type and basic JSON parsing errors.
  * - Rejects non-JSON files.
  */
-export function readJsonFile<T = unknown>(file: File): Promise<Result<T, FileError>> {
+export function readJsonFile(file: File): Promise<Result<unknown, FileError>> {
   return new Promise((resolve) => {
     try {
       const isJsonType = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
@@ -63,7 +63,7 @@ export function readJsonFile<T = unknown>(file: File): Promise<Result<T, FileErr
       reader.onload = () => {
         try {
           const text = String(reader.result ?? '');
-          const data = JSON.parse(text) as T;
+          const data: unknown = JSON.parse(text);
           resolve(success(data));
         } catch (e) {
           resolve(failure({ _tag: 'InvalidJsonError', error: e }));

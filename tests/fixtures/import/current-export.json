@@ -1,0 +1,63 @@
+[
+  {
+    "user": {
+      "firstName": "Ada",
+      "lastName": "Example",
+      "gender": "female",
+      "age": 34
+    },
+    "tests": [
+      {
+        "id": 101,
+        "userKey": "Ada|Example",
+        "testSettings": {
+          "testMode": "shapes",
+          "stimulusSize": 25,
+          "exposureTime": 700,
+          "exposureDelay": [500, 1900],
+          "stimulusCount": 3,
+          "testType": "svmr",
+          "usePregenerated": { "exposureDelay": true, "stimuli": true }
+        },
+        "trials": [
+          { "trialIndex": 0, "stimulus": "circle", "reactionTime": 252, "outcome": "Success", "expectedAction": "DEFAULT", "actualAction": "DEFAULT" }
+        ],
+        "date": "2026-01-15T10:00:00.000Z"
+      },
+      {
+        "id": 102,
+        "userKey": "Ada|Example",
+        "testSettings": {
+          "testMode": "colors",
+          "stimulusSize": 25,
+          "exposureTime": 700,
+          "exposureDelay": [500, 1900],
+          "stimulusCount": 3,
+          "testType": "crt1-3",
+          "usePregenerated": { "exposureDelay": true, "stimuli": true }
+        },
+        "trials": [
+          { "trialIndex": 0, "stimulus": "red", "reactionTime": 318, "outcome": "Success", "expectedAction": "DEFAULT", "actualAction": "DEFAULT" }
+        ],
+        "date": "2026-01-16T10:00:00.000Z"
+      },
+      {
+        "id": 103,
+        "userKey": "Ada|Example",
+        "testSettings": {
+          "testMode": "words",
+          "stimulusSize": 25,
+          "exposureTime": 700,
+          "exposureDelay": [500, 1900],
+          "stimulusCount": 3,
+          "testType": "crt2-3",
+          "usePregenerated": { "exposureDelay": true, "stimuli": true }
+        },
+        "trials": [
+          { "trialIndex": 0, "stimulus": "cat", "reactionTime": 401, "outcome": "Success", "expectedAction": "RIGHT", "actualAction": "RIGHT" }
+        ],
+        "date": "2026-01-17T10:00:00.000Z"
+      }
+    ]
+  }
+]

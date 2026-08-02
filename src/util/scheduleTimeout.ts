@@ -1,20 +1,40 @@
-let timeoutIds: number[] = [];
-
-/**
- * Wraps `setTimeout` in a function so we can track and clear all timeouts.
- */
-export function scheduleTimeout(callback: () => void, delay: number): number {
-  const id = window.setTimeout(callback, delay);
-  timeoutIds.push(id);
-  return id;
+export interface ScheduledTask {
+  readonly cancel: () => void;
 }
 
-/**
- * Clears all timeouts that were scheduled with `scheduleTimeout`.
- */
-export function clearAllTimeouts() {
-  for (const id of timeoutIds) {
-    clearTimeout(id);
+export interface Scheduler {
+  schedule(callback: () => void, delayMs: number): ScheduledTask;
+  cancelAll(): void;
+  now(): number;
+}
+
+export class BrowserScheduler implements Scheduler {
+  private readonly taskIds = new Set<ReturnType<typeof setTimeout>>();
+
+  public schedule(callback: () => void, delayMs: number): ScheduledTask {
+    let cancelled = false;
+    const taskId = setTimeout(() => {
+      this.taskIds.delete(taskId);
+      if (!cancelled) callback();
+    }, delayMs);
+    this.taskIds.add(taskId);
+
+    return {
+      cancel: () => {
+        if (cancelled) return;
+        cancelled = true;
+        clearTimeout(taskId);
+        this.taskIds.delete(taskId);
+      },
+    };
   }
-  timeoutIds = [];
+
+  public cancelAll(): void {
+    for (const taskId of this.taskIds) clearTimeout(taskId);
+    this.taskIds.clear();
+  }
+
+  public now(): number {
+    return performance.now();
+  }
 }

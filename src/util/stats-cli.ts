@@ -8,7 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { parseImportedJson, ImportValidationError } from "./import-json";
+import {parseImportedJson} from "./import-json";
 import { TrialResult } from "../config/domain";
 
 import { ReactionTimeStats } from "../stats/ReactionTimeStats.node";
@@ -42,9 +42,9 @@ type CsvRow = {
   entropyBits: number;
 
   // Loskutova
-  functionalLevel: number;
-  reactionStability: number;
-  functionalCapabilities: number;
+  functionalLevel: number | null;
+  reactionStability: number | null;
+  functionalCapabilities: number | null;
 };
 
 // --------- CSV helpers ----------
@@ -63,6 +63,9 @@ function toCsvLine(headers: string[], row: Record<string, unknown>): string {
 // --------- CLI class ----------
 export class ReactionStatsCli {
   static runFromArgv(argv: string[]) {
+    console.warn(
+      'DEPRECATED: the statistics CLI is retained only for one-off analysis and is not maintained as browser-equivalent reporting.',
+    );
     const fileArg = argv[2];
     const outputArg = argv[3]; // Optional output file
 
@@ -91,17 +94,13 @@ export class ReactionStatsCli {
       process.exit(2);
     }
 
-    let imported;
-    try {
-      imported = parseImportedJson(rawJson);
-    } catch (e) {
-      if (e instanceof ImportValidationError) {
-        console.error(`ImportValidationError: ${e.message}`);
-      } else {
-        console.error("Unknown error while validating import:", e);
-      }
-      process.exit(2);
+    const parsed = parseImportedJson(rawJson);
+    if (parsed._tag === 'Failure') {
+      console.error(`Invalid import at ${parsed.error.path}: expected ${parsed.error.expected}.`);
+      process.exitCode = 2;
+      return;
     }
+    const imported = parsed.value;
 
     const rows: CsvRow[] = [];
 
@@ -109,29 +108,10 @@ export class ReactionStatsCli {
       const u = block.user;
 
       for (const t of block.tests) {
-        let trialResults: TrialResult[];
-
-        if (t.trials && Array.isArray(t.trials)) {
-          // New format: normalize in case it's missing expectedAction/actualAction
-          trialResults = t.trials.map(trial => ({
-            ...trial,
-            expectedAction: (trial as any).expectedAction || 'DEFAULT',
-            actualAction: (trial as any).actualAction || 'DEFAULT'
-          }));
-        } else {
-          // Legacy format (reactionTimes)
-          trialResults = t.reactionTimes.map((rt, index) => ({
-            trialIndex: index,
-            stimulus: 'circle' as any,
-            reactionTime: rt,
-            outcome: rt > 0 ? "Success" : "Miss",
-            expectedAction: 'DEFAULT',
-            actualAction: 'DEFAULT',
-          }));
-        }
+        const trialResults: readonly TrialResult[] = t.trials;
 
         // Use existing calculator
-        const stats = new ReactionTimeStats(trialResults);
+        const stats = new ReactionTimeStats([...trialResults]);
 
         const exposureDelay = Array.isArray(t.testSettings.exposureDelay)
           ? t.testSettings.exposureDelay
@@ -149,13 +129,13 @@ export class ReactionStatsCli {
         const mode = stats.modeVal ?? null;
 
         const row: CsvRow = {
-          userKey: t.userKey,
+          userKey: `${u.firstName}|${u.lastName}`,
           firstName: u.firstName,
           lastName: u.lastName,
           gender: String(u.gender),
           age: u.age,
 
-          testId: t.id,
+          testId: t.sourceId ?? 0,
           date: t.date,
           testMode: t.testSettings.testMode,
           testType: t.testSettings.testType,

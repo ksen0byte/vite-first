@@ -4,15 +4,24 @@ import katex from 'katex';
 import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.ts";
 
 export function updateLanguageUI(): void {
+  document.documentElement.lang = LanguageManager.getCurrentLanguage();
+  document.title = localize('appTitle');
+
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
   localizableElements.forEach((element) => {
     const key = element.dataset.localize!;
     const textContent = localize(key);
     if (element.tagName === "INPUT") {
       element.setAttribute("placeholder", textContent);
+      element.setAttribute("aria-label", textContent);
     } else {
       element.textContent = textContent;
     }
+  });
+
+  const ariaLocalizableElements = document.querySelectorAll<HTMLElement>('[data-localize-aria]');
+  ariaLocalizableElements.forEach((element) => {
+    element.setAttribute('aria-label', localize(element.dataset.localizeAria!));
   });
 
   const mathElements = document.querySelectorAll<HTMLElement>("[data-localize-math]");
@@ -43,6 +52,7 @@ export function localize(key: string): string {
 }
 
 const localization: LocalizationKeys = {
+  languageSelector: {en: "Language", uk: "Мова"},
   languageEN: {en: "EN", uk: "АНГЛ."}, // Localized label for "EN"
   languageUA: {en: "UA", uk: "УКР."},  // Localized label for "UA"
 

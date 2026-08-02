@@ -1,4 +1,4 @@
-import {scheduleTimeout} from "../util/scheduleTimeout.ts";
+import {Scheduler} from "../util/scheduleTimeout.ts";
 
 /**
  * Displays a countdown in the given container, then calls `callAfter` once complete.
@@ -10,7 +10,13 @@ export class Countdown {
   private readonly callAfter: () => void
 
 
-  constructor(container: HTMLElement, countDownValues: string[], interval: number, callAfter: () => void) {
+  constructor(
+    container: HTMLElement,
+    countDownValues: string[],
+    interval: number,
+    callAfter: () => void,
+    private readonly scheduler: Scheduler,
+  ) {
     this.container = container;
     this.countDownValues = countDownValues;
     this.interval = interval;
@@ -24,7 +30,7 @@ export class Countdown {
       if (currentIndex < this.countDownValues.length) {
         this.container.textContent = this.countDownValues[currentIndex];
         currentIndex++;
-        scheduleTimeout(updateCountDown, this.interval);
+        this.scheduler.schedule(updateCountDown, this.interval);
       } else {
         this.callAfter();
       }

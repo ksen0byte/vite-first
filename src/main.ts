@@ -19,13 +19,19 @@ Router.registerRoute('/', () => setupDashboardScreen(appContainer));
 Router.registerRoute('/settings', () => setupSettingsScreen(appContainer));
 Router.registerRoute('/testTypeSelection', () => setupTestTypeSelectionScreen(appContainer));
 Router.registerRoute('/beginTest', () => setupBeginTestScreen(appContainer));
-Router.registerRoute('/test', () => new TestScreen(appContainer).setupScreen());
+Router.registerRoute('/test', () => {
+  const testScreen = new TestScreen(appContainer);
+  testScreen.setupScreen();
+  return () => testScreen.destroy();
+});
 Router.registerRoute('/spam-warning', () => setupSpamWarningScreen(appContainer));
 Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(appContainer));
 Router.registerRoute('/users', async () => {
   appContainer.innerHTML = '<p>Loading...</p>';
   try {
-    await new UsersScreen(appContainer).setupScreen();
+    const usersScreen = new UsersScreen(appContainer);
+    await usersScreen.setupScreen();
+    return () => usersScreen.destroy();
   } catch (error) {
     console.error('Failed to load User Screen:', error);
     appContainer.innerHTML = '<p>Error loading user screen. Please try again later.</p>';
@@ -52,7 +58,7 @@ Router.registerRoute('/profile', () => {
     return;
   }
 
-  setupProfileScreen(appContainer, user, tests);
+  return setupProfileScreen(appContainer, user, tests);
 });
 
 // Initialize router

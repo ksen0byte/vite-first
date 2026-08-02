@@ -1,11 +1,13 @@
 import {setupHeader} from '../components/header';
 import {setupFooter} from '../components/footer';
 import {localize, updateLanguageUI} from '../localization/localization';
-import {db, User, TestRecord} from "../db/db";
-import {getAllUsers, getTestsForUser, upsertUser} from "../db/operations";
+import {User, TestRecord} from "../db/db";
+import {deleteUserAndTests, getAllUsers, getTestsForUser} from "../db/operations";
 import Router from "../routing/router.ts";
 import {exportDataAsJson, readJsonFile} from "../util/export-utils";
-import {TestSettings, TrialResult} from "../config/domain.ts";
+import {escapeHtml} from "../util/html.ts";
+import {ExportEnvelopeV1, parseImportedJson} from '../util/import-json.ts';
+import {importUsers} from '../application/import-users.ts';
 
 /**
  * Exports all users and their test data as a JSON file
@@ -20,12 +22,12 @@ async function exportAllUsersData(): Promise<void> {
     }
     const users = usersResult.value;
 
-    const exportData: ExportUserBundle[] = [];
+    const usersForExport: ExportUserBundle[] = [];
 
     for (const user of users) {
       const testsResult = await getTestsForUser(user.firstName, user.lastName);
       const tests = testsResult._tag === 'Success' ? testsResult.value : [];
-      exportData.push({
+      usersForExport.push({
         user,
         tests
       });
@@ -40,6 +42,7 @@ async function exportAllUsersData(): Promise<void> {
     const filename = `users_data_${timestamp}.json`;
 
     // Export the data using the utility function
+    const exportData: ExportEnvelopeV1 = {schemaVersion: 1, exportedAt: now.toISOString(), users: usersForExport};
     const result = await exportDataAsJson(exportData, filename);
     if (result._tag === 'Failure') {
       alert(result.error);
@@ -70,7 +73,7 @@ async function exportUserData(firstName: string, lastName: string): Promise<void
     const testsResult = await getTestsForUser(firstName, lastName);
     const tests = testsResult._tag === 'Success' ? testsResult.value : [];
 
-    const exportData: ExportUserBundle = {
+    const userForExport: ExportUserBundle = {
       user,
       tests
     };
@@ -84,6 +87,7 @@ async function exportUserData(firstName: string, lastName: string): Promise<void
     const filename = `user_data_${firstName}_${lastName}_${timestamp}.json`;
 
     // Export the data using the utility function
+    const exportData: ExportEnvelopeV1 = {schemaVersion: 1, exportedAt: now.toISOString(), users: [userForExport]};
     const result = await exportDataAsJson(exportData, filename);
     if (result._tag === 'Failure') {
       alert(result.error);
@@ -97,6 +101,7 @@ async function exportUserData(firstName: string, lastName: string): Promise<void
 export class UsersScreen {
   private readonly appContainer: HTMLElement;
   private users: User[] = []; // Cached state for users
+  private readonly handleContainerClickBound: (event: MouseEvent) => Promise<void>;
 
   constructor(appContainer: HTMLElement) {
     this.appContainer = appContainer;
@@ -105,6 +110,7 @@ export class UsersScreen {
     this.setupScreen = this.setupScreen.bind(this);
     this.viewUserProfile = this.viewUserProfile.bind(this);
     this.addUser = this.addUser.bind(this);
+    this.handleContainerClickBound = this.handleContainerClick.bind(this);
   }
 
   /**
@@ -179,22 +185,24 @@ export class UsersScreen {
    */
   private userCardHTML(user: User): string {
     const {firstName, lastName, gender, age} = user;
+    const escapedFirstName = escapeHtml(firstName);
+    const escapedLastName = escapeHtml(lastName);
 
     return `
       <div class="card shadow-md bg-base-100">
         <div class="card-body">
           <div class="flex justify-between">
-            <h2 class="card-title">${firstName} ${lastName}</h2>
+            <h2 class="card-title">${escapedFirstName} ${escapedLastName}</h2>
             <div class="flex justify-between gap-x-2">
-                <button class="btn btn-sm btn-outline btn-primary export-user-btn" data-first-name="${firstName}" data-last-name="${lastName}">
+                <button class="btn btn-sm btn-outline btn-primary export-user-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /> </svg>
                   <span data-localize="exportData"></span>
                 </button>
-                <button class="btn btn-sm btn-outline btn-info view-profile-btn" data-first-name="${firstName}" data-last-name="${lastName}">
+                <button class="btn btn-sm btn-outline btn-info view-profile-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /> </svg>
                   <span data-localize="viewProfileButton"></span>
                 </button>
-                <button class="btn btn-sm btn-outline btn-error delete-user-btn" data-first-name="${firstName}" data-last-name="${lastName}">
+                <button class="btn btn-sm btn-outline btn-error delete-user-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /> </svg>
                   <span data-localize="deleteButton"></span>
                 </button>
@@ -214,7 +222,15 @@ export class UsersScreen {
    * Attaches event listeners to dynamically generated buttons.
    */
   private attachEventListeners() {
-    this.appContainer.addEventListener('click', async (event) => {
+    this.appContainer.removeEventListener('click', this.handleContainerClickBound);
+    this.appContainer.addEventListener('click', this.handleContainerClickBound);
+  }
+
+  public destroy(): void {
+    this.appContainer.removeEventListener('click', this.handleContainerClickBound);
+  }
+
+  private async handleContainerClick(event: MouseEvent): Promise<void> {
       const target = event.target as HTMLElement;
 
       // Delegate the event strictly to the delete-user-btn
@@ -248,7 +264,6 @@ export class UsersScreen {
         const lastName = exportButton.getAttribute('data-last-name')!;
         await exportUserData(firstName, lastName);
       }
-    });
   }
 
   /**
@@ -267,8 +282,6 @@ export class UsersScreen {
    * Deletes a user and their associated tests after confirmation.
    */
   private async deleteUser(firstName: string, lastName: string) {
-    const userKey = `${firstName}|${lastName}`;
-
     // Ask for confirmation before proceeding
     const confirmation = confirm(localize('deleteConfirmation').replace('%s', `${firstName} ${lastName}`));
     if (!confirmation) {
@@ -276,14 +289,8 @@ export class UsersScreen {
     }
 
     try {
-      // Delete user and associated tests
-      await db.transaction('rw', db.users, db.tests, async () => {
-        // Delete the user
-        await db.users.where('[firstName+lastName]').equals([firstName, lastName]).delete();
-
-        // Delete associated test records
-        await db.tests.where('userKey').equals(userKey).delete();
-      });
+      const result = await deleteUserAndTests(firstName, lastName);
+      if (result._tag === 'Failure') throw result.error;
 
       // Remove the user visually from the list
       this.users = this.users.filter(u => !(u.firstName === firstName && u.lastName === lastName));
@@ -352,120 +359,20 @@ export class UsersScreen {
       const file = input.files?.[0];
       if (!file) return;
       try {
-        type ImportedUser = {
-          firstName: string;
-          lastName: string;
-          gender: User['gender'];
-          age: number;
-        };
-        type ImportedTestRecord = {
-          testSettings: TestSettings;
-          date?: string;
-          trials?: TrialResult[];    // New format
-          reactionTimes?: number[]; // Legacy format
-        };
-        type ImportedBundle = { user: ImportedUser; tests: ImportedTestRecord[] };
-
-        const readResult = await readJsonFile<ImportedBundle | ImportedBundle[]>(file);
+        const readResult = await readJsonFile(file);
         if (readResult._tag === 'Failure') {
           console.error('Error reading file:', readResult.error);
           alert(localize('importError'));
           return;
         }
-        const raw = readResult.value;
-        const items: ImportedBundle[] = Array.isArray(raw) ? raw : [raw];
-
-        let importedUsers = 0;
-        let importedTests = 0;
-
-        await db.transaction('rw', db.users, db.tests, async () => {
-          for (const item of items) {
-            if (!item || typeof item !== 'object' || !item.user) continue;
-
-            const normalizedUser: User = {
-              firstName: item.user.firstName,
-              lastName: item.user.lastName,
-              gender: item.user.gender,
-              age: item.user.age
-            };
-
-            // Upsert user, but count only if it didn't exist before
-            const existed = await db.users.get([normalizedUser.firstName, normalizedUser.lastName]);
-            await upsertUser(normalizedUser);
-            if (!existed) {
-              importedUsers += 1;
-            }
-
-            const userKey = `${normalizedUser.firstName}|${normalizedUser.lastName}`;
-            const tests: ImportedTestRecord[] = Array.isArray(item.tests) ? item.tests : [];
-
-            // Normalize tests; ignore incoming id to avoid collisions
-            const normalizedTests: Omit<TestRecord, 'id'>[] = tests
-              .map((t) => {
-                // 1. Determine which data source to use
-                let finalTrials: TrialResult[] = [];
-
-                if (Array.isArray(t.trials)) {
-                  // Normalize in case it's missing expectedAction/actualAction from old exports
-                  finalTrials = t.trials.map(trial => ({
-                    ...trial,
-                    expectedAction: (trial as any).expectedAction || 'DEFAULT',
-                    actualAction: (trial as any).actualAction || 'DEFAULT'
-                  }));
-                } else if (Array.isArray(t.reactionTimes)) {
-                  // Legacy conversion
-                  finalTrials = t.reactionTimes.map((rt, index) => ({
-                    trialIndex: index,
-                    stimulus: 'circle',
-                    reactionTime: rt,
-                    outcome: "Success",
-                    expectedAction: "DEFAULT",
-                    actualAction: "DEFAULT",
-                  }));
-                } else {
-                  return null; // Skip invalid records
-                }
-
-                return {
-                  userKey,
-                  testSettings: t.testSettings,
-                  trials: finalTrials, // Always store as trials
-                  date: (t.date ?? new Date().toISOString())
-                };
-              })
-              .filter((t): t is Omit<TestRecord, 'id'> => t !== null);
-
-            if (normalizedTests.length > 0) {
-              // Deduplicate against existing tests for this userKey
-              const existing = await db.tests.where('userKey').equals(userKey).toArray();
-
-              const makeSig = (r: Omit<TestRecord, 'id'> | TestRecord | any): string =>
-                JSON.stringify({
-                  userKey: r.userKey,
-                  date: r.date,
-                  testSettings: r.testSettings,
-                  trials: r.trials // Compare the object array, not the number array
-                });
-
-              const existingSignatures = new Set<string>(existing.map(makeSig));
-
-              // Filter out tests that already exist (by signature)
-              const toAdd: Omit<TestRecord, 'id'>[] = [];
-              for (const t of normalizedTests) {
-                const sig = makeSig(t);
-                if (!existingSignatures.has(sig)) {
-                  existingSignatures.add(sig); // prevent duplicates within the same import too
-                  toAdd.push(t);
-                }
-              }
-
-              if (toAdd.length > 0) {
-                await db.tests.bulkAdd(toAdd);
-                importedTests += toAdd.length;
-              }
-            }
-          }
-        });
+        const parsed = parseImportedJson(readResult.value);
+        if (parsed._tag === 'Failure') {
+          console.error('Invalid import:', parsed.error);
+          alert(localize('importError'));
+          return;
+        }
+        const importResult = await importUsers(parsed.value);
+        if (importResult._tag === 'Failure') throw importResult.error;
 
         // Refresh UI
         const usersResult = await getAllUsers();
@@ -476,8 +383,8 @@ export class UsersScreen {
         updateLanguageUI();
 
         alert(localize('importSuccess')
-          .replace('%u', String(importedUsers))
-          .replace('%t', String(importedTests)));
+          .replace('%u', String(importResult.value.importedUsers))
+          .replace('%t', String(importResult.value.importedTests)));
       } catch (e) {
         console.error('Error importing data:', e);
         alert(localize('importError'));
