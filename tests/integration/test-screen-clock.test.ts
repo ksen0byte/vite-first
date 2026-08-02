@@ -7,15 +7,19 @@ import Router from '../../src/routing/router.ts';
 import {TestScreen} from '../../src/screens/test-screen.ts';
 import {DeterministicScheduler} from '../support/deterministic-scheduler.ts';
 
-const createContext = (exposureDelay: readonly [number, number] = [0, 0]): AppContext => ({
+const createContext = (
+  exposureDelay: readonly [number, number] = [0, 0],
+  testType: AppContext['testSettings']['testType'] = 'svmr',
+  stimulusCount = 1,
+): AppContext => ({
   personalData: {firstName: 'Ada', lastName: 'Example', age: 34, gender: 'female'},
   testSettings: {
     testMode: 'shapes',
     stimulusSize: 50,
     exposureTime: 500,
     exposureDelay,
-    stimulusCount: 1,
-    testType: 'svmr',
+    stimulusCount,
+    testType,
     usePregenerated: {exposureDelay: false, stimuli: true},
   },
   debugMode: 'debug',
@@ -66,6 +70,23 @@ describe('TestScreen with a deterministic scheduler', () => {
     expect(reactionTimes.get(0)).toMatchObject({outcome: 'Success', reactionTime: 100});
   });
 
+  it('applies CRT2-3 left-response rules after advancing deterministic time', () => {
+    screen.destroy();
+    AppContextManager.setContext(createContext([0, 0], 'crt2-3', 2));
+    screen = new TestScreen(appContainer, scheduler);
+    screen.setupScreen();
+
+    scheduler.advanceBy(4_500);
+    expect(appContainer.querySelector('#stimuli-counter')?.textContent?.trim()).toBe('2/2');
+    scheduler.advanceBy(100);
+    press('ArrowLeft');
+    scheduler.advanceBy(400);
+
+    const reactionTimes = (screen as unknown as {reactionTimes: Map<number, {outcome: string; reactionTime: number}>}).reactionTimes;
+    expect(reactionTimes.get(0)?.outcome).toBe('CorrectRejection');
+    expect(reactionTimes.get(1)).toMatchObject({outcome: 'Success', reactionTime: 100});
+  });
+
   it('records a false start while delayed and still shows the scheduled stimulus', () => {
     screen.destroy();
     AppContextManager.setContext(createContext([50, 50]));
@@ -99,6 +120,17 @@ describe('TestScreen with a deterministic scheduler', () => {
     screen.destroy();
     scheduler.advanceBy(10_000);
 
+    expect(appContainer.querySelector('#stimuli-counter')?.textContent?.trim()).toBe('0/1');
+  });
+
+  it('retries a completed session with a fresh countdown and counter', () => {
+    startShowingFirstStimulus(scheduler);
+    scheduler.advanceBy(500);
+    expect(appContainer.querySelector('#end-retry-btn')).not.toBeNull();
+
+    (appContainer.querySelector('#end-retry-btn') as HTMLButtonElement).click();
+
+    expect(appContainer.querySelector('#test-stimulus-container')?.textContent?.trim()).toBe('3');
     expect(appContainer.querySelector('#stimuli-counter')?.textContent?.trim()).toBe('0/1');
   });
 });
