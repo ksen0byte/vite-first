@@ -5,6 +5,7 @@ export interface ScheduledTask {
 export interface Scheduler {
   schedule(callback: () => void, delayMs: number): ScheduledTask;
   cancelAll(): void;
+  now(): number;
 }
 
 export class BrowserScheduler implements Scheduler {
@@ -31,5 +32,9 @@ export class BrowserScheduler implements Scheduler {
   public cancelAll(): void {
     for (const taskId of this.taskIds) clearTimeout(taskId);
     this.taskIds.clear();
+  }
+
+  public now(): number {
+    return performance.now();
   }
 }

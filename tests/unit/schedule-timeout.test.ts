@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserScheduler } from '../../src/util/scheduleTimeout.ts';
+import {DeterministicScheduler} from '../support/deterministic-scheduler.ts';
 
 describe('BrowserScheduler', () => {
   afterEach(() => vi.useRealTimers());
@@ -41,6 +42,34 @@ describe('BrowserScheduler', () => {
     scheduler.cancelAll();
     scheduler.cancelAll();
     vi.advanceTimersByTime(100);
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+});
+
+describe('DeterministicScheduler', () => {
+  it('drains nested scheduled work in chronological order', () => {
+    const scheduler = new DeterministicScheduler();
+    const events: string[] = [];
+
+    scheduler.schedule(() => {
+      events.push(`first:${scheduler.now()}`);
+      scheduler.schedule(() => events.push(`nested:${scheduler.now()}`), 50);
+    }, 100);
+
+    scheduler.advanceBy(150);
+
+    expect(events).toEqual(['first:100', 'nested:150']);
+    expect(scheduler.now()).toBe(150);
+  });
+
+  it('does not run cancelled work', () => {
+    const scheduler = new DeterministicScheduler();
+    const callback = vi.fn();
+    const task = scheduler.schedule(callback, 100);
+
+    task.cancel();
+    scheduler.advanceBy(100);
 
     expect(callback).not.toHaveBeenCalled();
   });

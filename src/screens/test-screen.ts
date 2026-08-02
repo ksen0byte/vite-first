@@ -2,7 +2,7 @@
 import {AppContext, DebugMode, HandAction, TrialOutcome, TrialResult} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
-import {BrowserScheduler} from "../util/scheduleTimeout.ts";
+import {BrowserScheduler, Scheduler} from "../util/scheduleTimeout.ts";
 import {StimulusManager} from "../components/StimulusManager.ts";
 import {StimuliCounter} from "../components/StimuliCounter.ts";
 import {TimerManager} from "../components/Timer.ts";
@@ -44,15 +44,16 @@ export class TestScreen {
   private state: TestState = toIdle();
   private reactionTimes: Map<number, TrialResult> = new Map();
   private isDestroyed = false;
-  private readonly scheduler = new BrowserScheduler();
+  private readonly scheduler: Scheduler;
 
   // spam prevention
   private readonly spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
   private spamInputCount: number = 0;
 
-  constructor(appContainer: HTMLElement) {
+  constructor(appContainer: HTMLElement, scheduler: Scheduler = new BrowserScheduler()) {
     this.appContainer = appContainer;
     this.appContext = AppContextManager.getContext();
+    this.scheduler = scheduler;
 
     // Store the bound reference
     this.handleKeyDownBound = this.handleAppKeyDown.bind(this);
@@ -252,7 +253,7 @@ export class TestScreen {
     this.stimuliCounter.set(index + 1);
     const stimulus: Stimulus = this.stimulusManager.showStimulus(index);
     this.timerManager.restart();
-    this.transitionTo(toShowingStimulus(index, performance.now(), stimulus));
+    this.transitionTo(toShowingStimulus(index, this.scheduler.now(), stimulus));
 
     this.scheduler.schedule(() => {
       this.onStimulusTimeout(index);
@@ -305,7 +306,7 @@ export class TestScreen {
     if (this.state._tag !== 'ShowingStimulus') return;
 
     // 4. Threshold Guard
-    const reactionTime = performance.now() - this.state.startTime;
+    const reactionTime = this.scheduler.now() - this.state.startTime;
     if (reactionTime < this.spamPreventionConfig.clickAllowedFromMs) {
       console.warn(`Input ignored: RT ${reactionTime}ms below threshold.`);
       return;
