@@ -29,9 +29,9 @@ The preceding inventory is retained as the pre-upgrade baseline. The following
 isolated updates were subsequently verified with `npm run check` and the
 Chromium browser suite:
 
-- Vite `6.4.3`, PostCSS `8.5.25`, and `tsx` `4.23.1`.
+- Vite `8.2.0`, PostCSS `8.5.25`, and `tsx` `4.23.1`.
 - Tailwind `4.3.3`, DaisyUI `5.7.9`, and Sass `1.102.0`.
-- Dexie `4.4.4`, Chart.js `4.5.1`, KaTeX `0.16.47`, and `@types/katex` `0.16.8`.
+- Dexie `4.4.4`, Chart.js `4.5.1`, KaTeX `0.18.1`, and `@types/katex` `0.16.8`.
 - ESLint `10.8.0`, `typescript-eslint` `8.65.0`, globals `17.8.0`, and
   `postcss-cli` `11.0.1`.
 
@@ -40,11 +40,14 @@ deprecated and is not maintained as browser-equivalent reporting; its
 implementation drift is intentionally outside the current hardening scope.
 
 Vite `8.2.0` was evaluated as a separate migration on Node `22.13.1`.
-Types, lint, unit tests, and the production build passed, but the Chromium
-timer-session E2E flows did not reach the finish screen under Playwright's
-controllable clock. The upgrade was reverted rather than weakening those
-regressions; Vite remains on the verified `6.4.3` line pending a reproducible
-test-runtime compatibility solution.
+Types, lint, unit tests, production build, desktop E2E, and the six real-timer
+session scenarios pass after the unreliable browser fake-clock flows were
+replaced. Vite `8.2.0` is now the verified version.
+
+TypeScript `7.0.2` was attempted but not retained: the current
+`typescript-eslint` `8.65.0` peer range ends at TypeScript `6.0`. The project
+remains on the compatible TypeScript `5.6.3` release until that toolchain
+supports TypeScript 7.
 
 ## Re-audit on 2026-08-02
 
