@@ -2,9 +2,14 @@ import { expect, test } from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
+  await page.goto('./');
+  await page.evaluate(async () => {
     localStorage.clear();
-    indexedDB.deleteDatabase('CnsTestDatabase');
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase('CnsTestDatabase');
+      request.addEventListener('success', () => resolve());
+      request.addEventListener('error', () => reject(request.error));
+    });
   });
 });
 
