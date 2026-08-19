@@ -2,9 +2,11 @@ import {settings} from "../config/settings.ts";
 import {LanguageManager} from "./LanguageManager.ts";
 import katex from 'katex';
 import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.ts";
+import {getRepresentativeWord, type WordCategory} from "../components/Words.ts";
 
 export function updateLanguageUI(): void {
-  document.documentElement.lang = LanguageManager.getCurrentLanguage();
+  const currentLanguage = LanguageManager.getCurrentLanguage();
+  document.documentElement.lang = currentLanguage;
   document.title = localize('appTitle');
 
   const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
@@ -17,6 +19,18 @@ export function updateLanguageUI(): void {
     } else {
       element.textContent = textContent;
     }
+  });
+
+  const htmlLocalizableElements = document.querySelectorAll<HTMLElement>("[data-localize-html]");
+  htmlLocalizableElements.forEach((element) => {
+    const key = element.dataset.localizeHtml!;
+    element.innerHTML = localize(key);
+  });
+
+  const wordCategoryElements = document.querySelectorAll<HTMLElement>("[data-localize-word-category]");
+  wordCategoryElements.forEach((element) => {
+    const category = element.dataset.localizeWordCategory! as WordCategory;
+    element.textContent = getRepresentativeWord(getLocalizedVar("randomWords"), category);
   });
 
   const ariaLocalizableElements = document.querySelectorAll<HTMLElement>('[data-localize-aria]');
@@ -158,6 +172,7 @@ const localization: LocalizationKeys = {
   testTypePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакція"},
   testTypeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
   testTypeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
+  instructionPreviewSpace: {en: "Space", uk: "Пробіл"},
 
   // Test instructions | modes -> "shapes" | "words" | "colors" | "combined"
   instructionSvmr: {
@@ -183,19 +198,19 @@ const localization: LocalizationKeys = {
     uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (<b>Червоний, Квадрат або Тварина</b>). Ігноруйте інші подразники."
   },
   instructionCRT23_shapes: {
-    en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Square</b> <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Circle</b>. Ignore <b>Triangle</b>.",
+    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Circle</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Square</b>. Ignore <b>Triangle</b>.",
     uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Кола</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Квадрата</b>. Ігноруйте <b>Трикутник</b>."
   },
   instructionCRT23_words: {
-    en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Animal</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Plant</b>. Ignore <b>Non-living thing</b>.",
+    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Plant</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Animal</b>. Ignore <b>Non-living thing</b>.",
     uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Рослини</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Тварини</b>. Ігноруйте <b>Неживі предмети</b>."
   },
   instructionCRT23_colors: {
-    en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green</b>. Ignore <b>Yellow</b>.",
+    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red</b>. Ignore <b>Yellow</b>.",
     uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного</b>. Ігноруйте <b>Жовтий</b>."
   },
   instructionCRT23_combined: {
-    en: "Press <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red/Square/Animal</b>, <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green/Circle/Plant</b>. Ignore <b>Yellow/Triangle/Non-living</b>.",
+    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green/Circle/Plant</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red/Square/Animal</b>. Ignore <b>Yellow/Triangle/Non-living</b>.",
     uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого/Кола/Рослини</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного/Квадрата/Тварини</b>. Ігноруйте <b>Жовтий/Трикутник/Неживе</b>."
   },
 

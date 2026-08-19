@@ -77,13 +77,25 @@ function applyTheme(theme: string) {
   }
 }
 
+function initializeLanguageToggle(): void {
+  updateLanguageToggleState();
+}
+
+function updateLanguageToggleState(): void {
+  const languageToggle = document.getElementById("language-toggle") as HTMLInputElement | null;
+  if (languageToggle) {
+    languageToggle.checked = LanguageManager.getCurrentLanguage() === "en";
+  }
+}
+
 function setupHeaderActions() {
   const logo = document.getElementById('logo')!;
   const themeToggleBtn = document.getElementById('theme-toggle')!;
-  const languageToggleBtn = document.getElementById('language-toggle')!;
+  const languageToggleBtn = document.getElementById('language-toggle') as HTMLInputElement;
 
-  // Initialize theme on page load
+  // Initialize theme and language on page load
   initializeTheme();
+  initializeLanguageToggle();
 
   logo.addEventListener('click', () => Router.navigate("/"));
 
@@ -92,6 +104,7 @@ function setupHeaderActions() {
 
   languageToggleBtn?.addEventListener('change', () => {
     toggleLanguage();
+    updateLanguageToggleState();
     updateThemeToggleButton(); // Ensure theme localization updates
   });
 
