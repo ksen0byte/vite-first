@@ -176,7 +176,7 @@ npm run test:e2e:real-timer
 npx playwright test --ui
 
 # Запустити конкретний тест-файл
-npx playwright test tests/e2e/visual-test-selection.spec.ts
+npx playwright test tests/e2e/visual-comprehensive.spec.ts
 ```
 
 #### Візуальні регресійні тести (Screenshots)
@@ -185,7 +185,7 @@ npx playwright test tests/e2e/visual-test-selection.spec.ts
 
 ```bash
 # Оновити базові скріншоти (після зміни UI)
-npx playwright test tests/e2e/visual-test-selection.spec.ts --update-snapshots
+npx playwright test tests/e2e/visual-comprehensive.spec.ts --update-snapshots
 
 # Переглянути звіт про тести
 npx playwright show-report
