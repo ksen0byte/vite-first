@@ -28,5 +28,4 @@ dist-ssr
 *.sw?
 
 .features/
-/tests/e2e/visual-comprehensive.spec.ts-snapshots/*.png
-/test-results/.last-run.json
+/test-results/
