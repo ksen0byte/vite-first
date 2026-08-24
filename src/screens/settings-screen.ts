@@ -14,146 +14,32 @@ const PREVIEW_STIMULUS_SIZE = 28;
 const PREVIEW_COMBINED_COMPONENT_SIZE = 14;
 const PREVIEW_WORD_SIZE = 8;
 
-type InputStyle = "boxed" | "stepper" | "scrubber" | "chips";
-const INPUT_STYLE_KEY = "settings-input-style";
-const INPUT_STYLES: InputStyle[] = ["boxed", "stepper", "scrubber", "chips"];
-const INPUT_STYLE_CLASS: Record<InputStyle, string> = {
-  boxed: "",
-  stepper: "input-style-stepper",
-  scrubber: "input-style-scrubber",
-  chips: "input-style-chips",
-};
-const INPUT_STYLE_LABEL_KEY: Record<InputStyle, string> = {
-  boxed: "inputStyleBoxed",
-  stepper: "inputStyleStepper",
-  scrubber: "inputStyleScrubber",
-  chips: "inputStyleChips",
-};
-
 /**
- * Presets offered by the "chips" style, derived from each parameter's range:
- * min, max, default and evenly spaced values in between.
- */
-function chipValuesFor(definition: ParameterDefinition): number[] {
-  const {min, max, defaultValue, step} = definition;
-  const span = max - min;
-  const raw = span <= 100
-    ? [min, min + span / 3, min + (2 * span) / 3, max]
-    : [min, defaultValue, (min + max) / 2, max];
-  const rounded = [...new Set(raw.map(v => Math.round(v / step) * step))]
-    .filter((v, i, arr) => v >= min && v <= max && (!i || v !== arr[i - 1]));
-  if (!rounded.includes(defaultValue)) rounded.push(defaultValue);
-  return [...new Set(rounded)].sort((a, b) => a - b);
-}
-
-/**
- * Renders one numeric parameter as a text input (the boxed baseline), driven
- * entirely by its ParameterDefinition: the id, the always-visible localized
- * label, the localized in-field unit suffix, the min/max/step constraints and
+ * Renders one numeric parameter as a responsive text input, driven entirely by
+ * its ParameterDefinition: the id, the always-visible localized label, the
+ * localized unit suffix rendered after the field (so the native spin controls
+ * never sit between the value and the unit), the min/max/step constraints and
  * the daisyUI validator hint all come from the shared config in settings.ts.
  * The hint reserves no space while valid; fields in a cross-field min/max pair
  * carry a specific error message that replaces the generic range text.
  */
-const parameterField = (definition: ParameterDefinition, value: number, wrapperClass: string = "", errorKey: string | null = null): string => `
-  <label class="${wrapperClass} block w-full min-w-0">
-    <span class="mb-1 block text-sm font-medium" data-localize="${definition.labelKey}"></span>
-    <div class="relative">
-      <input id="${definition.id}" class="input input-md input-bordered validator w-full pr-16 text-right text-base" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" />
-      <div class="pointer-events-none absolute right-3 top-2.5 text-sm font-bold text-base-content" data-localize="${definition.unitKey}"></div>
-      <div class="validator-hint hidden text-left" id="${definition.id}-hint">
-        <span class="hint-range"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></span>
-        ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
-      </div>
-    </div>
-  </label>`;
-
-/**
- * Stepper style: [−] value [+] with the unit. Buttons move by the configured
- * step and clamp to the range; the value stays a real input, so it remains
- * typeable and participates in native + cross-field validation.
- */
-const parameterStepperField = (definition: ParameterDefinition, value: number, errorKey: string | null = null): string => `
+const parameterField = (definition: ParameterDefinition, value: number, errorKey: string | null = null): string => `
   <div class="block w-full min-w-0">
     <span class="mb-1 block text-sm font-medium" data-localize="${definition.labelKey}"></span>
-    <div class="relative">
-      <div class="join w-full">
-        <button type="button" class="btn btn-md btn-neutral join-item" data-step="${definition.id}" data-dir="-1" aria-label="${localize("stepDownLabel")}" title="${localize("stepDownLabel")}">−</button>
-        <input id="${definition.id}" class="input input-md input-bordered validator no-spin join-item w-full grow text-center text-base font-semibold" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" required aria-describedby="${definition.id}-hint" />
-        <button type="button" class="btn btn-md btn-neutral join-item" data-step="${definition.id}" data-dir="1" aria-label="${localize("stepUpLabel")}" title="${localize("stepUpLabel")}">+</button>
-      </div>
-      <div class="range-caption text-center">${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></div>
-      <div class="validator-hint hidden text-center" id="${definition.id}-hint">
-        <span class="hint-range hidden"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></span>
-        ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
-      </div>
+    <div class="flex items-center gap-2">
+      <input id="${definition.id}" class="input input-md input-bordered validator w-full text-base" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" />
+      <div class="shrink-0 text-sm font-bold" data-localize="${definition.unitKey}"></div>
+    </div>
+    <div class="validator-hint hidden text-left" id="${definition.id}-hint">
+      <span class="hint-range"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></span>
+      ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
     </div>
   </div>`;
-
-/**
- * Scrubber style: the value itself is the control. Drag horizontally anywhere
- * on the field to change it (pointer capture, 1 px ≈ 1 step, shift = ×10 fine
- * control), click to type as usual. Keyboard arrows work natively.
- */
-const parameterScrubberField = (definition: ParameterDefinition, value: number, errorKey: string | null = null): string => `
-  <div class="block w-full min-w-0">
-    <span class="mb-1 block text-sm font-medium" data-localize="${definition.labelKey}"></span>
-    <div class="relative">
-      <input id="${definition.id}" class="input input-md input-bordered validator scrubber w-full pr-16" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" required aria-describedby="${definition.id}-hint" data-scrubber="${definition.id}" />
-      <div class="pointer-events-none absolute right-3 top-2.5 text-sm font-bold text-base-content" data-localize="${definition.unitKey}"></div>
-      <div class="range-caption text-center" data-localize="scrubHint"></div>
-      <div class="validator-hint hidden text-center" id="${definition.id}-hint">
-        <span class="hint-range hidden"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></span>
-        ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
-      </div>
-    </div>
-  </div>`;
-
-/**
- * Chips style: a row of tappable preset chips derived from the parameter range,
- * plus a small numeric input for values outside the presets. Selected chip is
- * highlighted; typing a custom value clears the chip selection.
- */
-const parameterChipsField = (definition: ParameterDefinition, value: number, errorKey: string | null = null): string => {
-  const chips = chipValuesFor(definition)
-    .map(v => `<button type="button" class="badge badge-lg cursor-pointer border border-base-300 bg-base-100 hover:bg-base-200 ${v === value ? "badge-secondary font-bold" : ""}" data-chip="${definition.id}" data-value="${v}">${v}</button>`)
-    .join("");
-  return `
-  <div class="block w-full min-w-0">
-    <span class="mb-1 block text-sm font-medium" data-localize="${definition.labelKey}"></span>
-    <div class="flex flex-wrap items-center gap-1.5">${chips}</div>
-    <div class="relative mt-1.5">
-      <input id="${definition.id}" class="input input-sm input-bordered validator w-full pr-14 text-right text-sm" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" required aria-describedby="${definition.id}-hint" data-chips-input="${definition.id}" />
-      <div class="pointer-events-none absolute right-2.5 top-1.5 text-xs font-bold text-base-content" data-localize="${definition.unitKey}"></div>
-      <div class="validator-hint hidden text-left" id="${definition.id}-hint">
-        <span class="hint-range hidden"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></span>
-        ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
-      </div>
-    </div>
-  </div>`;
-};
 
 const renderDelayRangeFields = (minValue: number, maxValue: number): string => `
   <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
-    ${parameterField(parameters.exposureDelayMin, minValue, "", "delayMinExceedsMaxError")}
+    ${parameterField(parameters.exposureDelayMin, minValue, "delayMinExceedsMaxError")}
     ${parameterField(parameters.exposureDelayMax, maxValue)}
-  </div>`;
-
-const renderDelayRangeSteppers = (minValue: number, maxValue: number): string => `
-  <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
-    ${parameterStepperField(parameters.exposureDelayMin, minValue, "delayMinExceedsMaxError")}
-    ${parameterStepperField(parameters.exposureDelayMax, maxValue)}
-  </div>`;
-
-const renderDelayRangeScrubbers = (minValue: number, maxValue: number): string => `
-  <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
-    ${parameterScrubberField(parameters.exposureDelayMin, minValue, "delayMinExceedsMaxError")}
-    ${parameterScrubberField(parameters.exposureDelayMax, maxValue)}
-  </div>`;
-
-const renderDelayRangeChips = (minValue: number, maxValue: number): string => `
-  <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
-    ${parameterChipsField(parameters.exposureDelayMin, minValue, "delayMinExceedsMaxError")}
-    ${parameterChipsField(parameters.exposureDelayMax, maxValue)}
   </div>`;
 
 const renderPregeneratedOptions = (settings: AppContext["testSettings"]): string => `
@@ -185,7 +71,6 @@ export function setupSettingsScreen(appContainer: HTMLElement): void {
   const appContext = AppContextManager.getContext();
 
   appContainer.innerHTML = compactSettingsScreenHTML(appContext);
-  applyInputStyle(getStoredInputStyle());
   setupHeader(appContainer);
   setupCompactSettings(appContext);
 
@@ -223,37 +108,10 @@ function compactSettingsScreenHTML(appContext: AppContext): string {
     </div></section>
 
     <section class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-      <div class="card min-w-0 bg-base-100 shadow-sm"><div class="card-body min-w-0 p-4"><h2 class="card-title text-lg" data-localize="testSettingsTitle"></h2><div class="flex items-center gap-2"><span class="text-sm" data-localize="inputStyleLabel"></span><select id="input-style-select" class="select select-sm select-bordered w-44"></select></div><div id="compact-parameters" class="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-5 lg:grid-cols-4"></div></div></div>
+      <div class="card min-w-0 bg-base-100 shadow-sm"><div class="card-body min-w-0 p-4"><h2 class="card-title text-lg" data-localize="testSettingsTitle"></h2><div id="compact-parameters" class="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-5 lg:grid-cols-4"></div></div></div>
       <div class="card min-w-0 bg-base-100 shadow-sm"><div class="card-body min-w-0 p-4"><h2 class="card-title text-lg" data-localize="instructionTitle"></h2><div id="compact-preview" class="mb-3 flex min-h-28 min-w-0 items-center justify-center rounded-box bg-black p-3"></div><p id="compact-instruction" class="text-center text-sm leading-relaxed"></p></div></div>
     </section>
   </form></main>`;
-}
-
-function getStoredInputStyle(): InputStyle {
-  const stored = localStorage.getItem(INPUT_STYLE_KEY) as InputStyle | null;
-  return stored && INPUT_STYLES.includes(stored) ? stored : "boxed";
-}
-
-function applyInputStyle(style: InputStyle): void {
-  const main = document.getElementById("main");
-  if (!main) return;
-  for (const candidate of INPUT_STYLES) {
-    const cls = INPUT_STYLE_CLASS[candidate];
-    if (cls) main.classList.remove(cls);
-  }
-  const cls = INPUT_STYLE_CLASS[style];
-  if (cls) main.classList.add(cls);
-  main.dataset.inputStyle = style;
-}
-
-function setupInputStyleSwitcher(getCurrent: () => InputStyle, onChange: (style: InputStyle) => void): void {
-  const select = document.getElementById("input-style-select") as HTMLSelectElement | null;
-  if (!select) return;
-  select.innerHTML = INPUT_STYLES
-    .map(style => `<option value="${style}" ${style === getCurrent() ? "selected" : ""} data-localize="${INPUT_STYLE_LABEL_KEY[style]}"></option>`)
-    .join("");
-  select.addEventListener("change", () => onChange(select.value as InputStyle));
-  updateLanguageUI();
 }
 
 function setupCompactSettings(appContext: AppContext): void {
@@ -312,146 +170,33 @@ function setupCompactSettings(appContext: AppContext): void {
     refresh();
   });
   const parametersRoot = document.getElementById("compact-parameters")!;
-  parametersRoot.addEventListener("input", () => {
-    markChipSelection();
-    onParametersChanged();
-  });
+  parametersRoot.addEventListener("input", onParametersChanged);
+  // :user-invalid only matches once the field loses focus, so re-sync on blur.
   parametersRoot.addEventListener("focusout", () => syncParameterHints());
-  // Stepper −/+ buttons and chips re-render/validate on click.
-  parametersRoot.addEventListener("click", (event) => {
-    const target = event.target as HTMLElement;
-    const stepButton = target.closest<HTMLButtonElement>("button[data-step]");
-    if (stepButton) {
-      stepParameter(stepButton.dataset.step!, Number(stepButton.dataset.dir));
-      onParametersChanged();
-      return;
-    }
-    const chip = target.closest<HTMLButtonElement>("button[data-chip]");
-    if (chip) {
-      const input = document.getElementById(chip.dataset.chip!) as HTMLInputElement | null;
-      if (input) {
-        input.value = chip.dataset.value!;
-        markChipSelection();
-        onParametersChanged();
-      }
-    }
-  });
-  setupScrubbing(onParametersChanged);
-  setupInputStyleSwitcher(
-    getStoredInputStyle,
-    (style) => {
-      const captured = captureCurrentValues();
-      localStorage.setItem(INPUT_STYLE_KEY, style);
-      applyInputStyle(style);
-      renderCompactParameters(appContext, selectedProtocol, captured);
-      updateLanguageUI();
-      validateParameterRanges();
-      syncParameterHints();
-      renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol);
-    }
-  );
   refresh();
 }
 
-function renderCompactParameters(appContext: AppContext, protocol: ProtocolMode, overrides: Record<string, number> = {}): void {
+function renderCompactParameters(appContext: AppContext, protocol: ProtocolMode): void {
   const testSettings = appContext.testSettings;
   const feedback = testSettings.feedback;
-  const val = (definition: ParameterDefinition, contextValue: number): number =>
-    Object.prototype.hasOwnProperty.call(overrides, definition.id) ? overrides[definition.id] : contextValue;
-  const style = document.getElementById("main")?.dataset.inputStyle as InputStyle | undefined ?? "boxed";
-  const delayRange = {boxed: renderDelayRangeFields, stepper: renderDelayRangeSteppers, scrubber: renderDelayRangeScrubbers, chips: renderDelayRangeChips}[style];
-  const field = {boxed: parameterField, stepper: parameterStepperField, scrubber: parameterScrubberField, chips: parameterChipsField}[style];
   const rows = protocol === "feedback"
     ? [
-      field(parameters.stimulusSize, val(parameters.stimulusSize, testSettings.stimulusSize)),
-      field(parameters.stimulusCount, val(parameters.stimulusCount, testSettings.stimulusCount)),
-      field(parameters.feedbackInitialExposure, val(parameters.feedbackInitialExposure, feedback.initialExposure)),
-      field(parameters.feedbackAdjustmentStep, val(parameters.feedbackAdjustmentStep, feedback.adjustmentStep)),
-      field(parameters.feedbackMinExposure, val(parameters.feedbackMinExposure, feedback.minExposure), "", "exposureMinExceedsMaxError"),
-      field(parameters.feedbackMaxExposure, val(parameters.feedbackMaxExposure, feedback.maxExposure)),
-      field(parameters.feedbackPause, val(parameters.feedbackPause, feedback.pause)),
-      field(parameters.feedbackDuration, val(parameters.feedbackDuration, feedback.duration)),
+      parameterField(parameters.stimulusSize, testSettings.stimulusSize),
+      parameterField(parameters.stimulusCount, testSettings.stimulusCount),
+      parameterField(parameters.feedbackInitialExposure, feedback.initialExposure),
+      parameterField(parameters.feedbackAdjustmentStep, feedback.adjustmentStep),
+      parameterField(parameters.feedbackMinExposure, feedback.minExposure, "exposureMinExceedsMaxError"),
+      parameterField(parameters.feedbackMaxExposure, feedback.maxExposure),
+      parameterField(parameters.feedbackPause, feedback.pause),
+      parameterField(parameters.feedbackDuration, feedback.duration),
     ]
     : [
-      field(parameters.stimulusSize, val(parameters.stimulusSize, testSettings.stimulusSize)),
-      field(parameters.stimulusCount, val(parameters.stimulusCount, testSettings.stimulusCount)),
-      field(parameters.exposureTime, val(parameters.exposureTime, testSettings.exposureTime), "col-span-2"),
-      delayRange(val(parameters.exposureDelayMin, testSettings.exposureDelay[0]), val(parameters.exposureDelayMax, testSettings.exposureDelay[1])),
+      parameterField(parameters.stimulusSize, testSettings.stimulusSize),
+      parameterField(parameters.stimulusCount, testSettings.stimulusCount),
+      parameterField(parameters.exposureTime, testSettings.exposureTime, "col-span-2"),
+      renderDelayRangeFields(testSettings.exposureDelay[0], testSettings.exposureDelay[1]),
     ];
   document.getElementById("compact-parameters")!.innerHTML = rows.join("") + renderPregeneratedOptions(testSettings);
-}
-
-/** Stepper −/+ button handler: moves the paired input by one step, clamped. */
-function stepParameter(id: string, direction: number): void {
-  const input = document.getElementById(id) as HTMLInputElement | null;
-  if (!input) return;
-  const step = Number(input.step) || 1;
-  const min = Number(input.min);
-  const max = Number(input.max);
-  const current = Number(input.value);
-  if (!Number.isFinite(current)) return;
-  input.value = String(Math.min(max, Math.max(min, current + direction * step)));
-}
-
-/**
- * Scrubber style: pointer-drag on the field changes the value (1 px = 1 step by
- * default, hold Shift for 10× finer control). A real click (no drag) keeps the
- * normal focus-and-type behaviour.
- */
-function setupScrubbing(onChange: () => void): void {
-  const root = document.getElementById("compact-parameters");
-  if (!root) return;
-  let active: { input: HTMLInputElement; startX: number; startValue: number; moved: boolean; fine: boolean } | null = null;
-  root.addEventListener("pointerdown", (event) => {
-    const input = (event.target as HTMLElement).closest<HTMLInputElement>("input[data-scrubber]");
-    if (!input) return;
-    active = {input, startX: event.clientX, startValue: Number(input.value), moved: false, fine: event.shiftKey};
-  });
-  root.addEventListener("pointermove", (event) => {
-    if (!active || event.pointerType === "touch" && !event.isPrimary) return;
-    const dx = event.clientX - active.startX;
-    if (Math.abs(dx) < 4 && !active.moved) return;
-    if (!active.moved) {
-      active.moved = true;
-      active.input.setPointerCapture(event.pointerId);
-    }
-    const step = Number(active.input.step) || 1;
-    const min = Number(active.input.min);
-    const max = Number(active.input.max);
-    const scale = event.shiftKey ? 0.2 : 1;
-    active.input.value = String(Math.min(max, Math.max(min, Math.round((active.startValue + dx * step * scale) / step) * step)));
-    onChange();
-  });
-  const endScrub = () => {
-    active = null;
-  };
-  root.addEventListener("pointerup", endScrub);
-  root.addEventListener("pointercancel", endScrub);
-}
-
-/** Highlights the chip matching the current input value, if any. */
-function markChipSelection(): void {
-  const root = document.getElementById("compact-parameters");
-  if (!root) return;
-  for (const input of root.querySelectorAll<HTMLInputElement>("input[data-chips-input]")) {
-    const value = Number(input.value);
-    for (const chip of root.querySelectorAll<HTMLButtonElement>(`button[data-chip="${input.dataset.chipsInput}"]`)) {
-      chip.classList.toggle("badge-secondary", Number(chip.dataset.value) === value);
-      chip.classList.toggle("font-bold", Number(chip.dataset.value) === value);
-    }
-  }
-}
-
-/** Snapshot of every currently edited parameter value, used when switching input styles. */
-function captureCurrentValues(): Record<string, number> {
-  const captured: Record<string, number> = {};
-  for (const definition of Object.values(parameters)) {
-    const input = document.getElementById(definition.id);
-    if (input instanceof HTMLInputElement && input.value !== "" && Number.isFinite(Number(input.value))) {
-      captured[definition.id] = Number(input.value);
-    }
-  }
-  return captured;
 }
 
 function renderCompactInstruction(testType: TestType, testMode: TestMode): void {
