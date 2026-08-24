@@ -41,6 +41,43 @@
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Settings screen input-style experiments                             */
+/* boxed (baseline) | stepper | scrubber | chips                       */
+/* ------------------------------------------------------------------ */
+
+/* Scrubber: the value itself is the control - drag horizontally to change */
+#main input.scrubber {
+  @apply cursor-ew-resize select-none text-center text-lg font-bold;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  touch-action: pan-y;
+}
+
+#main input.scrubber::-webkit-outer-spin-button,
+#main input.scrubber::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Stepper: hide native number spinners, the −/+ buttons replace them */
+#main input.no-spin {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+#main input.no-spin::-webkit-outer-spin-button,
+#main input.no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Subtle range caption under stepper/scrubber/chips fields */
+#main .range-caption {
+  @apply mt-0.5 text-left text-xs opacity-60;
+}
+
+
 @media print {
   @page {
     size: landscape;
