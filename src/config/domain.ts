@@ -1,20 +1,4 @@
-import {Options} from "nouislider";
 import {Stimulus} from "../domain/types.ts";
-
-export const intFormatter = {
-  to: (value: number): string => Math.round(value).toString(),
-  from: (value: string): number => parseInt(value, 10),
-};
-
-export interface SliderConfig {
-  id: string,
-  options: Options,
-  label: {
-    id: string,
-    localizationKey: string,
-    unit: string,
-  }
-}
 
 export type TestMode = "shapes" | "words" | "colors" | "combined";
 export type ProtocolMode = "optimal" | "feedback";

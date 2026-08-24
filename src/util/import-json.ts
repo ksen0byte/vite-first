@@ -1,4 +1,5 @@
 import {Gender, TestMode, TestSettings, TestType, TrialResult} from '../config/domain.ts';
+import {settings as defaultSettings} from '../config/settings.ts';
 import {User} from '../db/db.ts';
 import {Result, failure, success} from './result.ts';
 
@@ -105,12 +106,12 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
           stimulusCount: settings.stimulusCount as number,
           testType: settings.testType,
           feedback: {
-            initialExposure: 900,
-            adjustmentStep: 20,
-            minExposure: 20,
-            maxExposure: 900,
-            pause: 200,
-            duration: 300,
+            initialExposure: defaultSettings.default.feedback.initialExposure,
+            adjustmentStep: defaultSettings.default.feedback.adjustmentStep,
+            minExposure: defaultSettings.default.feedback.minExposure,
+            maxExposure: defaultSettings.default.feedback.maxExposure,
+            pause: defaultSettings.default.feedback.pause,
+            duration: defaultSettings.default.feedback.duration,
           },
           usePregenerated: settings.usePregenerated as TestSettings['usePregenerated'],
         },

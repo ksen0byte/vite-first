@@ -10,11 +10,11 @@ async function startSession(page: any, testType: string, protocol = 'optimal') {
   await page.locator('#gender-select').selectOption('female');
   await page.locator('#protocol-select').selectOption(protocol);
   await page.locator('#test-type-select').selectOption(testType);
-  await page.locator('#compact-stimulus-count').fill('10');
+  await page.locator('#compact-stimulus-count').fill('30');
   if (protocol === 'optimal') {
-    await page.locator('#compact-exposure-time').fill('100');
-    await page.locator('#compact-delay-min').fill('50');
-    await page.locator('#compact-delay-max').fill('50');
+    await page.locator('#compact-exposure-time').fill('500');
+    await page.locator('#compact-delay-min').fill('250');
+    await page.locator('#compact-delay-max').fill('250');
   } else {
     await page.locator('#compact-initial-exposure').fill('100');
     await page.locator('#compact-exposure-min').fill('100');
@@ -25,17 +25,16 @@ async function startSession(page: any, testType: string, protocol = 'optimal') {
 }
 
 test('runs a short optimal CRT1-3 session with the current settings flow', async ({page}) => {
-  test.setTimeout(30_000);
+  test.setTimeout(90_000);
   await startSession(page, 'crt1-3');
-  await expect(page.locator('#stimuli-counter')).toContainText('/10');
-  await page.waitForTimeout(5_000);
-  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 15_000});
+  await expect(page.locator('#stimuli-counter')).toContainText('/30');
+  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 75_000});
 });
 
 test('runs a short feedback CRT2-3 session with the current settings flow', async ({page}) => {
-  test.setTimeout(30_000);
+  test.setTimeout(45_000);
   await startSession(page, 'crt2-3', 'feedback');
-  await expect(page.locator('#stimuli-counter')).toContainText('/10');
+  await expect(page.locator('#stimuli-counter')).toContainText('/30');
   await page.waitForTimeout(5_000);
-  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 15_000});
+  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 30_000});
 });

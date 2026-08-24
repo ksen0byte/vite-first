@@ -1,4 +1,4 @@
-﻿import {settings} from "../config/settings.ts";
+import {settings} from "../config/settings.ts";
 import {LanguageManager} from "./LanguageManager.ts";
 import katex from 'katex';
 import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.ts";
@@ -135,6 +135,7 @@ const localization: LocalizationKeys = {
   surnameLabel: {en: "Last Name", uk: "Прізвище"},
   ageLabel: {en: "Age", uk: "Вік"},
   selectGender: {en: "Gender", uk: "Стать"},
+  invalidRangeError: {en: "Invalid range: the minimum must not exceed the maximum", uk: "Некоректний діапазон: мінімум не може перевищувати максимум"},
   male: {en: "Male", uk: "Чоловіча"},
   female: {en: "Female", uk: "Жіноча"},
   savedTestsBtnLabel: {en: "Saved Tests", uk: "Збережені Тести"},
@@ -168,21 +169,12 @@ const localization: LocalizationKeys = {
   // Test mode
   testModeLabel: {en: "Test Mode", uk: "Вид Подразника"},
   shapesOption: {en: "🔴 Geometrical Shapes", uk: "🔴 Геометричні Фігури"},
-  shapeSizeSliderLabel: {en: "Shape Size", uk: "Розмір фігури"},
   wordsOption: {en: "🔤 Words", uk: "🔤 Слова"},
-  wordSizeSliderLabel: {en: "Word Size", uk: "Розмір слова"},
-  wordPreviewWord: {en: "Lion", uk: "Лев"},
   colorsOption: {en: "🎨 Colors", uk: "🎨 Кольори"},
-  colorsSizeSliderLabel: {en: "Colored Rectangle Size", uk: "Розмір кольорового прямокутника"},
   combinedOption: {en: "🔀 Combined Stimuli", uk: "🔀 Комбіновані Стимули"},
-  combinedSizeSliderLabel: {en: "Combined Stimuli Size", uk: "Розмір комбінованих стимулів"},
-
-  fontSizeSliderLabel: {en: "Font Size", uk: "Розмір шрифту"},
 
   // Test settings
   exposureTimeLabel: {en: "Stimulus Exposure", uk: "Експозиція подразника"},
-  exposureDelayLabel: {en: "Stimulus Exposure Delay", uk: "Затримка експозиції"},
-  exposureDelayHint: {en: "Delay is picked randomly between min and max.", uk: "З цього діапазону випадково обирається затримка."},
   stimulusCountLabel: {en: "Number of Stimuli", uk: "Кількість подразників"},
 
   // Footer
