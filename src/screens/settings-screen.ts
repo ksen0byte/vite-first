@@ -16,16 +16,15 @@ const PREVIEW_WORD_SIZE = 8;
 
 /**
  * Renders one numeric parameter input driven entirely by its ParameterDefinition:
- * the id, the always-visible localized label, the localized unit suffix and the
- * min/max/step constraints all come from the shared config in settings.ts.
+ * the id, the always-visible localized label (with the localized unit appended),
+ * the min/max/step constraints and the daisyUI validator hint all come from the
+ * shared config in settings.ts.
  */
-const parameterField = (definition: ParameterDefinition, value: number): string => `
-  <label class="block w-full min-w-0">
+const parameterField = (definition: ParameterDefinition, value: number, wrapperClass: string = ""): string => `
+  <label class="${wrapperClass} form-control w-full min-w-0">
     <span class="mb-1 block text-xs font-medium" data-localize="${definition.labelKey}"></span>
-    <div class="relative">
-      <input id="${definition.id}" class="input input-bordered input-sm w-full pr-14 text-right" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required />
-      <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-base-content">${localize(definition.unitKey)}</div>
-    </div>
+    <input id="${definition.id}" class="input input-bordered input-sm validator w-full pr-16 text-right" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" />
+    <div class="validator-hint text-left" id="${definition.id}-hint"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></div>
   </label>`;
 
 const renderDelayRangeFields = (minValue: number, maxValue: number): string => `
@@ -154,7 +153,10 @@ function setupCompactSettings(appContext: AppContext): void {
     selectedStimulus = stimulus.value as TestMode;
     refresh();
   });
-  document.getElementById("compact-parameters")!.addEventListener("input", () => renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol));
+  document.getElementById("compact-parameters")!.addEventListener("input", () => {
+    validateParameterRanges();
+    renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol);
+  });
   refresh();
 }
 
@@ -175,7 +177,7 @@ function renderCompactParameters(appContext: AppContext, protocol: ProtocolMode)
     : [
       parameterField(parameters.stimulusSize, testSettings.stimulusSize),
       parameterField(parameters.stimulusCount, testSettings.stimulusCount),
-      parameterField(parameters.exposureTime, testSettings.exposureTime),
+      parameterField(parameters.exposureTime, testSettings.exposureTime, "col-span-2"),
       renderDelayRangeFields(testSettings.exposureDelay[0], testSettings.exposureDelay[1]),
     ];
   document.getElementById("compact-parameters")!.innerHTML = rows.join("") + renderPregeneratedOptions(testSettings);
@@ -199,8 +201,8 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
   const stimulus = `<div class="grid w-full ${testType === "crt2-3" ? "grid-cols-3" : "grid-cols-1"} items-end gap-2 px-2">${stimulusColumns}</div>`;
   const delayMin = protocol === "feedback" ? readNumberInput(parameters.feedbackPause) : readNumberInput(parameters.exposureDelayMin);
   const delayMax = protocol === "feedback" ? delayMin : readNumberInput(parameters.exposureDelayMax);
-  const pauseLabel = `${localize("previewPauseState")} [${delayMin}-${delayMax} ${localize("ms")}]`;
-  const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-[10px] text-gray-300"><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span><span>→</span><span class="rounded border border-gray-500 px-2 py-1">${localize("previewStimulusState")} [${exposure} ${localize("ms")}]</span><span>→</span><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span><span class="font-mono">× ${count} ${localize("units")}</span></div>`;
+  const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${delayMin}–${delayMax}&nbsp;<span data-localize="ms"></span>]`;
+  const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-[10px] text-gray-300"><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span><span>→</span><span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span data-localize="ms"></span>]</span><span>→</span><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span><span class="font-mono">× ${count}&nbsp;<span data-localize="units"></span></span></div>`;
   preview.innerHTML = `<div class="relative flex min-h-[30rem] w-full items-center justify-center overflow-hidden rounded-box bg-black py-10 text-white">${stimulus}${stateDiagram}</div>`;
   updateLanguageUI();
 }
@@ -235,11 +237,34 @@ function readNumberInput(definition: ParameterDefinition): number {
   return Math.min(definition.max, Math.max(definition.min, Math.round(raw)));
 }
 
-function reportInvalidRange(minKey: string, maxKey: string): void {
-  window.alert(`${localize("invalidRangeError")}: ${localize(minKey)} ≤ ${localize(maxKey)}`);
+/**
+ * Live cross-field validation for the min/max parameter pairs (delay range,
+ * feedback exposure range). Uses the native constraint API (setCustomValidity)
+ * plus an aria-invalid flag, so daisyUI's validator styling and hint show the
+ * problem exactly like a built-in range error - no alerts, and the form cannot
+ * be submitted while the pair is inconsistent.
+ */
+function validateParameterRanges(): void {
+  const markRange = (minDefinition: ParameterDefinition, errorKey: string | null) => {
+    const minInput = document.getElementById(minDefinition.id) as HTMLInputElement | null;
+    if (!minInput) return;
+    minInput.setCustomValidity(errorKey ? localize(errorKey) : "");
+    if (errorKey) {
+      minInput.setAttribute("aria-invalid", "true");
+    } else {
+      minInput.removeAttribute("aria-invalid");
+    }
+  };
+  const delayMin = readNumberInput(parameters.exposureDelayMin);
+  const delayMax = readNumberInput(parameters.exposureDelayMax);
+  markRange(parameters.exposureDelayMin, delayMin > delayMax ? "delayMinExceedsMaxError" : null);
+  const feedbackMin = readNumberInput(parameters.feedbackMinExposure);
+  const feedbackMax = readNumberInput(parameters.feedbackMaxExposure);
+  markRange(parameters.feedbackMinExposure, feedbackMin > feedbackMax ? "exposureMinExceedsMaxError" : null);
 }
 
 function compactStartButtonCallback(): void {
+  validateParameterRanges();
   const form = document.getElementById("personal-data-form") as HTMLFormElement;
   if (!form.checkValidity()) {
     form.reportValidity();
@@ -250,19 +275,10 @@ function compactStartButtonCallback(): void {
   const feedbackSubmode = (document.getElementById("mode-select") as HTMLSelectElement).value as "mobility" | "strength";
   const testType = (document.getElementById("test-type-select") as HTMLSelectElement).value as TestType;
   const testMode = (document.getElementById("stimulus-select") as HTMLSelectElement).value as TestMode;
-
   const delayMin = readNumberInput(parameters.exposureDelayMin);
   const delayMax = readNumberInput(parameters.exposureDelayMax);
-  if (delayMin > delayMax) {
-    reportInvalidRange("exposureDelayMinLabel", "exposureDelayMaxLabel");
-    return;
-  }
   const feedbackMinExposure = readNumberInput(parameters.feedbackMinExposure);
   const feedbackMaxExposure = readNumberInput(parameters.feedbackMaxExposure);
-  if (feedbackMinExposure > feedbackMaxExposure) {
-    reportInvalidRange("feedbackMinExposure", "feedbackMaxExposure");
-    return;
-  }
 
   AppContextManager.setContext({
     ...current,
