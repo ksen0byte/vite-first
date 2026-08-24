@@ -16,20 +16,29 @@ const PREVIEW_WORD_SIZE = 8;
 
 /**
  * Renders one numeric parameter input driven entirely by its ParameterDefinition:
- * the id, the always-visible localized label (with the localized unit appended),
+ * the id, the always-visible localized label, the localized in-field unit suffix,
  * the min/max/step constraints and the daisyUI validator hint all come from the
- * shared config in settings.ts.
+ * shared config in settings.ts. The hint reserves no space while valid (hidden
+ * class); daisyUI reveals it automatically on :user-invalid / aria-invalid.
+ * Fields participating in a cross-field min/max pair also carry a specific
+ * error message that replaces the generic allowed-range text when triggered.
  */
-const parameterField = (definition: ParameterDefinition, value: number, wrapperClass: string = ""): string => `
-  <label class="${wrapperClass} form-control w-full min-w-0">
+const parameterField = (definition: ParameterDefinition, value: number, wrapperClass: string = "", errorKey: string | null = null): string => `
+  <label class="${wrapperClass} block w-full min-w-0">
     <span class="mb-1 block text-xs font-medium" data-localize="${definition.labelKey}"></span>
-    <input id="${definition.id}" class="input input-bordered input-sm validator w-full pr-16 text-right" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" />
-    <div class="validator-hint text-left" id="${definition.id}-hint"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></div>
+    <div class="relative">
+      <input id="${definition.id}" class="input input-bordered input-sm validator w-full pr-16 text-right" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" />
+      <div class="pointer-events-none absolute right-3 top-2 text-xs font-bold text-base-content" data-localize="${definition.unitKey}"></div>
+      <div class="validator-hint hidden text-left" id="${definition.id}-hint">
+        <span class="hint-range"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></span>
+        ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
+      </div>
+    </div>
   </label>`;
 
 const renderDelayRangeFields = (minValue: number, maxValue: number): string => `
   <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
-    ${parameterField(parameters.exposureDelayMin, minValue)}
+    ${parameterField(parameters.exposureDelayMin, minValue, "", "delayMinExceedsMaxError")}
     ${parameterField(parameters.exposureDelayMax, maxValue)}
   </div>`;
 
@@ -155,8 +164,11 @@ function setupCompactSettings(appContext: AppContext): void {
   });
   document.getElementById("compact-parameters")!.addEventListener("input", () => {
     validateParameterRanges();
+    syncParameterHints();
     renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol);
   });
+  // :user-invalid only matches once the field loses focus, so re-sync on blur.
+  document.getElementById("compact-parameters")!.addEventListener("focusout", () => syncParameterHints());
   refresh();
 }
 
@@ -169,7 +181,7 @@ function renderCompactParameters(appContext: AppContext, protocol: ProtocolMode)
       parameterField(parameters.stimulusCount, testSettings.stimulusCount),
       parameterField(parameters.feedbackInitialExposure, feedback.initialExposure),
       parameterField(parameters.feedbackAdjustmentStep, feedback.adjustmentStep),
-      parameterField(parameters.feedbackMinExposure, feedback.minExposure),
+      parameterField(parameters.feedbackMinExposure, feedback.minExposure, "", "exposureMinExceedsMaxError"),
       parameterField(parameters.feedbackMaxExposure, feedback.maxExposure),
       parameterField(parameters.feedbackPause, feedback.pause),
       parameterField(parameters.feedbackDuration, feedback.duration),
@@ -249,10 +261,21 @@ function validateParameterRanges(): void {
     const minInput = document.getElementById(minDefinition.id) as HTMLInputElement | null;
     if (!minInput) return;
     minInput.setCustomValidity(errorKey ? localize(errorKey) : "");
+    const hint = document.getElementById(`${minDefinition.id}-hint`);
+    const rangeText = hint?.querySelector(".hint-range");
+    const errorText = hint?.querySelector(".hint-error");
     if (errorKey) {
       minInput.setAttribute("aria-invalid", "true");
+      // reveal the hint explicitly: aria-invalid alone only flips visibility,
+      // which a display:none element would still suppress.
+      hint?.classList.remove("hidden");
+      rangeText?.classList.add("hidden");
+      errorText?.classList.remove("hidden");
     } else {
       minInput.removeAttribute("aria-invalid");
+      hint?.classList.add("hidden");
+      rangeText?.classList.remove("hidden");
+      errorText?.classList.add("hidden");
     }
   };
   const delayMin = readNumberInput(parameters.exposureDelayMin);
@@ -261,6 +284,30 @@ function validateParameterRanges(): void {
   const feedbackMin = readNumberInput(parameters.feedbackMinExposure);
   const feedbackMax = readNumberInput(parameters.feedbackMaxExposure);
   markRange(parameters.feedbackMinExposure, feedbackMin > feedbackMax ? "exposureMinExceedsMaxError" : null);
+}
+
+/**
+ * Reveals a field's validator hint only while it is actually invalid - either
+ * through the cross-field range error (aria-invalid) or through a native
+ * constraint violation such as an out-of-range value (:user-invalid, set after
+ * the user interacts with the field). Valid fields keep the hint collapsed so
+ * the card stays compact.
+ */
+function syncParameterHints(): void {
+  for (const definition of Object.values(parameters)) {
+    const input = document.getElementById(definition.id);
+    const hint = document.getElementById(`${definition.id}-hint`);
+    if (!(input instanceof HTMLInputElement) || !hint) continue;
+    const crossFieldInvalid = input.getAttribute("aria-invalid") === "true";
+    let nativeInvalid: boolean;
+    try {
+      nativeInvalid = input.matches(":user-invalid");
+    } catch {
+      // Fallback for engines without :user-invalid support.
+      nativeInvalid = !input.checkValidity() && input.value !== "";
+    }
+    hint.classList.toggle("hidden", !(crossFieldInvalid || nativeInvalid));
+  }
 }
 
 function compactStartButtonCallback(): void {
