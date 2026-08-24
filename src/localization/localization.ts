@@ -1,4 +1,4 @@
-import {settings} from "../config/settings.ts";
+﻿import {settings} from "../config/settings.ts";
 import {LanguageManager} from "./LanguageManager.ts";
 import katex from 'katex';
 import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.ts";
@@ -66,6 +66,39 @@ export function localize(key: string): string {
 }
 
 const localization: LocalizationKeys = {
+  protocolModeLabel: {en: "Test protocol", uk: "Протокол тестування"},
+  protocolLabel: {en: "Protocol", uk: "Протокол"},
+  regimeLabel: {en: "Regime", uk: "Режим"},
+  submodeLabel: {en: "Submode", uk: "Підрежим"},
+  stimulusTypeLabel: {en: "Stimulus type", uk: "Вид подразника"},
+  genderLabel: {en: "Gender", uk: "Стать"},
+  optimalProtocol: {en: "Optimal protocol", uk: "Оптимальний протокол"},
+  feedbackProtocol: {en: "Feedback protocol", uk: "Протокол зворотного зв’язку"},
+  protocolModeDescription: {en: "Choose how stimulus exposure is controlled during the test.", uk: "Оберіть спосіб керування експозицією подразника під час тестування."},
+  feedbackSettingsTitle: {en: "Feedback protocol settings", uk: "Налаштування протоколу зворотного зв’язку"},
+  adaptiveExposureBadge: {en: "Adaptive exposure", uk: "Адаптивна експозиція"},
+  feedbackSettingsHint: {en: "Correct answers shorten the next exposure; incorrect answers lengthen it.", uk: "Правильна відповідь скорочує наступну експозицію, неправильна — подовжує її."},
+  feedbackInitialExposure: {en: "Initial exposure", uk: "Початкова експозиція"},
+  feedbackAdjustmentStep: {en: "Adjustment step", uk: "Крок зміни"},
+  feedbackMinExposure: {en: "Minimum exposure", uk: "Мінімальна експозиція"},
+  feedbackMaxExposure: {en: "Maximum exposure", uk: "Максимальна експозиція"},
+  feedbackExposureRange: {en: "Exposure range", uk: "Діапазон експозиції"},
+  feedbackPause: {en: "Pause between stimuli", uk: "Пауза між подразниками"},
+  feedbackDuration: {en: "Test duration", uk: "Тривалість тесту"},
+  stimulusLabel: {en: "Stimulus", uk: "Подразник"},
+  testSettingsTitle: {en: "Test settings", uk: "Налаштування тесту"},
+  instructionTitle: {en: "Preview and instruction", uk: "Попередній перегляд та інструкція"},
+  previewExposureHint: {en: "stimulus preview · exposure shown above", uk: "попередній перегляд подразника · експозиція вказана вище"},
+  previewPauseState: {en: "pause", uk: "пауза"},
+  previewStimulusState: {en: "stimulus", uk: "подразник"},
+  previewExposureLabel: {en: "exposure", uk: "експозиція"},
+  previewIgnore: {en: "ignore", uk: "ігнорувати"},
+  units: {en: "units", uk: "од."},
+  exposureDelayMinLabel: {en: "Minimum exposure delay", uk: "Мінімальна затримка експозиції"},
+  exposureDelayMaxLabel: {en: "Maximum exposure delay", uk: "Максимальна затримка експозиції"},
+  feedbackMobility: {en: "Functional mobility", uk: "Функціональна рухливість"},
+  feedbackStrength: {en: "Nervous process strength", uk: "Сила нервових процесів"},
+  optimalMode: {en: "Fixed exposure", uk: "Фіксована експозиція"},
   languageSelector: {en: "Language", uk: "Мова"},
   languageEN: {en: "EN", uk: "АНГЛ."}, // Localized label for "EN"
   languageUA: {en: "UA", uk: "УКР."},  // Localized label for "UA"
@@ -367,7 +400,7 @@ const localization: LocalizationKeys = {
   valueLabel: {en: "Value", uk: "Значення"},
   countLabel: {en: "Count", uk: "Кількість"},
   meanLabel: {en: "Mean", uk: "Середнє"},
-  modeLabel: {en: "Mode", uk: "Мода"},
+  statisticalModeLabel: {en: "Statistical mode", uk: "Статистична мода"},
   stdevLabel: {en: "Std. Deviation", uk: "Стандартне Відхилення"},
   cvLabel: {en: "Coefficient of Variation", uk: "Коефіцієнт Варіації"},
   entropyLabel: {en: "Shannon Entropy", uk: "Ентропія Шеннона"},

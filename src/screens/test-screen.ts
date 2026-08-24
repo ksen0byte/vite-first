@@ -49,11 +49,13 @@ export class TestScreen {
   // spam prevention
   private readonly spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
   private spamInputCount: number = 0;
+  private feedbackExposure: number;
 
   constructor(appContainer: HTMLElement, scheduler: Scheduler = new BrowserScheduler()) {
     this.appContainer = appContainer;
     this.appContext = AppContextManager.getContext();
     this.scheduler = scheduler;
+    this.feedbackExposure = this.appContext.testSettings.feedback.initialExposure;
 
     // Store the bound reference
     this.handleKeyDownBound = this.handleAppKeyDown.bind(this);
@@ -193,6 +195,7 @@ export class TestScreen {
     this.timerManager?.stopAndReset();
     this.scheduler.cancelAll();
     this.reactionTimes.clear();
+    this.feedbackExposure = this.appContext.testSettings.feedback.initialExposure;
     this.spamInputCount = 0;
     this.stimuliCounter?.reset();
     this.transitionTo(toIdle());
@@ -239,7 +242,9 @@ export class TestScreen {
       return;
     }
 
-    const delay = getNextDelay(this.appContext.testSettings, index);
+    const delay = this.appContext.testSettings.protocolMode === "feedback"
+      ? this.appContext.testSettings.feedback.pause
+      : getNextDelay(this.appContext.testSettings, index);
     this.transitionTo(toDelayed(index, delay));
 
     this.scheduler.schedule(() => {
@@ -257,7 +262,7 @@ export class TestScreen {
 
     this.scheduler.schedule(() => {
       this.onStimulusTimeout(index);
-    }, this.appContext.testSettings.exposureTime);
+    }, this.appContext.testSettings.protocolMode === "feedback" ? this.feedbackExposure : this.appContext.testSettings.exposureTime);
   }
 
   private onStimulusTimeout(index: number): void {
@@ -279,12 +284,24 @@ export class TestScreen {
       } else if (!hasReacted && !shouldHaveReacted) {
         this.recordReactionTime(this.state.stimulusValue, -1, "CorrectRejection", expectedAction, "NONE");
       }
+
+      this.updateFeedbackExposure(index);
     }
 
     this.stimulusManager.clearContainer();
     this.timerManager.stop();
     this.spamInputCount = 0;
     this.scheduleNextStimulus(index + 1);
+  }
+
+  private updateFeedbackExposure(index: number): void {
+    if (this.appContext.testSettings.protocolMode !== "feedback") return;
+    const result = this.reactionTimes.get(index);
+    if (!result) return;
+    const {adjustmentStep, minExposure, maxExposure} = this.appContext.testSettings.feedback;
+    const correct = result.outcome === "Success" || result.outcome === "CorrectRejection";
+    this.feedbackExposure = Math.max(minExposure, Math.min(maxExposure,
+      this.feedbackExposure + (correct ? -adjustmentStep : adjustmentStep)));
   }
 
   private handleUserInput(actualAction: HandAction): void {

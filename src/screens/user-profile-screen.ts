@@ -190,7 +190,7 @@ function testCardHTML(index: number, test: TestRecord): string {
                   </td>
                 </tr>
                 <tr class="text-center">
-                  <td><strong data-localize="modeLabel"></strong></td>
+                  <td><strong data-localize="statisticalModeLabel"></strong></td>
                   <td>
                     ${stats.modeVal ? stats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.modeVal ? handStats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>`)}

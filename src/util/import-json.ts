@@ -96,12 +96,22 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       tests.push({
         ...(typeof test.id === 'number' && Number.isInteger(test.id) ? {sourceId: test.id} : {}),
         testSettings: {
+          protocolMode: 'optimal',
+          feedbackSubmode: 'mobility',
           testMode: settings.testMode,
           stimulusSize: settings.stimulusSize as number,
           exposureTime: settings.exposureTime as number,
           exposureDelay: [settings.exposureDelay[0] as number, settings.exposureDelay[1] as number],
           stimulusCount: settings.stimulusCount as number,
           testType: settings.testType,
+          feedback: {
+            initialExposure: 900,
+            adjustmentStep: 20,
+            minExposure: 20,
+            maxExposure: 900,
+            pause: 200,
+            duration: 300,
+          },
           usePregenerated: settings.usePregenerated as TestSettings['usePregenerated'],
         },
         trials,

@@ -1,211 +1,103 @@
-import { expect, test } from '@playwright/test';
+import {expect, test} from '@playwright/test';
 
-/**
- * Comprehensive visual regression tests covering:
- * - Settings/personal data screen
- * - Test selection screen with different stimulus modes
- * - Begin test summary screen
- */
-
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({page}) => {
+  await page.addInitScript(() => localStorage.clear());
   await page.goto('./');
-  await page.evaluate(async () => {
-    localStorage.clear();
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase('CnsTestDatabase');
-      request.addEventListener('success', () => resolve());
-      request.addEventListener('error', () => reject(request.error));
-    });
-  });
 });
 
-async function navigateToSettings(page: any, language: 'en' | 'uk' = 'en') {
+async function openSettings(page: any) {
   await page.goto('./');
-  if (language === 'en') {
-    await page.locator('#language-toggle').check();
-  }
   await page.locator('#service-reaction').click();
   await expect(page.locator('#personal-data-form')).toBeVisible();
 }
 
 async function fillPersonalData(page: any) {
-  await page.locator('#surname-input').fill('Тестовий');
-  await page.locator('#name-input').fill('Користувач');
-  await page.locator('#age-input').fill('25');
-  await page.locator('#gender-select').selectOption('male');
+  await page.locator('#surname-input').fill('Example');
+  await page.locator('#name-input').fill('Ada');
+  await page.locator('#age-input').fill('34');
+  await page.locator('#gender-select').selectOption('female');
 }
 
-async function selectTestMode(page: any, mode: 'shapes' | 'colors' | 'words' | 'combined') {
-  const radioSelector = `input[type="radio"][data-subsection="${mode}"]`;
-  await page.locator(radioSelector).check();
-  await page.waitForTimeout(200);
-}
+test('settings matrix: every protocol, regime, submode and stimulus combination is usable', async ({page}, testInfo) => {
+  await openSettings(page);
+  await fillPersonalData(page);
 
-test.describe('Settings Screen - Personal Data Form', () => {
-  test('Settings screen - Empty form (English)', async ({ page }) => {
-    await navigateToSettings(page, 'en');
-    await expect(page).toHaveScreenshot('settings-empty-en.png');
-  });
+  const protocols = ['optimal', 'feedback'];
+  const testTypes = ['svmr', 'crt1-3', 'crt2-3'];
+  const stimuli = ['shapes', 'words', 'colors', 'combined'];
+  let screenshotIndex = 0;
 
-  test('Settings screen - Empty form (Ukrainian)', async ({ page }) => {
-    await navigateToSettings(page, 'uk');
-    await expect(page).toHaveScreenshot('settings-empty-uk.png');
-  });
+  for (const protocol of protocols) {
+    await page.locator('#protocol-select').selectOption(protocol);
+    const regimes = protocol === 'feedback' ? ['mobility', 'strength'] : ['standard'];
+    for (const regime of regimes) {
+      await page.locator('#mode-select').selectOption(regime);
+      for (const testType of testTypes) {
+        await page.locator('#test-type-select').selectOption(testType);
+        for (const stimulus of stimuli) {
+          await page.locator('#stimulus-select').selectOption(stimulus);
+          await expect(page.locator('#compact-preview')).toBeVisible();
+          await expect(page.locator('#compact-instruction')).not.toBeEmpty();
+          await expect(page.locator('#start-test-btn')).not.toBeEmpty();
+          await expect(page.locator('#compact-parameters input')).toHaveCount(protocol === 'feedback' ? 10 : 7);
 
-  test('Settings screen - Filled form with shapes mode selected', async ({ page }) => {
-    await navigateToSettings(page, 'en');
-    await fillPersonalData(page);
-    await selectTestMode(page, 'shapes');
-    await expect(page).toHaveScreenshot('settings-filled-shapes-en.png');
-  });
-
-  test('Settings screen - Filled form with colors mode selected', async ({ page }) => {
-    await navigateToSettings(page, 'en');
-    await fillPersonalData(page);
-    await selectTestMode(page, 'colors');
-    await expect(page).toHaveScreenshot('settings-filled-colors-en.png');
-  });
-
-  test('Settings screen - Filled form with words mode selected', async ({ page }) => {
-    await navigateToSettings(page, 'en');
-    await fillPersonalData(page);
-    await selectTestMode(page, 'words');
-    await expect(page).toHaveScreenshot('settings-filled-words-en.png');
-  });
-
-  test('Settings screen - Filled form with combined mode selected', async ({ page }) => {
-    await navigateToSettings(page, 'en');
-    await fillPersonalData(page);
-    await selectTestMode(page, 'combined');
-    await expect(page).toHaveScreenshot('settings-filled-combined-en.png');
-  });
+          if (screenshotIndex < 8 || testType === 'crt2-3') {
+            const snapshotName = `matrix-${protocol}-${regime}-${testType}-${stimulus}.png`;
+            await expect(page).toHaveScreenshot(snapshotName, {fullPage: true});
+            await page.screenshot({path: testInfo.outputPath(snapshotName), fullPage: true});
+            screenshotIndex++;
+          }
+        }
+      }
+    }
+  }
 });
 
-test.describe('Test Selection Screen - Different Modes', () => {
-  async function navigateToTestSelectionWithMode(page: any, mode: 'shapes' | 'colors' | 'words' | 'combined', language: 'en' | 'uk' = 'en') {
-    await navigateToSettings(page, language);
-    await fillPersonalData(page);
-    await selectTestMode(page, mode);
-    await page.locator('#start-test-btn').click();
-    await expect(page.locator('#test-type-selection-screen')).toBeVisible();
+test('settings matrix: all checkbox combinations remain visible and selectable', async ({page}) => {
+  await openSettings(page);
+  await fillPersonalData(page);
+
+  for (const protocol of ['optimal', 'feedback']) {
+    await page.locator('#protocol-select').selectOption(protocol);
+    for (const delay of [false, true]) {
+      for (const stimuli of [false, true]) {
+        const delayBox = page.locator('#compact-use-pregenerated-delay');
+        const stimuliBox = page.locator('#compact-use-pregenerated-stimuli');
+        if ((await delayBox.isChecked()) !== delay) await delayBox.click();
+        if ((await stimuliBox.isChecked()) !== stimuli) await stimuliBox.click();
+        await expect(delayBox).toBeChecked({checked: delay});
+        await expect(stimuliBox).toBeChecked({checked: stimuli});
+      }
+    }
   }
-
-  test('Test selection - SVMR with shapes mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'shapes', 'en');
-    await page.locator('#pzmr-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-svmr-shapes.png');
-  });
-
-  test('Test selection - SVMR with colors mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'colors', 'en');
-    await page.locator('#pzmr-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-svmr-colors.png');
-  });
-
-  test('Test selection - SVMR with words mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'words', 'en');
-    await page.locator('#pzmr-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-svmr-words.png');
-  });
-
-  test('Test selection - SVMR with combined mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'combined', 'en');
-    await page.locator('#pzmr-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-svmr-combined.png');
-  });
-
-  test('Test selection - CRT1-3 with colors mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'colors', 'en');
-    await page.locator('#rv1-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-crt13-colors.png');
-  });
-
-  test('Test selection - CRT1-3 with words mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'words', 'en');
-    await page.locator('#rv1-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-crt13-words.png');
-  });
-
-  test('Test selection - CRT1-3 with combined mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'combined', 'en');
-    await page.locator('#rv1-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-crt13-combined.png');
-  });
-
-  test('Test selection - CRT2-3 with colors mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'colors', 'en');
-    await page.locator('#rv2-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-crt23-colors.png');
-  });
-
-  test('Test selection - CRT2-3 with words mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'words', 'en');
-    await page.locator('#rv2-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-crt23-words.png');
-  });
-
-  test('Test selection - CRT2-3 with combined mode', async ({ page }) => {
-    await navigateToTestSelectionWithMode(page, 'combined', 'en');
-    await page.locator('#rv2-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-crt23-combined.png');
-  });
 });
 
-test.describe('Test Selection Screen - Language Coverage', () => {
-  async function navigateToTestSelectionDefaultMode(page: any, language: 'en' | 'uk' = 'en') {
-    await navigateToSettings(page, language);
-    await fillPersonalData(page);
-    // Default mode is shapes
-    await page.locator('#start-test-btn').click();
-    await expect(page.locator('#test-type-selection-screen')).toBeVisible();
-  }
+test('preview stays fixed while combined stimulus contains shape, colour and word', async ({page}) => {
+  await openSettings(page);
+  await page.locator('#stimulus-select').selectOption('combined');
+  await page.locator('#test-type-select').selectOption('crt2-3');
+  await expect(page.locator('#compact-preview svg')).toHaveCount(3);
+  await expect(page.locator('#compact-preview .grid-cols-3')).toBeVisible();
 
-  test('SVMR - Ukrainian with default shapes mode', async ({ page }) => {
-    await navigateToTestSelectionDefaultMode(page, 'uk');
-    await page.locator('#pzmr-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-svmr-uk.png');
-  });
+  const before = await page.locator('#compact-preview svg').first().boundingBox();
+  await page.locator('#compact-stimulus-size').fill('70');
+  await page.locator('#compact-stimulus-size').dispatchEvent('input');
+  const after = await page.locator('#compact-preview svg').first().boundingBox();
+  expect(after?.width).toBeCloseTo(before?.width ?? 0, 1);
+});
 
-  test('CRT1-3 - Ukrainian with default shapes mode', async ({ page }) => {
-    await navigateToTestSelectionDefaultMode(page, 'uk');
-    await page.locator('#rv1-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-crt13-uk.png');
-  });
+test('compact parameters keep the delay range aligned at a narrow viewport', async ({page}) => {
+  await page.setViewportSize({width: 700, height: 900});
+  await openSettings(page);
+  await page.locator('#protocol-select').selectOption('optimal');
 
-  test('CRT2-3 - Ukrainian with default shapes mode', async ({ page }) => {
-    await navigateToTestSelectionDefaultMode(page, 'uk');
-    await page.locator('#rv2-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-crt23-uk.png');
-  });
-
-  test('Switching flow - User switches from SVMR to CRT1-3 to CRT2-3', async ({ page }) => {
-    await navigateToTestSelectionDefaultMode(page, 'en');
-
-    // Start with SVMR
-    await page.locator('#pzmr-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-
-    // Switch to CRT1-3
-    await page.locator('#rv1-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-switch-to-crt13.png');
-
-    // Switch to CRT2-3
-    await page.locator('#rv2-3-button').click();
-    await expect(page.locator('#test-instruction-preview')).toBeVisible();
-    await expect(page).toHaveScreenshot('test-selection-switch-to-crt23.png');
-  });
+  const minInput = page.locator('#compact-delay-min');
+  const maxInput = page.locator('#compact-delay-max');
+  const minBox = await minInput.boundingBox();
+  const maxBox = await maxInput.boundingBox();
+  expect(minBox).not.toBeNull();
+  expect(maxBox).not.toBeNull();
+  expect(Math.abs((minBox?.y ?? 0) - (maxBox?.y ?? 0))).toBeLessThanOrEqual(1);
+  expect((minBox?.x ?? 0) + (minBox?.width ?? 0)).toBeLessThanOrEqual(maxBox?.x ?? 0);
+  expect(await page.locator('#compact-preview > div').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 });

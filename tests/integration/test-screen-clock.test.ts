@@ -20,12 +20,22 @@ const createContext = (
     exposureDelay,
     stimulusCount,
     testType,
+    protocolMode: 'optimal',
+    feedbackSubmode: 'mobility',
+    feedback: {
+      initialExposure: 900,
+      adjustmentStep: 20,
+      minExposure: 20,
+      maxExposure: 900,
+      pause: 200,
+      duration: 300,
+    },
     usePregenerated: {exposureDelay: false, stimuli: true},
   },
   debugMode: 'debug',
 });
 
-const press = (code: string): void => document.dispatchEvent(new KeyboardEvent('keydown', {code}));
+const press = (code: string): boolean => document.dispatchEvent(new KeyboardEvent('keydown', {code}));
 
 const startShowingFirstStimulus = (scheduler: DeterministicScheduler): void => scheduler.advanceBy(4_000);
 

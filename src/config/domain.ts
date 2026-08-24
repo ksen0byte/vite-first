@@ -17,6 +17,8 @@ export interface SliderConfig {
 }
 
 export type TestMode = "shapes" | "words" | "colors" | "combined";
+export type ProtocolMode = "optimal" | "feedback";
+export type FeedbackSubmode = "mobility" | "strength";
 export type TestType = "svmr" | "crt1-3" | "crt2-3";
 export type HandAction = 'LEFT' | 'RIGHT' | 'DEFAULT' | 'NONE';
 export type Gender = 'male' | 'female';
@@ -24,6 +26,15 @@ export type StimulusSize = number;
 export type ExposureTime = number;
 export type ExposureDelay = readonly [number, number];
 export type StimulusCount = number;
+
+export interface FeedbackSettings {
+  readonly initialExposure: number;
+  readonly adjustmentStep: number;
+  readonly minExposure: number;
+  readonly maxExposure: number;
+  readonly pause: number;
+  readonly duration: number;
+}
 
 
 export interface PersonalData {
@@ -34,12 +45,15 @@ export interface PersonalData {
 }
 
 export interface TestSettings {
+  readonly protocolMode: ProtocolMode;
+  readonly feedbackSubmode: FeedbackSubmode;
   readonly testMode: TestMode;
   readonly stimulusSize: StimulusSize;
   readonly exposureTime: ExposureTime;
   readonly exposureDelay: ExposureDelay;
   readonly stimulusCount: StimulusCount;
   readonly testType: TestType;
+  readonly feedback: FeedbackSettings;
   readonly usePregenerated: {
     readonly exposureDelay: boolean;
     readonly stimuli: boolean;

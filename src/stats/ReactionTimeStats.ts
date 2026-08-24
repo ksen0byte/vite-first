@@ -500,7 +500,7 @@ export class ReactionTimeStats {
     return [
       `${localize("countLabel")}: ${this.count}`,
       `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
-      `${localize("modeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
+      `${localize("statisticalModeLabel")}: ${this.modeVal ? this.modeVal!.toFixed(2) : "N/A"}`,
       `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
       `${localize("cvLabel")}: ${this.cvVal.toFixed(2)}%`,
       `${localize("entropyLabel")}: ${this.entropyVal.toFixed(3)} ${localize("bits")}`,
