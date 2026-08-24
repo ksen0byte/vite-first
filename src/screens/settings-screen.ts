@@ -292,10 +292,11 @@ function validateParameterRanges(): void {
 
 /**
  * Reveals a field's validator hint only while it is actually invalid - either
- * through the cross-field range error (aria-invalid) or through a native
- * constraint violation such as an out-of-range value (:user-invalid, set after
- * the user interacts with the field). Valid fields keep the hint collapsed so
- * the card stays compact.
+ * through the cross-field range error (aria-invalid, set by
+ * validateParameterRanges) or through a native constraint violation such as an
+ * out-of-range value. checkValidity is evaluated directly (instead of relying
+ * on :user-invalid) so the hint appears immediately while typing, not only
+ * after the field loses focus. Valid fields keep the hint collapsed.
  */
 function syncParameterHints(): void {
   for (const definition of Object.values(parameters)) {
@@ -303,13 +304,7 @@ function syncParameterHints(): void {
     const hint = document.getElementById(`${definition.id}-hint`);
     if (!(input instanceof HTMLInputElement) || !hint) continue;
     const crossFieldInvalid = input.getAttribute("aria-invalid") === "true";
-    let nativeInvalid: boolean;
-    try {
-      nativeInvalid = input.matches(":user-invalid");
-    } catch {
-      // Fallback for engines without :user-invalid support.
-      nativeInvalid = !input.checkValidity() && input.value !== "";
-    }
+    const nativeInvalid = !input.checkValidity() && input.value !== "";
     hint.classList.toggle("hidden", !(crossFieldInvalid || nativeInvalid));
   }
 }

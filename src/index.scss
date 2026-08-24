@@ -41,6 +41,13 @@
   }
 }
 
+/* daisyUI reveals .validator-hint via an input-sibling selector only; the
+   settings fields wrap the input in a flex row (unit outside the field), so
+   visibility is driven by the hidden class from syncParameterHints instead. */
+#main .validator-hint:not(.hidden) {
+  visibility: visible;
+}
+
 @media print {
   @page {
     size: landscape;
