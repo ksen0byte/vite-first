@@ -1,5 +1,5 @@
 import {Gender, TestMode, TestSettings, TestType, TrialResult} from '../config/domain.ts';
-import {settings as defaultSettings} from '../config/settings.ts';
+import {settings as appDefaults} from '../config/settings.ts';
 import {User} from '../db/db.ts';
 import {Result, failure, success} from './result.ts';
 
@@ -68,12 +68,12 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       const testPath = `${bundlePath}.tests[${testIndex}]`;
       const test = bundle.tests[testIndex];
       if (!isRecord(test) || !isRecord(test.testSettings)) return invalidType(testPath, 'test record');
-      const settings = test.testSettings;
-      if (!isOneOf(settings.testMode, testModes)) return invalidValue(`${testPath}.testSettings.testMode`, 'test mode');
-      if (!isOneOf(settings.testType, testTypes)) return invalidValue(`${testPath}.testSettings.testType`, 'test type');
-      if (!Array.isArray(settings.exposureDelay) || settings.exposureDelay.length !== 2 || !settings.exposureDelay.every((value) => typeof value === 'number' && Number.isFinite(value)) || settings.exposureDelay[0] > settings.exposureDelay[1]) return invalidValue(`${testPath}.testSettings.exposureDelay`, 'ordered finite pair');
-      if (!isRecord(settings.usePregenerated) || typeof settings.usePregenerated.exposureDelay !== 'boolean' || typeof settings.usePregenerated.stimuli !== 'boolean') return invalidValue(`${testPath}.testSettings.usePregenerated`, 'boolean flags');
-      if (![settings.stimulusSize, settings.exposureTime, settings.stimulusCount].every((value) => typeof value === 'number' && Number.isFinite(value)) || !Number.isInteger(settings.stimulusCount)) return invalidValue(`${testPath}.testSettings`, 'finite numeric settings and integer stimulus count');
+      const parsed = test.testSettings;
+      if (!isOneOf(parsed.testMode, testModes)) return invalidValue(`${testPath}.testSettings.testMode`, 'test mode');
+      if (!isOneOf(parsed.testType, testTypes)) return invalidValue(`${testPath}.testSettings.testType`, 'test type');
+      if (!Array.isArray(parsed.exposureDelay) || parsed.exposureDelay.length !== 2 || !parsed.exposureDelay.every((value) => typeof value === 'number' && Number.isFinite(value)) || parsed.exposureDelay[0] > parsed.exposureDelay[1]) return invalidValue(`${testPath}.testSettings.exposureDelay`, 'ordered finite pair');
+      if (!isRecord(parsed.usePregenerated) || typeof parsed.usePregenerated.exposureDelay !== 'boolean' || typeof parsed.usePregenerated.stimuli !== 'boolean') return invalidValue(`${testPath}.testSettings.usePregenerated`, 'boolean flags');
+      if (![parsed.stimulusSize, parsed.exposureTime, parsed.stimulusCount].every((value) => typeof value === 'number' && Number.isFinite(value)) || !Number.isInteger(parsed.stimulusCount)) return invalidValue(`${testPath}.testSettings`, 'finite numeric parsed and integer stimulus count');
       if (typeof test.date !== 'string' || Number.isNaN(Date.parse(test.date))) return invalidValue(`${testPath}.date`, 'ISO date');
       const trials: TrialResult[] = [];
       if (Array.isArray(test.trials)) {
@@ -99,21 +99,21 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
         testSettings: {
           protocolMode: 'optimal',
           feedbackSubmode: 'mobility',
-          testMode: settings.testMode,
-          stimulusSize: settings.stimulusSize as number,
-          exposureTime: settings.exposureTime as number,
-          exposureDelay: [settings.exposureDelay[0] as number, settings.exposureDelay[1] as number],
-          stimulusCount: settings.stimulusCount as number,
-          testType: settings.testType,
+          testMode: parsed.testMode,
+          stimulusSize: parsed.stimulusSize as number,
+          exposureTime: parsed.exposureTime as number,
+          exposureDelay: [parsed.exposureDelay[0] as number, parsed.exposureDelay[1] as number],
+          stimulusCount: parsed.stimulusCount as number,
+          testType: parsed.testType,
           feedback: {
-            initialExposure: defaultSettings.default.feedback.initialExposure,
-            adjustmentStep: defaultSettings.default.feedback.adjustmentStep,
-            minExposure: defaultSettings.default.feedback.minExposure,
-            maxExposure: defaultSettings.default.feedback.maxExposure,
-            pause: defaultSettings.default.feedback.pause,
-            duration: defaultSettings.default.feedback.duration,
+            initialExposure: appDefaults.default.feedback.initialExposure,
+            adjustmentStep: appDefaults.default.feedback.adjustmentStep,
+            minExposure: appDefaults.default.feedback.minExposure,
+            maxExposure: appDefaults.default.feedback.maxExposure,
+            pause: appDefaults.default.feedback.pause,
+            duration: appDefaults.default.feedback.duration,
           },
-          usePregenerated: settings.usePregenerated as TestSettings['usePregenerated'],
+          usePregenerated: parsed.usePregenerated as TestSettings['usePregenerated'],
         },
         trials,
         date: test.date,

@@ -1,17 +1,17 @@
-import {expect, test} from '@playwright/test';
+import {expect, test, type Page} from '@playwright/test';
 
 test.beforeEach(async ({page}) => {
   await page.addInitScript(() => localStorage.clear());
   await page.goto('./');
 });
 
-async function openSettings(page: any) {
+async function openSettings(page: Page) {
   await page.goto('./');
   await page.locator('#service-reaction').click();
   await expect(page.locator('#personal-data-form')).toBeVisible();
 }
 
-async function fillPersonalData(page: any) {
+async function fillPersonalData(page: Page) {
   await page.locator('#surname-input').fill('Example');
   await page.locator('#name-input').fill('Ada');
   await page.locator('#age-input').fill('34');

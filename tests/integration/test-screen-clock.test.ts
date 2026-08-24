@@ -3,6 +3,7 @@
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {AppContext} from '../../src/config/domain.ts';
 import AppContextManager from '../../src/config/AppContextManager.ts';
+import {defaultAppContext} from '../../src/config/settings.ts';
 import Router from '../../src/routing/router.ts';
 import {TestScreen} from '../../src/screens/test-screen.ts';
 import {DeterministicScheduler} from '../support/deterministic-scheduler.ts';
@@ -12,27 +13,19 @@ const createContext = (
   testType: AppContext['testSettings']['testType'] = 'svmr',
   stimulusCount = 1,
 ): AppContext => ({
+  ...defaultAppContext,
   personalData: {firstName: 'Ada', lastName: 'Example', age: 34, gender: 'female'},
+  debugMode: 'debug',
   testSettings: {
+    ...defaultAppContext.testSettings,
     testMode: 'shapes',
     stimulusSize: 50,
     exposureTime: 500,
     exposureDelay,
     stimulusCount,
     testType,
-    protocolMode: 'optimal',
-    feedbackSubmode: 'mobility',
-    feedback: {
-      initialExposure: 900,
-      adjustmentStep: 20,
-      minExposure: 20,
-      maxExposure: 900,
-      pause: 200,
-      duration: 300,
-    },
     usePregenerated: {exposureDelay: false, stimuli: true},
   },
-  debugMode: 'debug',
 });
 
 const press = (code: string): boolean => document.dispatchEvent(new KeyboardEvent('keydown', {code}));

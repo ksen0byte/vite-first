@@ -1,5 +1,5 @@
 import {AppContext, TestMode, ProtocolMode, TestType} from "../config/domain.ts";
-import {defaultAppContext, parameters, ParameterDefinition} from "../config/settings.ts";
+import {defaultAppContext, parameterPairs, parameters, ParameterDefinition} from "../config/settings.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {setupFooter} from "../components/footer.ts";
 import {setupHeader} from "../components/header.ts";
@@ -282,14 +282,12 @@ function validateParameterRanges(): void {
       errorText?.classList.add("hidden");
     }
   };
-  const delayMin = readNumberInput(parameters.exposureDelayMin);
-  const delayMax = readNumberInput(parameters.exposureDelayMax);
-  markRange(parameters.exposureDelayMin, delayMin > delayMax ? "delayMinExceedsMaxError" : null);
-  const feedbackMin = readNumberInput(parameters.feedbackMinExposure);
-  const feedbackMax = readNumberInput(parameters.feedbackMaxExposure);
-  markRange(parameters.feedbackMinExposure, feedbackMin > feedbackMax ? "exposureMinExceedsMaxError" : null);
+  for (const [minDefinition, maxDefinition, errorKey] of parameterPairs) {
+    const minValue = readNumberInput(minDefinition);
+    const maxValue = readNumberInput(maxDefinition);
+    markRange(minDefinition, minValue > maxValue ? errorKey : null);
+  }
 }
-
 /**
  * Reveals a field's validator hint only while it is actually invalid - either
  * through the cross-field range error (aria-invalid, set by

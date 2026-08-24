@@ -1,6 +1,6 @@
-import {expect, test} from '@playwright/test';
+import {expect, test, type Page} from '@playwright/test';
 
-async function startSession(page: any, testType: string, protocol = 'optimal') {
+async function startSession(page: Page, testType: string, protocol = 'optimal') {
   await page.goto('./');
   await page.locator('#language-toggle').check();
   await page.locator('#service-reaction').click();

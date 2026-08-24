@@ -38,9 +38,36 @@ export const parameters = {
   feedbackDuration: {id: "compact-duration", labelKey: "feedbackDuration", unitKey: "s", min: 30, max: 1800, step: 30, defaultValue: 300},
 } as const satisfies Record<string, ParameterDefinition>;
 
+/**
+ * Ordered min/max parameter pairs that must satisfy min <= max. The settings
+ * screen derives its cross-field validation from this list, so a new ranged
+ * pair only needs an entry here (plus the two parameter definitions).
+ */
+export const parameterPairs: readonly (readonly [ParameterDefinition, ParameterDefinition, string])[] = [
+  [parameters.exposureDelayMin, parameters.exposureDelayMax, "delayMinExceedsMaxError"],
+  [parameters.feedbackMinExposure, parameters.feedbackMaxExposure, "exposureMinExceedsMaxError"],
+] as const;
+
+/**
+ * Recursively freezes a config object so factory defaults cannot be mutated at
+ * runtime (defence in depth on top of AppContextManager's clone-on-access).
+ */
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const property of Object.values(value as Record<string, unknown>)) {
+      deepFreeze(property);
+    }
+  }
+  return value;
+}
+
+deepFreeze(parameters);
+deepFreeze(parameterPairs);
+
 export const settings = {
   default: {
-    language: "uk",
+    language: "uk" as "uk" | "en",
     testMode: "shapes" as TestMode,
     stimulusSize: parameters.stimulusSize.defaultValue as StimulusSize,
     exposureTime: parameters.exposureTime.defaultValue as ExposureTime,
@@ -56,6 +83,8 @@ export const settings = {
     } as FeedbackSettings,
   }
 };
+
+deepFreeze(settings);
 
 export const defaultAppContext: AppContext = {
   personalData: {
@@ -81,6 +110,8 @@ export const defaultAppContext: AppContext = {
   },
   debugMode: "prod",
 };
+
+deepFreeze(defaultAppContext);
 
 export const printConfig = {
   chart: {
