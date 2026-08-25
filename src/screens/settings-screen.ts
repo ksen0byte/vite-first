@@ -140,17 +140,17 @@ function setupCompactSettings(appContext: AppContext): void {
       value: "combined",
       key: "combinedOption"
     }], selectedStimulus);
-    renderCompactParameters(appContext, selectedProtocol);
-    renderCompactInstruction(selectedTestType, selectedStimulus);
+    renderCompactParameters(appContext, selectedProtocol, selectedMode);
+    renderCompactInstruction(selectedTestType, selectedStimulus, selectedProtocol);
     updateLanguageUI();
-    renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol);
+    renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol, selectedMode);
     validateParameterRanges();
     syncParameterHints();
   };
   const onParametersChanged = () => {
     validateParameterRanges();
     syncParameterHints();
-    renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol);
+    renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol, selectedMode);
   };
   protocol.addEventListener("change", () => {
     selectedProtocol = protocol.value as ProtocolMode;
@@ -176,38 +176,50 @@ function setupCompactSettings(appContext: AppContext): void {
   refresh();
 }
 
-function renderCompactParameters(appContext: AppContext, protocol: ProtocolMode): void {
+function renderCompactParameters(appContext: AppContext, protocol: ProtocolMode, submode: string): void {
   const testSettings = appContext.testSettings;
   const feedback = testSettings.feedback;
   const rows = protocol === "feedback"
-    ? [
-      parameterField(parameters.stimulusSize, testSettings.stimulusSize),
-      parameterField(parameters.stimulusCount, testSettings.stimulusCount),
-      parameterField(parameters.feedbackInitialExposure, feedback.initialExposure),
-      parameterField(parameters.feedbackAdjustmentStep, feedback.adjustmentStep),
-      parameterField(parameters.feedbackMinExposure, feedback.minExposure, "exposureMinExceedsMaxError"),
-      parameterField(parameters.feedbackMaxExposure, feedback.maxExposure),
-      parameterField(parameters.feedbackPause, feedback.pause),
-      parameterField(parameters.feedbackDuration, feedback.duration),
-    ]
+    ? submode === "strength"
+      ? [
+        parameterField(parameters.stimulusSize, testSettings.stimulusSize),
+        parameterField(parameters.feedbackInitialExposure, feedback.initialExposure),
+        parameterField(parameters.feedbackAdjustmentStep, feedback.adjustmentStep),
+        parameterField(parameters.feedbackMinExposure, feedback.minExposure, "exposureMinExceedsMaxError"),
+        parameterField(parameters.feedbackMaxExposure, feedback.maxExposure),
+        parameterField(parameters.feedbackPause, feedback.pause),
+        parameterField(parameters.feedbackDuration, feedback.duration),
+      ]
+      : [
+        parameterField(parameters.stimulusSize, testSettings.stimulusSize),
+        parameterField(parameters.feedbackStimulusCount, testSettings.stimulusCount),
+        parameterField(parameters.feedbackInitialExposure, feedback.initialExposure),
+        parameterField(parameters.feedbackAdjustmentStep, feedback.adjustmentStep),
+        parameterField(parameters.feedbackMinExposure, feedback.minExposure, "exposureMinExceedsMaxError"),
+        parameterField(parameters.feedbackMaxExposure, feedback.maxExposure),
+        parameterField(parameters.feedbackPause, feedback.pause),
+      ]
     : [
       parameterField(parameters.stimulusSize, testSettings.stimulusSize),
       parameterField(parameters.stimulusCount, testSettings.stimulusCount),
-      parameterField(parameters.exposureTime, testSettings.exposureTime, "col-span-2"),
+      parameterField(parameters.exposureTime, testSettings.exposureTime),
       renderDelayRangeFields(testSettings.exposureDelay[0], testSettings.exposureDelay[1]),
     ];
   document.getElementById("compact-parameters")!.innerHTML = rows.join("") + renderPregeneratedOptions(testSettings);
 }
 
-function renderCompactInstruction(testType: TestType, testMode: TestMode): void {
-  const key = testType === "svmr" ? "instructionSvmr" : testType === "crt1-3" ? `instructionCRT13_${testMode}` : `instructionCRT23_${testMode}`;
+function renderCompactInstruction(testType: TestType, testMode: TestMode, protocol: ProtocolMode): void {
+  const key = protocol === "feedback"
+    ? "instructionFeedback"
+    : testType === "svmr" ? "instructionSvmr" : testType === "crt1-3" ? `instructionCRT13_${testMode}` : `instructionCRT23_${testMode}`;
   document.getElementById("compact-instruction")!.dataset.localizeHtml = key;
 }
 
-function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: ProtocolMode): void {
+function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: ProtocolMode, submode: string): void {
   const preview = document.getElementById("compact-preview")!;
-  const count = readNumberInput(parameters.stimulusCount);
-  const exposure = protocol === "feedback"
+  const isFeedback = protocol === "feedback";
+  const isStrength = isFeedback && submode === "strength";
+  const exposure = isFeedback
     ? readNumberInput(parameters.feedbackInitialExposure)
     : readNumberInput(parameters.exposureTime);
   const stimulusSize = PREVIEW_STIMULUS_SIZE;
@@ -215,10 +227,23 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
     ? `${previewReactionColumn(testMode, "left", stimulusSize)}${previewReactionColumn(testMode, "ignore", stimulusSize)}${previewReactionColumn(testMode, "right", stimulusSize)}`
     : previewReactionColumn(testMode, "space", stimulusSize);
   const stimulus = `<div class="grid w-full ${testType === "crt2-3" ? "grid-cols-3" : "grid-cols-1"} items-end gap-2 px-2">${stimulusColumns}</div>`;
-  const delayMin = protocol === "feedback" ? readNumberInput(parameters.feedbackPause) : readNumberInput(parameters.exposureDelayMin);
-  const delayMax = protocol === "feedback" ? delayMin : readNumberInput(parameters.exposureDelayMax);
+  // Feedback cadence: fixed pause between trials; the pause doubles as the
+  // late-answer window. Optimal: random delay range.
+  const pauseMs = isFeedback ? readNumberInput(parameters.feedbackPause) : undefined;
+  const delayMin = pauseMs ?? readNumberInput(parameters.exposureDelayMin);
+  const delayMax = pauseMs ?? readNumberInput(parameters.exposureDelayMax);
+
+  // Session-extent badge: count-driven (optimal/mobility) vs time-driven (strength).
+  const sessionBadge = isStrength
+    ? `<span class="rounded border border-gray-500 px-2 py-1 font-mono">⏱ ${readNumberInput(parameters.feedbackDuration)}&nbsp;<span data-localize="s"></span></span>`
+    : `<span class="font-mono">× ${(isFeedback ? readNumberInput(parameters.feedbackStimulusCount) : readNumberInput(parameters.stimulusCount))}&nbsp;<span data-localize="units"></span></span>`;
+
+  const adaptationBadge = isFeedback
+    ? `<span>→</span><span class="rounded border border-emerald-500 px-2 py-1"><span data-localize="previewAdaptationState"></span>&nbsp;±${readNumberInput(parameters.feedbackAdjustmentStep)}&nbsp;<span data-localize="ms"></span></span>`
+    : "";
+
   const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${delayMin}–${delayMax}&nbsp;<span data-localize="ms"></span>]`;
-  const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-300"><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span><span>→</span><span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span data-localize="ms"></span>]</span><span>→</span><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span><span class="font-mono">× ${count}&nbsp;<span data-localize="units"></span></span></div>`;
+  const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-300"><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span><span>→</span><span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span data-localize="ms"></span>]</span><span>→</span><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span>${adaptationBadge}${sessionBadge}</div>`;
   preview.innerHTML = `<div class="relative flex min-h-[30rem] w-full items-center justify-center overflow-hidden rounded-box bg-black py-10 text-white">${stimulus}${stateDiagram}</div>`;
   updateLanguageUI();
 }
@@ -339,7 +364,9 @@ function compactStartButtonCallback(): void {
       testType,
       testMode,
       stimulusSize: readNumberInput(parameters.stimulusSize),
-      stimulusCount: readNumberInput(parameters.stimulusCount),
+      stimulusCount: protocolMode === "feedback" && feedbackSubmode !== "strength"
+        ? readNumberInput(parameters.feedbackStimulusCount)
+        : readNumberInput(parameters.stimulusCount),
       exposureTime: readNumberInput(parameters.exposureTime),
       exposureDelay: [delayMin, delayMax],
       feedback: {

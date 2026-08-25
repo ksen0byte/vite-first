@@ -36,6 +36,12 @@ export const parameters = {
   feedbackMaxExposure: {id: "compact-exposure-max", labelKey: "feedbackMaxExposure", unitKey: "ms", min: 20, max: 900, step: 10, defaultValue: 900},
   feedbackPause: {id: "compact-pause", labelKey: "feedbackPause", unitKey: "ms", min: 0, max: 2500, step: 10, defaultValue: 200},
   feedbackDuration: {id: "compact-duration", labelKey: "feedbackDuration", unitKey: "s", min: 30, max: 1800, step: 30, defaultValue: 300},
+  /**
+   * Mobility-submode series length (doc §2.1 recommends ~120 stimuli). Kept
+   * as a separate definition so its default can differ from the optimal
+   * protocol's count while both persist into the same TestSettings field.
+   */
+  feedbackStimulusCount: {id: "compact-stimulus-count-fb", labelKey: "stimulusCountLabel", unitKey: "units", min: 30, max: 480, step: 10, defaultValue: 120},
 } as const satisfies Record<string, ParameterDefinition>;
 
 /**
