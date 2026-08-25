@@ -28,6 +28,31 @@ the current context.
 | *Any* (except `Finished`, `CountingDown`) | Excessive input (>3)                | `SpamDetected`           | Clears timers, destroys the active test screen, and redirects to `/spam-warning`. |
 | `SpamDetected`                            | User clicks "Start Test Again"      | Test type selection page | The warning page routes back to `/testTypeSelection`.                             |
 
+### Feedback-protocol differences (`protocolMode === "feedback"`)
+
+The optimal-protocol flow above is unchanged. Feedback mode alters the trial
+lifecycle per the program description (§2.1/§2.2):
+
+- **Unified cadence**: the inter-stimulus pause doubles as the late-answer
+  window. After the first trial no separate `Delayed` phase is inserted;
+  each trial lasts `exposure (adaptive) + pause`, where `pause` is the
+  late-answer window.
+- **Expiry vs window close**: at `exposure` the stimulus visually disappears
+  and an unanswered trial records a *provisional* `Miss` /
+  `CorrectRejection`. The trial stays open until `exposure + pause`; a press
+  inside that window is a **late answer to the same trial** (classified
+  against it, true elapsed RT recorded, replaces the provisional outcome
+  exactly once). A press after an in-exposure answer is ignored.
+- **Adaptation at window close only**: `exposure ±= adjustmentStep`
+  (correct = `Success`/`CorrectRejection`, clamped to
+  `[minExposure, maxExposure]`). Deferring adaptation to the window close
+  prevents a double-step when a late answer flips a `Miss` into a `Success`.
+- **Termination**: mobility submode ends after `stimulusCount` trials;
+  strength submode ends at the first closed window at/after
+  `feedback.duration` seconds (the in-flight trial completes cleanly).
+- **Recording**: every trial stores `exposureMs` (the exposure in force when
+  its stimulus was shown).
+
 ---
 
 ## 2. Timing & Execution Loop

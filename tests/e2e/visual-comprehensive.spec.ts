@@ -39,7 +39,10 @@ test('settings matrix: every protocol, regime, submode and stimulus combination 
           await expect(page.locator('#compact-preview')).toBeVisible();
           await expect(page.locator('#compact-instruction')).not.toBeEmpty();
           await expect(page.locator('#start-test-btn')).not.toBeEmpty();
-          await expect(page.locator('#compact-parameters input')).toHaveCount(protocol === 'feedback' ? 10 : 7);
+          // Parameter inputs per shape: optimal = size, count, exposure +
+          // delay-min/max (5) + 2 checkboxes = 7; both feedback submodes =
+          // size + 5 or 6 feedback fields + 2 checkboxes = 9.
+          await expect(page.locator('#compact-parameters input')).toHaveCount(protocol === 'feedback' ? 9 : 7);
 
           if (screenshotIndex < 8 || testType === 'crt2-3') {
             const snapshotName = `matrix-${protocol}-${regime}-${testType}-${stimulus}.png`;
