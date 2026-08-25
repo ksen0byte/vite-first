@@ -42,12 +42,12 @@ const renderDelayRangeFields = (minValue: number, maxValue: number): string => `
     ${parameterField(parameters.exposureDelayMax, maxValue)}
   </div>`;
 
-const renderPregeneratedOptions = (settings: AppContext["testSettings"]): string => `
+const renderPregeneratedOptions = (settings: AppContext["testSettings"], showDelayOption: boolean): string => `
   <div class="col-span-full grid min-w-0 grid-cols-1 gap-3 border-t border-base-300 pt-3 sm:grid-cols-2">
-    <label class="flex min-w-0 cursor-pointer items-start gap-2">
+    ${showDelayOption ? `<label class="flex min-w-0 cursor-pointer items-start gap-2">
       <input id="compact-use-pregenerated-delay" type="checkbox" class="checkbox checkbox-md mt-0.5 shrink-0" ${settings.usePregenerated.exposureDelay ? "checked" : ""} />
       <span class="min-w-0 text-sm leading-6" data-localize="usePregeneratedDelay"></span>
-    </label>
+    </label>` : ""}
     <label class="flex min-w-0 cursor-pointer items-start gap-2">
       <input id="compact-use-pregenerated-stimuli" type="checkbox" class="checkbox checkbox-md mt-0.5 shrink-0" ${settings.usePregenerated.stimuli ? "checked" : ""} />
       <span class="min-w-0 text-sm leading-6" data-localize="usePregeneratedStimuli"></span>
@@ -205,7 +205,11 @@ function renderCompactParameters(appContext: AppContext, protocol: ProtocolMode,
       parameterField(parameters.exposureTime, testSettings.exposureTime),
       renderDelayRangeFields(testSettings.exposureDelay[0], testSettings.exposureDelay[1]),
     ];
-  document.getElementById("compact-parameters")!.innerHTML = rows.join("") + renderPregeneratedOptions(testSettings);
+  // The pregenerated-delays option only applies to the optimal protocol's
+  // random delay range; feedback cadence uses the fixed pause, so the checkbox
+  // is hidden there and the stored flag is passed through untouched.
+  document.getElementById("compact-parameters")!.innerHTML =
+    rows.join("") + renderPregeneratedOptions(testSettings, protocol === "optimal");
 }
 
 function renderCompactInstruction(testType: TestType, testMode: TestMode, protocol: ProtocolMode): void {
@@ -385,7 +389,10 @@ function compactStartButtonCallback(): void {
         duration: readNumberInput(parameters.feedbackDuration),
       },
       usePregenerated: {
-        exposureDelay: (document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement).checked,
+        // Hidden in feedback mode (the pause replaces the delay range), so fall
+        // back to the stored flag instead of a null-deref.
+        exposureDelay: (document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null)?.checked
+          ?? current.testSettings.usePregenerated.exposureDelay,
         stimuli: (document.getElementById("compact-use-pregenerated-stimuli") as HTMLInputElement).checked,
       },
     },

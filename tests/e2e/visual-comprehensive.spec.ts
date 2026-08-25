@@ -41,8 +41,9 @@ test('settings matrix: every protocol, regime, submode and stimulus combination 
           await expect(page.locator('#start-test-btn')).not.toBeEmpty();
           // Parameter inputs per shape: optimal = size, count, exposure +
           // delay-min/max (5) + 2 checkboxes = 7; both feedback submodes =
-          // size + 5 or 6 feedback fields + 2 checkboxes = 9.
-          await expect(page.locator('#compact-parameters input')).toHaveCount(protocol === 'feedback' ? 9 : 7);
+          // size + 5 or 6 feedback fields (no pregenerated-delay option -
+          // feedback cadence has no random delay range) + 1 checkbox = 8.
+          await expect(page.locator('#compact-parameters input')).toHaveCount(protocol === 'feedback' ? 8 : 7);
 
           if (screenshotIndex < 8 || testType === 'crt2-3') {
             const snapshotName = `matrix-${protocol}-${regime}-${testType}-${stimulus}.png`;
@@ -60,19 +61,24 @@ test('settings matrix: all checkbox combinations remain visible and selectable',
   await openSettings(page);
   await fillPersonalData(page);
 
-  for (const protocol of ['optimal', 'feedback']) {
-    await page.locator('#protocol-select').selectOption(protocol);
-    for (const delay of [false, true]) {
-      for (const stimuli of [false, true]) {
-        const delayBox = page.locator('#compact-use-pregenerated-delay');
-        const stimuliBox = page.locator('#compact-use-pregenerated-stimuli');
-        if ((await delayBox.isChecked()) !== delay) await delayBox.click();
-        if ((await stimuliBox.isChecked()) !== stimuli) await stimuliBox.click();
-        await expect(delayBox).toBeChecked({checked: delay});
-        await expect(stimuliBox).toBeChecked({checked: stimuli});
-      }
+  // The pregenerated-delay checkbox exists only in optimal mode - feedback
+  // cadence has no random delay range for it to control.
+  await page.locator('#protocol-select').selectOption('optimal');
+  for (const delay of [false, true]) {
+    for (const stimuli of [false, true]) {
+      const delayBox = page.locator('#compact-use-pregenerated-delay');
+      const stimuliBox = page.locator('#compact-use-pregenerated-stimuli');
+      if ((await delayBox.isChecked()) !== delay) await delayBox.click();
+      if ((await stimuliBox.isChecked()) !== stimuli) await stimuliBox.click();
+      await expect(delayBox).toBeChecked({checked: delay});
+      await expect(stimuliBox).toBeChecked({checked: stimuli});
     }
   }
+
+  await page.locator('#protocol-select').selectOption('feedback');
+  await expect(page.locator('#compact-use-pregenerated-delay')).toHaveCount(0);
+  // Stimulus-sequence option still applies in feedback mode.
+  await expect(page.locator('#compact-use-pregenerated-stimuli')).toBeVisible();
 });
 
 test('preview stays fixed while combined stimulus contains shape, colour and word', async ({page}) => {
