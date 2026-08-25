@@ -28,10 +28,10 @@ const parameterField = (definition: ParameterDefinition, value: number, errorKey
     <span class="mb-1 block text-sm font-medium" data-localize="${definition.labelKey}"></span>
     <div class="flex items-center gap-2">
       <input id="${definition.id}" class="input input-md input-bordered validator w-full text-base" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" />
-      <div class="shrink-0 text-sm font-bold" data-localize="${definition.unitKey}"></div>
+      <div class="shrink-0 text-sm font-bold unit-suffix" data-localize="${definition.unitKey}"></div>
     </div>
     <div class="validator-hint hidden text-left" id="${definition.id}-hint">
-      <span class="hint-range"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span data-localize="${definition.unitKey}"></span></span>
+      <span class="hint-range"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span class="unit-suffix" data-localize="${definition.unitKey}"></span></span>
       ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
     </div>
   </div>`;
@@ -242,8 +242,15 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
     ? `<span>→</span><span class="rounded border border-emerald-500 px-2 py-1"><span data-localize="previewAdaptationState"></span>&nbsp;±${readNumberInput(parameters.feedbackAdjustmentStep)}&nbsp;<span data-localize="ms"></span></span>`
     : "";
 
-  const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${delayMin}–${delayMax}&nbsp;<span data-localize="ms"></span>]`;
-  const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-300"><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span><span>→</span><span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span data-localize="ms"></span>]</span><span>→</span><span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span>${adaptationBadge}${sessionBadge}</div>`;
+  // Fixed pause (min === max) collapses to a single value; feedback cadence
+  // has no pre-stimulus delay - the pause IS the post-stimulus late-answer
+  // window, so it is shown only once, after the stimulus.
+  const rangeText = delayMin === delayMax ? `${delayMin}` : `${delayMin}–${delayMax}`;
+  const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${rangeText}&nbsp;<span class="unit-suffix" data-localize="ms"></span>]`;
+  const pauseChip = `<span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span>`;
+  const stimulusChip = `<span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span class="unit-suffix" data-localize="ms"></span>]</span>`;
+  const leadingPause = isFeedback ? "" : `${pauseChip}<span>→</span>`;
+  const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-300">${leadingPause}${stimulusChip}<span>→</span>${pauseChip}${adaptationBadge}${sessionBadge}</div>`;
   preview.innerHTML = `<div class="relative flex min-h-[30rem] w-full items-center justify-center overflow-hidden rounded-box bg-black py-10 text-white">${stimulus}${stateDiagram}</div>`;
   updateLanguageUI();
 }

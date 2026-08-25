@@ -50,6 +50,20 @@
   color: var(--color-error);
 }
 
+/* Unit suffixes (мм/мс/од./с/mm/ms/pcs) share one fixed width so numeric
+   fields align regardless of the unit's natural length. 2.25rem fits the
+   widest allowed unit (3 characters, bold). */
+#main .unit-suffix {
+  display: inline-block;
+  width: 2.25rem;
+  text-align: left;
+}
+
+/* Instruction paragraphs need visible separation. */
+#main #compact-instruction p {
+  margin-bottom: 0.375rem;
+}
+
 @media print {
   @page {
     size: landscape;

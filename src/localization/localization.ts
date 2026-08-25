@@ -89,7 +89,7 @@ const localization: LocalizationKeys = {
   statMinExposureTrial: {en: "Minimum exposure at trial", uk: "Мінімальна експозиція на подразнику"},
   statStimuliProcessed: {en: "Stimuli processed", uk: "Опрацьовано подразників"},
   exposureCurveTitle: {en: "Exposure dynamics", uk: "Динаміка експозиції"},
-  units: {en: "units", uk: "од."},
+  units: {en: "pcs", uk: "од."},
   exposureDelayMinLabel: {en: "Minimum exposure delay", uk: "Мінімальна затримка експозиції"},
   exposureDelayMaxLabel: {en: "Maximum exposure delay", uk: "Максимальна затримка експозиції"},
   feedbackMobility: {en: "Functional mobility", uk: "Функціональна рухливість"},
@@ -202,8 +202,8 @@ const localization: LocalizationKeys = {
     uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли на екрані з'явиться <b>БУДЬ-ЯКИЙ</b> подразник."
   },
   instructionFeedback: {
-    en: "React to each stimulus as in the corresponding selection test. If you answer correctly, the next stimulus is shown <b>faster</b>; if you make a mistake, it is shown <b>slower</b>. Your goal: reach the highest possible presentation speed and hold it for as long as you can. Answers given with a short delay are still counted as correct - they are not treated as errors. Do not stop when mistakes happen; focus on answering correctly. Keep going until the <b>TEST FINISHED</b> message appears.",
-    uk: "Реагуйте на подразники, як у відповідному тесті з вибором. Якщо Ви відповідаєте правильно — наступний подразник з'являється <b>швидше</b>, якщо помиляєтесь — <b>повільніше</b>. Ваше завдання: вийти на максимально можливу швидкість подачі сигналів і утримувати її якомога довго. Відповіді, дані з невеликим запізненням, зараховуються як правильні й помилкою не вважаються. У разі помилок роботу не припиняйте, а зосередьте увагу на правильному виконанні. Виконуйте тест до напису <b>ТЕСТ ЗАВЕРШЕНО</b>."
+    en: "<p>React to each stimulus as in the corresponding selection test. If you answer correctly, the next stimulus is shown <b>faster</b>. If you make a mistake, it is shown <b>slower</b>.</p><p>Your goal is to reach the highest possible presentation speed and to hold it for as long as you can.</p><p>Answers given with a short delay are still counted as correct and are not treated as errors. Do not stop when mistakes happen; focus on answering correctly.</p><p>Keep going until the <b>TEST FINISHED</b> message appears.</p>",
+    uk: "<p>Реагуйте на подразники, як у відповідному тесті з вибором. Якщо Ви відповідаєте правильно, наступний подразник з'являється <b>швидше</b>. Якщо помиляєтесь, з'являється <b>повільніше</b>.</p><p>Ваше завдання: вийти на максимально можливу швидкість подачі сигналів і утримувати її якомога довше.</p><p>Відповіді, дані з невеликим запізненням, зараховуються як правильні й помилкою не вважаються. У разі помилок роботу не припиняйте, а зосередьте увагу на правильному виконанні.</p><p>Виконуйте тест до напису <b>ТЕСТ ЗАВЕРШЕНО</b>.</p>"
   },
   // en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a target stimulus (Red, Square, or Animal) appears. Ignore other stimuli.",
   // uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (Червоний, Квадрат або Тварина). Ігноруйте інші подразники."
@@ -345,7 +345,7 @@ const localization: LocalizationKeys = {
   frequencyDistributionTitle: {en: "Frequency Distribution", uk: "Частотний Розподіл"},
   statLeftHand: {en: "Left Hand", uk: "Ліва рука"},
   statRightHand: {en: "Right Hand", uk: "Права рука"},
-  dontSaveAndQuit: {en: "Don't Save and Quite", uk: "Не зберігати"},
+  dontSaveAndQuit: {en: "Don't Save and Quit", uk: "Не зберігати"},
   saveResults: {en: "Save", uk: "Зберегти"},
 
   statFunctionalLevel: {en: "SFL", uk: "ФРС"},
