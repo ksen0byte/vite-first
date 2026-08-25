@@ -246,9 +246,9 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
   // has no pre-stimulus delay - the pause IS the post-stimulus late-answer
   // window, so it is shown only once, after the stimulus.
   const rangeText = delayMin === delayMax ? `${delayMin}` : `${delayMin}–${delayMax}`;
-  const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${rangeText}&nbsp;<span class="unit-suffix" data-localize="ms"></span>]`;
+  const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${rangeText}&nbsp;<span data-localize="ms"></span>]`;
   const pauseChip = `<span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span>`;
-  const stimulusChip = `<span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span class="unit-suffix" data-localize="ms"></span>]</span>`;
+  const stimulusChip = `<span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span data-localize="ms"></span>]</span>`;
   const leadingPause = isFeedback ? "" : `${pauseChip}<span>→</span>`;
   const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-300">${leadingPause}${stimulusChip}<span>→</span>${pauseChip}${adaptationBadge}${sessionBadge}</div>`;
   preview.innerHTML = `<div class="relative flex min-h-[30rem] w-full items-center justify-center overflow-hidden rounded-box bg-black py-10 text-white">${stimulus}${stateDiagram}</div>`;

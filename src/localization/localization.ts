@@ -383,7 +383,7 @@ const localization: LocalizationKeys = {
   valueLabel: {en: "Value", uk: "Значення"},
   countLabel: {en: "Count", uk: "Кількість"},
   meanLabel: {en: "Mean", uk: "Середнє"},
-  statisticalModeLabel: {en: "Statistical mode", uk: "Статистична мода"},
+  statisticalModeLabel: {en: "Mode", uk: "Мода"},
   stdevLabel: {en: "Std. Deviation", uk: "Стандартне Відхилення"},
   cvLabel: {en: "Coefficient of Variation", uk: "Коефіцієнт Варіації"},
   entropyLabel: {en: "Shannon Entropy", uk: "Ентропія Шеннона"},
