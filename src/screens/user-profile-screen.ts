@@ -106,9 +106,17 @@ function personalDataCardHtml(user: User) {
 function testCardHTML(index: number, test: TestRecord): string {
   const {testSettings, trials, date} = test;
   const {testMode, stimulusSize, exposureTime, exposureDelay, stimulusCount, testType} = testSettings;
+  const {protocolMode, feedbackSubmode} = testSettings;
+  const isFeedback = protocolMode === "feedback";
+
+  // Late answers legitimately exceed the fixed exposure in feedback mode, so
+  // bound RT cleaning by maxExposure + pause instead of exposureTime.
+  const rtUpperBound = isFeedback
+    ? testSettings.feedback.maxExposure + testSettings.feedback.pause
+    : exposureTime;
 
   // Generate statistics using ReactionTimeStats
-  const multiHandStats = new MultiHandReactionTimeStats(trials, exposureTime);
+  const multiHandStats = new MultiHandReactionTimeStats(trials, rtUpperBound);
   const stats = multiHandStats.total;
   const statsRight = multiHandStats.right;
   const statsLeft = multiHandStats.left;
@@ -140,6 +148,15 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <td><strong data-localize="testModeLabel"></strong></td>
                 <td><span data-localize="${getTestModeLocalizationKey(testMode)}"></span></td>
               </tr>
+              <tr class="text-center">
+                <td><strong data-localize="protocolLabel"></strong></td>
+                <td><span data-localize="${protocolMode === "feedback" ? "feedbackProtocol" : "optimalProtocol"}"></span></td>
+              </tr>
+              ${isFeedback ? `
+              <tr class="text-center">
+                <td><strong data-localize="submodeLabel"></strong></td>
+                <td><span data-localize="${feedbackSubmode === "strength" ? "feedbackStrength" : "feedbackMobility"}"></span></td>
+              </tr>` : ""}
               <tr class="text-center">
                 <td><strong data-localize="stimulusSizeLabel"></strong></td>
                 <td>${Math.round(stimulusSize)} <span data-localize="mm"></span></td>
@@ -277,6 +294,8 @@ function testCardHTML(index: number, test: TestRecord): string {
           </div>
         </div>
 
+        ${isFeedback ? feedbackStatsRowsHtml(trials) : ""}
+
         <!-- Histogram -->
         <div class="flex flex-grow p-8 min-h-96">
           <canvas id="histogram-${index}"></canvas>
@@ -285,6 +304,34 @@ function testCardHTML(index: number, test: TestRecord): string {
       </div>
     </div>
   `;
+}
+
+/**
+ * Feedback-only per-test block: minimum exposure reached, when it was reached,
+ * and how many stimuli carried an exposure stamp. Hidden for optimal sessions.
+ */
+function feedbackStatsRowsHtml(trials: TestRecord["trials"]): string {
+  const stamped = trials.filter((t): t is typeof t & {exposureMs: number} => typeof t.exposureMs === "number");
+  if (stamped.length === 0) return "";
+
+  const minExposure = Math.min(...stamped.map((t) => t.exposureMs));
+  const firstAtMin = stamped.find((t) => t.exposureMs === minExposure)!;
+
+  return `
+    <div class="stats stats-vertical lg:stats-horizontal shadow w-full mt-4">
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statMinExposure"></div>
+        <div class="stat-value text-lg">${minExposure} <span data-localize="ms"></span></div>
+      </div>
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statMinExposureTrial"></div>
+        <div class="stat-value text-lg">#${firstAtMin.trialIndex + 1}</div>
+      </div>
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statStimuliProcessed"></div>
+        <div class="stat-value text-lg">${stamped.length}</div>
+      </div>
+    </div>`;
 }
 
 function errorBreakdownRowsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {
@@ -385,7 +432,12 @@ function getTestTypeLocalizationKey(testType: string): string {
 function renderHistograms(tests: TestRecord[]): Chart[] {
   const charts: Chart[] = [];
   tests.forEach((test, index) => {
-    const stats = new ReactionTimeStats(test.trials, test.testSettings.exposureTime);
+    // Match the stats table's cleaning bound (feedback late answers exceed the
+    // fixed exposure legitimately).
+    const upperBound = test.testSettings.protocolMode === "feedback"
+      ? test.testSettings.feedback.maxExposure + test.testSettings.feedback.pause
+      : test.testSettings.exposureTime;
+    const stats = new ReactionTimeStats(test.trials, upperBound);
     const canvasId = `histogram-${index}`;
     const chart = stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
     charts.push(chart);

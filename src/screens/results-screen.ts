@@ -4,7 +4,6 @@ import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
-import {exposureCurveSvg} from "../stats/exposure-curve.ts";
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
@@ -205,11 +204,7 @@ function feedbackExposureStatsHtml(trialResults: readonly TrialResult[]): string
         <div class="stat-title text-base" data-localize="statStimuliProcessed"></div>
         <div class="stat-value text-lg">${stamped.length}</div>
       </div>
-    </div>
-    <div class="card bg-base-100 shadow w-full mb-4"><div class="card-body p-4">
-      <h3 class="card-title text-base" data-localize="exposureCurveTitle"></h3>
-      <div class="text-primary">${exposureCurveSvg(stamped)}</div>
-    </div></div>`;
+    </div>`;
 }
 
 function errorBreakdownStatsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {
