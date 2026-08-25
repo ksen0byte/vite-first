@@ -213,7 +213,7 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
   const stimulusSize = PREVIEW_STIMULUS_SIZE;
   const stimulusColumns = testType === "crt2-3"
     ? `${previewReactionColumn(testMode, "left", stimulusSize)}${previewReactionColumn(testMode, "ignore", stimulusSize)}${previewReactionColumn(testMode, "right", stimulusSize)}`
-    : previewReactionColumn(testMode, testType === "crt1-3" ? "right" : "space", stimulusSize);
+    : previewReactionColumn(testMode, "space", stimulusSize);
   const stimulus = `<div class="grid w-full ${testType === "crt2-3" ? "grid-cols-3" : "grid-cols-1"} items-end gap-2 px-2">${stimulusColumns}</div>`;
   const delayMin = protocol === "feedback" ? readNumberInput(parameters.feedbackPause) : readNumberInput(parameters.exposureDelayMin);
   const delayMax = protocol === "feedback" ? delayMin : readNumberInput(parameters.exposureDelayMax);
