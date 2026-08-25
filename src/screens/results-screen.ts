@@ -4,6 +4,7 @@ import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
+import {exposureCurveSvg} from "../stats/exposure-curve.ts";
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
@@ -28,11 +29,19 @@ export function setupResultsScreen(
   }
 
   // Frequency distribution
-  const testType = AppContextManager.getContext().testSettings.testType;
-  const multiHandStats = new MultiHandReactionTimeStats(trialResults, AppContextManager.getContext().testSettings.exposureTime);
+  const testSettings = AppContextManager.getContext().testSettings;
+  const isFeedback = testSettings.protocolMode === "feedback";
+  const testType = testSettings.testType;
+  // Late answers legitimately exceed the fixed exposure, so feedback sessions
+  // bound the RT cleaning by maxExposure + pause instead of exposureTime.
+  const rtUpperBound = isFeedback
+    ? testSettings.feedback.maxExposure + testSettings.feedback.pause
+    : testSettings.exposureTime;
+  const multiHandStats = new MultiHandReactionTimeStats(trialResults, rtUpperBound);
   const reactionTimeStats = multiHandStats.total;
   const showHandBreakdown = testType === "crt2-3";
   const errorBreakdownStats = errorBreakdownStatsHtml(multiHandStats, showHandBreakdown);
+  const exposureSummary = isFeedback ? feedbackExposureStatsHtml(trialResults) : "";
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();
@@ -146,8 +155,10 @@ export function setupResultsScreen(
       
       <!-- Loskutova stats-->
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
-        
+
       </div>
+
+      ${exposureSummary}
 
       <!-- Frequency Distribution Table -->
       <div class="flex flex-grow p-8 min-h-96">
@@ -166,6 +177,39 @@ export function setupResultsScreen(
   ]);
   reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
   updateLanguageUI();
+}
+
+/**
+ * Feedback-only results block: minimum exposure reached, when it was reached
+ * (trial number), and the exposure-dynamics curve (doc §2.1/§2.2 "дод.
+ * результати"). Hidden entirely for optimal-protocol sessions.
+ */
+function feedbackExposureStatsHtml(trialResults: readonly TrialResult[]): string {
+  const stamped = trialResults.filter((t): t is TrialResult & {exposureMs: number} => typeof t.exposureMs === "number");
+  if (stamped.length === 0) return "";
+
+  const minExposure = Math.min(...stamped.map((t) => t.exposureMs));
+  const firstAtMin = stamped.find((t) => t.exposureMs === minExposure)!;
+
+  return `
+    <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statMinExposure"></div>
+        <div class="stat-value text-lg">${minExposure}${localize("ms")}</div>
+      </div>
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statMinExposureTrial"></div>
+        <div class="stat-value text-lg">#${firstAtMin.trialIndex + 1}</div>
+      </div>
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statStimuliProcessed"></div>
+        <div class="stat-value text-lg">${stamped.length}</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow w-full mb-4"><div class="card-body p-4">
+      <h3 class="card-title text-base" data-localize="exposureCurveTitle"></h3>
+      <div class="text-primary">${exposureCurveSvg(stamped)}</div>
+    </div></div>`;
 }
 
 function errorBreakdownStatsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {
