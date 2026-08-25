@@ -26,6 +26,16 @@ export class TestScreen {
   private readonly appContainer: HTMLElement;
   private readonly appContext: AppContext;
 
+  /** Recorded trials keyed by stimulus index (read-only view for tests/diagnostics). */
+  public getTrials(): readonly TrialResult[] {
+    return [...this.reactionTimes.values()].sort((a, b) => a.trialIndex - b.trialIndex);
+  }
+
+  /** Current adaptive exposure in ms (equals initialExposure outside feedback mode). */
+  public getCurrentExposureMs(): number {
+    return this.feedbackExposure;
+  }
+
   // DOM elements
   private stimulusContainer!: HTMLElement;
   private retryButton!: HTMLButtonElement;
