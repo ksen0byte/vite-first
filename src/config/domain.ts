@@ -67,4 +67,10 @@ export interface TrialResult {
   readonly outcome: TrialOutcome;
   readonly expectedAction: HandAction;
   readonly actualAction: HandAction;
+  /**
+   * Exposure duration (ms) in force when this trial's stimulus was shown.
+   * Feedback-protocol sessions always record it; older persisted records may
+   * omit it (backfilled from the saved settings during the DB v4 migration).
+   */
+  readonly exposureMs?: number;
 }
