@@ -241,7 +241,7 @@ describe('REGRESSION: optimal-mode state machine (pinned behavior)', () => {
     boot();
     scheduler.advanceBy(4400);
     const initial = screen.getCurrentExposureMs();
-    expect(initial).toBe(defaultAppContext.testSettings.feedback.initialExposure);
+    expect(initial).toBe(500); // pinned: createContext() overrides exposureTime to 500
 
     scheduler.advanceBy(360); // expiry of #0 at 4750 (no press) -> Miss
     expect(screen.getCurrentExposureMs()).toBe(initial);

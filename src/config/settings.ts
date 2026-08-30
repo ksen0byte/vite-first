@@ -1,4 +1,4 @@
-import {ExposureDelay, ExposureTime, FeedbackSettings, StimulusCount, StimulusSize, TestMode, AppContext} from "./domain.ts";
+import {ExposureDelay, ExposureTime, FeedbackTuning, StimulusCount, StimulusSize, TestMode, AppContext} from "./domain.ts";
 
 /**
  * Single source of truth for every numeric test parameter.
@@ -85,8 +85,7 @@ export const settings = {
       minExposure: parameters.feedbackMinExposure.defaultValue,
       maxExposure: parameters.feedbackMaxExposure.defaultValue,
       pause: parameters.feedbackPause.defaultValue,
-      duration: parameters.feedbackDuration.defaultValue,
-    } as FeedbackSettings,
+    } as FeedbackTuning,
   }
 };
 
@@ -101,18 +100,16 @@ export const defaultAppContext: AppContext = {
   },
   testSettings: {
     protocolMode: "optimal",
-    feedbackSubmode: "mobility",
     testMode: settings.default.testMode,
     stimulusSize: settings.default.stimulusSize,
     exposureTime: settings.default.exposureTime,
     exposureDelay: settings.default.exposureDelay,
     stimulusCount: settings.default.stimulusCount,
     testType: 'svmr',
-    feedback: settings.default.feedback,
     usePregenerated: {
       exposureDelay: true,
       stimuli: true,
-    }
+    },
   },
   debugMode: "prod",
 };

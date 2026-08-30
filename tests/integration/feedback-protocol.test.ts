@@ -25,7 +25,6 @@
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {AppContext} from '../../src/config/domain.ts';
 import AppContextManager from '../../src/config/AppContextManager.ts';
-import {defaultAppContext} from '../../src/config/settings.ts';
 import Router from '../../src/routing/router.ts';
 import {TestScreen} from '../../src/screens/test-screen.ts';
 import {DeterministicScheduler} from '../support/deterministic-scheduler.ts';
@@ -39,25 +38,42 @@ const FEEDBACK = {
   duration: 1800,
 };
 
-const createContext = (overrides: Partial<AppContext['testSettings']> = {}): AppContext => ({
-  ...defaultAppContext,
-  personalData: {firstName: 'Ada', lastName: 'Example', age: 34, gender: 'female'},
-  debugMode: 'debug',
-  testSettings: {
-    ...defaultAppContext.testSettings,
-    testMode: 'shapes',
-    stimulusSize: 50,
-    exposureTime: 500,
-    exposureDelay: [250, 250],
-    stimulusCount: 6,
-    testType: 'crt2-3',
-    protocolMode: 'feedback',
-    feedbackSubmode: 'mobility',
-    feedback: {...FEEDBACK},
-    usePregenerated: {exposureDelay: false, stimuli: true},
-    ...overrides,
-  },
-});
+const createContext = (overrides: Partial<AppContext['testSettings']> = {}): AppContext => {
+  const base = {
+    personalData: {firstName: 'Ada', lastName: 'Example', age: 34, gender: 'female' as const},
+    debugMode: 'debug' as const,
+  };
+  // Default to a feedback-mobility arm; callers override toward strength via `overrides`.
+  const mobility: AppContext = {
+    ...base,
+    testSettings: {
+      protocolMode: 'feedback-mobility',
+      testMode: 'shapes',
+      stimulusSize: 50,
+      stimulusCount: 6,
+      testType: 'crt2-3',
+      usePregenerated: {stimuli: true},
+      feedback: {...FEEDBACK},
+    },
+  };
+  if (overrides.protocolMode === 'feedback-strength' || (overrides as {feedbackSubmode?: string}).feedbackSubmode === 'strength') {
+    return {
+      ...base,
+      testSettings: {
+        protocolMode: 'feedback-strength',
+        testMode: 'shapes',
+        stimulusSize: 50,
+        testType: 'crt2-3',
+        usePregenerated: {stimuli: true},
+        feedback: {...FEEDBACK, ...('feedback' in overrides && overrides.feedback ? overrides.feedback : {})},
+      },
+    };
+  }
+  return {
+    ...mobility,
+    testSettings: {...mobility.testSettings, ...overrides} as AppContext['testSettings'],
+  };
+};
 
 const press = (code: string): boolean =>
   document.dispatchEvent(new KeyboardEvent('keydown', {code}));

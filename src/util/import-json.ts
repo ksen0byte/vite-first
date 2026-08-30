@@ -1,4 +1,4 @@
-import {Gender, TestMode, TestSettings, TestType, TrialResult} from '../config/domain.ts';
+import {Gender, TestMode, TestSettings, TestType, TrialResult, FeedbackTuning} from '../config/domain.ts';
 import {settings as appDefaults} from '../config/settings.ts';
 import {User} from '../db/db.ts';
 import {Result, failure, success} from './result.ts';
@@ -94,27 +94,83 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       } else {
         return invalidType(`${testPath}.trials`, 'array');
       }
-      tests.push({
-        ...(typeof test.id === 'number' && Number.isInteger(test.id) ? {sourceId: test.id} : {}),
-        testSettings: {
+      const fb = isRecord(parsed.feedback) ? parsed.feedback : undefined;
+      const tuning: FeedbackTuning & { duration?: number } = fb && typeof fb.initialExposure === 'number'
+        ? {
+            initialExposure: fb.initialExposure as number,
+            adjustmentStep: fb.adjustmentStep as number,
+            minExposure: fb.minExposure as number,
+            maxExposure: fb.maxExposure as number,
+            pause: fb.pause as number,
+            ...(typeof fb.duration === 'number' ? {duration: fb.duration as number} : {}),
+          }
+        : {
+            initialExposure: appDefaults.default.feedback.initialExposure,
+            adjustmentStep: appDefaults.default.feedback.adjustmentStep,
+            minExposure: appDefaults.default.feedback.minExposure,
+            maxExposure: appDefaults.default.feedback.maxExposure,
+            pause: appDefaults.default.feedback.pause,
+            duration: 300,
+          };
+
+      // Determine the real protocol arm. Older exports used a flat shape with a
+      // `protocolMode` of 'optimal'|'feedback' plus an unconditional `feedback`
+      // block and `feedbackSubmode`; newer exports already use the union literals.
+      const parsedMode = parsed.protocolMode;
+      const submode = parsed.feedbackSubmode === 'strength' ? 'strength' : 'mobility';
+      const isFeedbackArm =
+        parsedMode === 'feedback-mobility' || parsedMode === 'feedback-strength'
+        || (parsedMode === 'feedback' || (parsedMode !== 'optimal' && fb !== undefined));
+
+      let testSettings: TestSettings;
+      if (!isFeedbackArm) {
+        testSettings = {
           protocolMode: 'optimal',
-          feedbackSubmode: 'mobility',
           testMode: parsed.testMode,
           stimulusSize: parsed.stimulusSize as number,
           exposureTime: parsed.exposureTime as number,
           exposureDelay: [parsed.exposureDelay[0] as number, parsed.exposureDelay[1] as number],
           stimulusCount: parsed.stimulusCount as number,
           testType: parsed.testType,
+          usePregenerated: parsed.usePregenerated as { exposureDelay: boolean; stimuli: boolean },
+        };
+      } else if (submode === 'strength' || parsedMode === 'feedback-strength' || (fb !== undefined && typeof fb.duration === 'number')) {
+        testSettings = {
+          protocolMode: 'feedback-strength',
+          testMode: parsed.testMode,
+          stimulusSize: parsed.stimulusSize as number,
+          testType: parsed.testType,
+          usePregenerated: { stimuli: parsed.usePregenerated.stimuli },
           feedback: {
-            initialExposure: appDefaults.default.feedback.initialExposure,
-            adjustmentStep: appDefaults.default.feedback.adjustmentStep,
-            minExposure: appDefaults.default.feedback.minExposure,
-            maxExposure: appDefaults.default.feedback.maxExposure,
-            pause: appDefaults.default.feedback.pause,
-            duration: appDefaults.default.feedback.duration,
+            initialExposure: tuning.initialExposure,
+            adjustmentStep: tuning.adjustmentStep,
+            minExposure: tuning.minExposure,
+            maxExposure: tuning.maxExposure,
+            pause: tuning.pause,
+            duration: tuning.duration ?? 300,
           },
-          usePregenerated: parsed.usePregenerated as TestSettings['usePregenerated'],
-        },
+        };
+      } else {
+        testSettings = {
+          protocolMode: 'feedback-mobility',
+          testMode: parsed.testMode,
+          stimulusSize: parsed.stimulusSize as number,
+          stimulusCount: parsed.stimulusCount as number,
+          testType: parsed.testType,
+          usePregenerated: { stimuli: parsed.usePregenerated.stimuli },
+          feedback: {
+            initialExposure: tuning.initialExposure,
+            adjustmentStep: tuning.adjustmentStep,
+            minExposure: tuning.minExposure,
+            maxExposure: tuning.maxExposure,
+            pause: tuning.pause,
+          },
+        };
+      }
+
+      tests.push({
+        ...(typeof test.id === 'number' && Number.isInteger(test.id) ? {sourceId: test.id} : {}),
+        testSettings,
         trials,
         date: test.date,
       });

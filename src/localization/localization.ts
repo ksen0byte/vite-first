@@ -312,6 +312,7 @@ const localization: LocalizationKeys = {
   appContextSummaryExposureTime: {en: "Exposure Time", uk: "Експозиція подразника"},
   appContextSummaryExposureDelay: {en: "Exposure Delay", uk: "Затримка експозиції"},
   appContextSummaryStimulusCount: {en: "Stimulus Count", uk: "Кількість подразників"},
+  durationLabel: {en: "Duration", uk: "Тривалість"},
   appContextSummaryTestType: {en: "Test Type", uk: "Тип тестування"},
 
   // test screen

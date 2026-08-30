@@ -4,7 +4,8 @@ import {setupFooter} from '../components/footer';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
-import {TestMode} from "../config/domain.ts";
+import {TestMode, isFeedback, isFeedbackStrength, feedbackTuning, OptimalSettings, FeedbackMobilitySettings, FeedbackStrengthSettings} from "../config/domain.ts";
+import {localize} from "../localization/localization";
 import Router, {Cleanup} from "../routing/router.ts";
 import {Chart} from "chart.js";
 import {printConfig} from "../config/settings.ts";
@@ -105,15 +106,17 @@ function personalDataCardHtml(user: User) {
 
 function testCardHTML(index: number, test: TestRecord): string {
   const {testSettings, trials, date} = test;
-  const {testMode, stimulusSize, exposureTime, exposureDelay, stimulusCount, testType} = testSettings;
-  const {protocolMode, feedbackSubmode} = testSettings;
-  const isFeedback = protocolMode === "feedback";
+  const {testMode, stimulusSize, testType} = testSettings;
+  const isOptimalArm = testSettings.protocolMode === 'optimal';
+  const isFeedbackSession = isFeedback(testSettings);
+  const protocolKey = testSettings.protocolMode === 'optimal' ? 'optimalProtocol' : 'feedbackProtocol';
+  const submodeKey = testSettings.protocolMode === 'feedback-strength' ? 'feedbackStrength' : 'feedbackMobility';
 
   // Late answers legitimately exceed the fixed exposure in feedback mode, so
   // bound RT cleaning by maxExposure + pause instead of exposureTime.
-  const rtUpperBound = isFeedback
-    ? testSettings.feedback.maxExposure + testSettings.feedback.pause
-    : exposureTime;
+  const rtUpperBound = isFeedbackSession
+    ? feedbackTuning(testSettings).maxExposure + feedbackTuning(testSettings).pause
+    : (testSettings as OptimalSettings).exposureTime;
 
   // Generate statistics using ReactionTimeStats
   const multiHandStats = new MultiHandReactionTimeStats(trials, rtUpperBound);
@@ -150,28 +153,37 @@ function testCardHTML(index: number, test: TestRecord): string {
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="protocolLabel"></strong></td>
-                <td><span data-localize="${protocolMode === "feedback" ? "feedbackProtocol" : "optimalProtocol"}"></span></td>
+                <td><span data-localize="${protocolKey}"></span></td>
               </tr>
-              ${isFeedback ? `
+              ${isFeedbackSession ? `
               <tr class="text-center">
                 <td><strong data-localize="submodeLabel"></strong></td>
-                <td><span data-localize="${feedbackSubmode === "strength" ? "feedbackStrength" : "feedbackMobility"}"></span></td>
+                <td><span data-localize="${submodeKey}"></span></td>
               </tr>` : ""}
               <tr class="text-center">
                 <td><strong data-localize="stimulusSizeLabel"></strong></td>
                 <td>${Math.round(stimulusSize)} <span data-localize="mm"></span></td>
               </tr>
+              ${isOptimalArm ? `
               <tr class="text-center">
                 <td><strong data-localize="exposureTimeLabel"></strong></td>
-                <td>${Math.round(exposureTime)} <span data-localize="ms"></span></td>
+                <td>${Math.round(testSettings.exposureTime)} <span data-localize="ms"></span></td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="exposureDelayMinMaxLabel"></strong></td>
-                <td>${Math.round(Math.min(...exposureDelay))} <span data-localize="ms"></span> - ${Math.round(Math.max(...exposureDelay))} <span data-localize="ms"></span></td>
+                <td>${Math.round(Math.min(...testSettings.exposureDelay))} <span data-localize="ms"></span> - ${Math.round(Math.max(...testSettings.exposureDelay))} <span data-localize="ms"></span></td>
+              </tr>` : `
+              <tr class="text-center">
+                <td><strong data-localize="feedbackInitialExposure"></strong></td>
+                <td>${Math.round(feedbackTuning(testSettings).initialExposure)} <span data-localize="ms"></span></td>
               </tr>
               <tr class="text-center">
-                <td><strong data-localize="stimulusCountLabel"></strong></td>
-                <td>${stimulusCount}</td>
+                <td><strong data-localize="feedbackPause"></strong></td>
+                <td>${Math.round(feedbackTuning(testSettings).pause)} <span data-localize="ms"></span></td>
+              </tr>`}
+              <tr class="text-center">
+                <td><strong data-localize="${isFeedbackStrength(testSettings) ? 'durationLabel' : 'stimulusCountLabel'}"></strong></td>
+                <td>${isFeedbackStrength(testSettings) ? `${(testSettings as FeedbackStrengthSettings).feedback.duration} ${localize('s')}` : `${(testSettings as OptimalSettings | FeedbackMobilitySettings).stimulusCount}`}</td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="testTypeLabel"></strong></td>
@@ -294,7 +306,7 @@ function testCardHTML(index: number, test: TestRecord): string {
           </div>
         </div>
 
-        ${isFeedback ? feedbackStatsRowsHtml(trials) : ""}
+        ${isFeedbackSession ? feedbackStatsRowsHtml(trials) : ""}
 
         <!-- Histogram -->
         <div class="flex flex-grow p-8 min-h-96">
@@ -434,8 +446,8 @@ function renderHistograms(tests: TestRecord[]): Chart[] {
   tests.forEach((test, index) => {
     // Match the stats table's cleaning bound (feedback late answers exceed the
     // fixed exposure legitimately).
-    const upperBound = test.testSettings.protocolMode === "feedback"
-      ? test.testSettings.feedback.maxExposure + test.testSettings.feedback.pause
+    const upperBound = isFeedback(test.testSettings)
+      ? feedbackTuning(test.testSettings).maxExposure + feedbackTuning(test.testSettings).pause
       : test.testSettings.exposureTime;
     const stats = new ReactionTimeStats(test.trials, upperBound);
     const canvasId = `histogram-${index}`;

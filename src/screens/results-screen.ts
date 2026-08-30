@@ -7,7 +7,7 @@ import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, ReactionTimeStats} from "
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
-import {TrialResult} from "../config/domain.ts";
+import {TrialResult, isFeedback, feedbackTuning} from "../config/domain.ts";
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
@@ -29,18 +29,18 @@ export function setupResultsScreen(
 
   // Frequency distribution
   const testSettings = AppContextManager.getContext().testSettings;
-  const isFeedback = testSettings.protocolMode === "feedback";
+  const isFeedbackSession = isFeedback(testSettings);
   const testType = testSettings.testType;
   // Late answers legitimately exceed the fixed exposure, so feedback sessions
   // bound the RT cleaning by maxExposure + pause instead of exposureTime.
-  const rtUpperBound = isFeedback
-    ? testSettings.feedback.maxExposure + testSettings.feedback.pause
+  const rtUpperBound = isFeedbackSession
+    ? feedbackTuning(testSettings).maxExposure + feedbackTuning(testSettings).pause
     : testSettings.exposureTime;
   const multiHandStats = new MultiHandReactionTimeStats(trialResults, rtUpperBound);
   const reactionTimeStats = multiHandStats.total;
   const showHandBreakdown = testType === "crt2-3";
   const errorBreakdownStats = errorBreakdownStatsHtml(multiHandStats, showHandBreakdown);
-  const exposureSummary = isFeedback ? feedbackExposureStatsHtml(trialResults) : "";
+  const exposureSummary = isFeedbackSession ? feedbackExposureStatsHtml(trialResults) : "";
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();

@@ -1,5 +1,5 @@
 // test-screen.ts
-import {AppContext, DebugMode, HandAction, TrialOutcome, TrialResult} from "../config/domain.ts";
+import {AppContext, DebugMode, HandAction, TrialOutcome, TrialResult, isFeedback, isFeedbackStrength} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
 import {BrowserScheduler, Scheduler} from "../util/scheduleTimeout.ts";
@@ -73,7 +73,8 @@ export class TestScreen {
     this.appContainer = appContainer;
     this.appContext = AppContextManager.getContext();
     this.scheduler = scheduler;
-    this.feedbackExposure = this.appContext.testSettings.feedback.initialExposure;
+    const ts = this.appContext.testSettings;
+    this.feedbackExposure = isFeedback(ts) ? ts.feedback.initialExposure : ts.exposureTime;
 
     // Store the bound reference
     this.handleKeyDownBound = this.handleAppKeyDown.bind(this);
@@ -154,7 +155,7 @@ export class TestScreen {
           <!-- Right side: counter -->
           <div class="flex items-center space-x-4">
             <div id="stimuli-counter" class="text-4xl font-mono text-gray-500">
-              0/${this.appContext.testSettings.stimulusCount}
+              0
             </div>
           </div>
         </div>
@@ -213,7 +214,8 @@ export class TestScreen {
     this.timerManager?.stopAndReset();
     this.scheduler.cancelAll();
     this.reactionTimes.clear();
-    this.feedbackExposure = this.appContext.testSettings.feedback.initialExposure;
+    const ts = this.appContext.testSettings;
+    this.feedbackExposure = isFeedback(ts) ? ts.feedback.initialExposure : ts.exposureTime;
     this.spamInputCount = 0;
     this.currentTrialExposureMs = undefined;
     this.testStartedAtMs = 0;
@@ -259,25 +261,24 @@ export class TestScreen {
   }
 
   private scheduleNextStimulus(index: number): void {
-    const isFeedback = this.appContext.testSettings.protocolMode === "feedback";
+    const ts = this.appContext.testSettings;
 
     // Strength submode: stop at the first trial boundary past the configured duration.
-    if (isFeedback
-      && this.appContext.testSettings.feedbackSubmode === "strength"
-      && (this.scheduler.now() - this.testStartedAtMs) >= this.appContext.testSettings.feedback.duration * 1000) {
+    if (isFeedbackStrength(ts)
+      && (this.scheduler.now() - this.testStartedAtMs) >= ts.feedback.duration * 1000) {
       this.onTestComplete();
       return;
     }
 
-    const totalStimuli = this.appContext.testSettings.stimulusCount;
+    const totalStimuli = isFeedbackStrength(ts) ? Number.POSITIVE_INFINITY : ts.stimulusCount;
     if (index >= totalStimuli) {
       this.onTestComplete();
       return;
     }
 
-    const delay = isFeedback
-      ? (index === 0 ? this.appContext.testSettings.feedback.pause : 0)
-      : getNextDelay(this.appContext.testSettings, index);
+    const delay = isFeedback(ts)
+      ? (index === 0 ? ts.feedback.pause : 0)
+      : getNextDelay(ts, index);
     // In feedback mode the late-answer window doubles as the inter-stimulus
     // pause, so after the first trial no extra Delayed phase is inserted.
     this.transitionTo(toDelayed(index, delay));
@@ -290,36 +291,37 @@ export class TestScreen {
   private showStimulus(index: number): void {
     if (this.isDestroyed) return;
     if (this.state._tag !== 'Delayed' || this.state.stimulusIndex !== index) return;
+    const ts = this.appContext.testSettings;
     this.stimuliCounter.set(index + 1);
     const stimulus: Stimulus = this.stimulusManager.showStimulus(index);
     this.timerManager.restart();
     // In feedback mode the pause doubles as the late-answer window, so the
     // exposure in force here may differ from the previous trial's.
-    this.currentTrialExposureMs = this.appContext.testSettings.protocolMode === "feedback"
+    this.currentTrialExposureMs = isFeedback(ts)
       ? this.feedbackExposure
       : undefined;
     this.transitionTo(toShowingStimulus(index, this.scheduler.now(), stimulus));
     this.stimulusExpired = false;
 
-    const exposure = this.appContext.testSettings.protocolMode === "feedback"
+    const exposure = isFeedback(ts)
       ? this.feedbackExposure
-      : this.appContext.testSettings.exposureTime;
+      : ts.exposureTime;
 
     this.scheduler.schedule(() => {
       this.onStimulusTimeout(index);
     }, exposure);
 
-    if (this.appContext.testSettings.protocolMode === "feedback") {
+    if (isFeedback(ts)) {
       this.scheduler.schedule(() => {
         this.onFeedbackWindowClosed(index);
-      }, exposure + this.appContext.testSettings.feedback.pause);
+      }, exposure + ts.feedback.pause);
     }
   }
 
   private onStimulusTimeout(index: number): void {
     if (this.isDestroyed) return;
     if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
-    if (this.appContext.testSettings.protocolMode === "feedback") {
+    if (isFeedback(this.appContext.testSettings)) {
       this.onFeedbackExpiry(index);
       return;
     }
@@ -390,10 +392,11 @@ export class TestScreen {
   }
 
   private updateFeedbackExposure(index: number): void {
-    if (this.appContext.testSettings.protocolMode !== "feedback") return;
+    const ts = this.appContext.testSettings;
+    if (!isFeedback(ts)) return;
     const result = this.reactionTimes.get(index);
     if (!result) return;
-    const {adjustmentStep, minExposure, maxExposure} = this.appContext.testSettings.feedback;
+    const {adjustmentStep, minExposure, maxExposure} = ts.feedback;
     const correct = result.outcome === "Success" || result.outcome === "CorrectRejection";
     this.feedbackExposure = Math.max(minExposure, Math.min(maxExposure,
       this.feedbackExposure + (correct ? -adjustmentStep : adjustmentStep)));
@@ -417,12 +420,12 @@ export class TestScreen {
 
     if (this.state._tag !== 'ShowingStimulus') return;
 
-    const isFeedback = this.appContext.testSettings.protocolMode === "feedback";
+    const isFeedbackSession = isFeedback(this.appContext.testSettings);
 
     // 3a. Feedback late-answer window: stimulus already expired, but presses
     // still count as answers to THIS trial until the window closes. The true
     // elapsed time is recorded (it is a valid, if slow, reaction).
-    if (isFeedback && this.stimulusExpired) {
+    if (isFeedbackSession && this.stimulusExpired) {
       if (!this.provisionalTrials.has(this.state.stimulusIndex)) {
         return; // already answered during exposure: further presses are ignored
       }

@@ -1,4 +1,4 @@
-import {AppContext} from "./domain.ts";
+import {AppContext, TestSettings} from "./domain.ts";
 import {defaultAppContext} from "./settings.ts";
 
 /**
@@ -25,15 +25,17 @@ class AppContextManager {
 
   /** Structural copy: nested objects (personalData, testSettings, feedback) are duplicated. */
   private static clone(context: AppContext): AppContext {
+    const ts = context.testSettings;
     return {
       ...context,
       personalData: {...context.personalData},
       testSettings: {
-        ...context.testSettings,
-        exposureDelay: [...context.testSettings.exposureDelay],
-        feedback: {...context.testSettings.feedback},
-        usePregenerated: {...context.testSettings.usePregenerated},
-      },
+        ...ts,
+        usePregenerated: {...ts.usePregenerated},
+        ...(ts.protocolMode === 'optimal'
+          ? {exposureDelay: [...ts.exposureDelay]}
+          : {}),
+      } as TestSettings,
     };
   }
 }

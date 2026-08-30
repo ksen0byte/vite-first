@@ -34,7 +34,15 @@ function beginTestScreenHTML(appContext: AppContext): string {
   const gender = appContext.personalData.gender || 'N/A';
   const age = appContext.personalData.age || 'N/A';
   const testType = (appContext.testSettings.testType! === 'svmr') ? localize("testTypePzmrShort") : (appContext.testSettings.testType! === 'crt1-3') ? localize("testTypeRV13Short") : localize("testTypeRV23Short");
-  const exposureDelay = `${appContext.testSettings.exposureDelay[0]}-${appContext.testSettings.exposureDelay[1]} ${localize("ms")}`;
+  const isOptimal = appContext.testSettings.protocolMode === 'optimal';
+  const isStrength = appContext.testSettings.protocolMode === 'feedback-strength';
+  const exposureTime = isOptimal ? `${appContext.testSettings.exposureTime} ${localize("ms")}` : '—';
+  const exposureDelay = isOptimal
+    ? `${appContext.testSettings.exposureDelay[0]}-${appContext.testSettings.exposureDelay[1]} ${localize("ms")}`
+    : '—';
+  const countOrDuration = isStrength
+    ? `${appContext.testSettings.feedback.duration} ${localize("s")}`
+    : `${appContext.testSettings.stimulusCount}`;
 
   return `
     <div id="begin-test-screen" class="flex flex-col flex-grow bg-base-200 text-base-content">
@@ -51,9 +59,9 @@ function beginTestScreenHTML(appContext: AppContext): string {
               <tr><th class="pr-2" data-localize="appContextSummaryAge">Age:</th><td>${age}</td></tr>
               <tr><th class="pr-2" data-localize="appContextSummaryTestMode">Test Mode:</th><td class="font-mono">${capitalize(localize(appContext.testSettings.testMode + "Option"))}</td></tr>
               <tr><th class="pr-2" data-localize="appContextSummaryStimulusSize">Stimulus Size:</th><td class="font-mono">${appContext.testSettings.stimulusSize} ${localize("mm")}</td></tr>
-              <tr><th class="pr-2" data-localize="appContextSummaryExposureTime">Exposure Time:</th><td class="font-mono">${appContext.testSettings.exposureTime} ${localize("ms")}</td></tr>
+              <tr><th class="pr-2" data-localize="appContextSummaryExposureTime">Exposure Time:</th><td class="font-mono">${exposureTime}</td></tr>
               <tr><th class="pr-2" data-localize="appContextSummaryExposureDelay">Exposure Delay:</th><td class="font-mono">${exposureDelay}</td></tr>
-              <tr><th class="pr-2" data-localize="appContextSummaryStimulusCount">Stimulus Count:</th><td class="font-mono">${appContext.testSettings.stimulusCount}</td></tr>
+              <tr><th class="pr-2">${isStrength ? localize("durationLabel") : localize("appContextSummaryStimulusCount")}</th><td class="font-mono">${countOrDuration}</td></tr>
               <tr><th class="pr-2" data-localize="appContextSummaryTestType">Test Type:</th><td class="font-mono">${testType}</td></tr>
             </tbody>
           </table>
