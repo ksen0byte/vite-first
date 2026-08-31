@@ -23,11 +23,11 @@ const PREVIEW_WORD_SIZE = 8;
  * The hint reserves no space while valid; fields in a cross-field min/max pair
  * carry a specific error message that replaces the generic range text.
  */
-const parameterField = (definition: ParameterDefinition, value: number, errorKey: string | null = null): string => `
+const parameterField = (definition: ParameterDefinition, value: number, errorKey: string | null = null, disabled = false): string => `
   <div class="block w-full min-w-0">
     <span class="mb-1 block text-sm font-medium" data-localize="${definition.labelKey}"></span>
     <div class="flex items-center gap-2">
-      <input id="${definition.id}" class="input input-md input-bordered validator w-full text-base" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" />
+      <input id="${definition.id}" class="input input-md input-bordered validator w-full text-base" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" ${disabled ? "disabled" : ""} />
       <div class="shrink-0 text-sm font-bold unit-suffix" data-localize="${definition.unitKey}"></div>
     </div>
     <div class="validator-hint hidden text-left" id="${definition.id}-hint">
@@ -36,10 +36,10 @@ const parameterField = (definition: ParameterDefinition, value: number, errorKey
     </div>
   </div>`;
 
-const renderDelayRangeFields = (minValue: number, maxValue: number): string => `
+const renderDelayRangeFields = (minValue: number, maxValue: number, disabled = false): string => `
   <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
-    ${parameterField(parameters.exposureDelayMin, minValue, "delayMinExceedsMaxError")}
-    ${parameterField(parameters.exposureDelayMax, maxValue)}
+    ${parameterField(parameters.exposureDelayMin, minValue, "delayMinExceedsMaxError", disabled)}
+    ${parameterField(parameters.exposureDelayMax, maxValue, null, disabled)}
   </div>`;
 
 const renderPregeneratedOptions = (settings: AppContext["testSettings"], showDelayOption: boolean): string => `
@@ -236,13 +236,53 @@ function renderCompactParameters(appContext: AppContext, protocol: string, submo
       parameterField(parameters.stimulusSize, preview.stimulusSize),
       parameterField(parameters.stimulusCount, (preview as OptimalSettings).stimulusCount),
       parameterField(parameters.exposureTime, (preview as OptimalSettings).exposureTime),
-      renderDelayRangeFields((preview as OptimalSettings).exposureDelay[0], (preview as OptimalSettings).exposureDelay[1]),
+      renderDelayRangeFields(
+        (preview as OptimalSettings).exposureDelay[0],
+        (preview as OptimalSettings).exposureDelay[1],
+        (preview as OptimalSettings).usePregenerated.exposureDelay
+      ),
     ];
   // The pregenerated-delays option only applies to the optimal protocol's
   // random delay range; feedback cadence uses the fixed pause, so the checkbox
   // is hidden there and the stored flag is passed through untouched.
   document.getElementById("compact-parameters")!.innerHTML =
     rows.join("") + renderPregeneratedOptions(preview, protocol === "optimal");
+
+  // If pregenerated delay is checked, disable the delay min/max inputs
+  if (protocol === "optimal") {
+    const usePregeneratedDelayCheckbox = document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null;
+    if (usePregeneratedDelayCheckbox) {
+      usePregeneratedDelayCheckbox.addEventListener("change", () => {
+        const disabled = usePregeneratedDelayCheckbox.checked;
+        const minInput = document.getElementById(parameters.exposureDelayMin.id) as HTMLInputElement | null;
+        const maxInput = document.getElementById(parameters.exposureDelayMax.id) as HTMLInputElement | null;
+        if (minInput) {
+          minInput.disabled = disabled;
+          minInput.classList.toggle("opacity-50", disabled);
+          minInput.classList.toggle("cursor-not-allowed", disabled);
+        }
+        if (maxInput) {
+          maxInput.disabled = disabled;
+          maxInput.classList.toggle("opacity-50", disabled);
+          maxInput.classList.toggle("cursor-not-allowed", disabled);
+        }
+      });
+      // Apply initial state
+      const disabled = usePregeneratedDelayCheckbox.checked;
+      const minInput = document.getElementById(parameters.exposureDelayMin.id) as HTMLInputElement | null;
+      const maxInput = document.getElementById(parameters.exposureDelayMax.id) as HTMLInputElement | null;
+      if (minInput) {
+        minInput.disabled = disabled;
+        minInput.classList.toggle("opacity-50", disabled);
+        minInput.classList.toggle("cursor-not-allowed", disabled);
+      }
+      if (maxInput) {
+        maxInput.disabled = disabled;
+        maxInput.classList.toggle("opacity-50", disabled);
+        maxInput.classList.toggle("cursor-not-allowed", disabled);
+      }
+    }
+  }
 }
 
 function renderCompactInstruction(testType: TestType, testMode: TestMode, protocol: string): void {
@@ -267,8 +307,24 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
   // Feedback cadence: fixed pause between trials; the pause doubles as the
   // late-answer window. Optimal: random delay range.
   const pauseMs = isFeedback ? readNumberInput(parameters.feedbackPause) : undefined;
-  const delayMin = pauseMs ?? readNumberInput(parameters.exposureDelayMin);
-  const delayMax = pauseMs ?? readNumberInput(parameters.exposureDelayMax);
+  let delayMin: number;
+  let delayMax: number;
+  let usePregeneratedDelay = false;
+  if (!isFeedback) {
+    const pregenCheckbox = document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null;
+    usePregeneratedDelay = pregenCheckbox?.checked ?? false;
+    if (usePregeneratedDelay) {
+      // Show "pregenerated" in preview instead of min/max
+      delayMin = 0; // placeholder, won't be used for display
+      delayMax = 0;
+    } else {
+      delayMin = readNumberInput(parameters.exposureDelayMin);
+      delayMax = readNumberInput(parameters.exposureDelayMax);
+    }
+  } else {
+      delayMin = pauseMs ?? 200;
+      delayMax = pauseMs ?? 200;
+    }
 
   // Session-extent badge: count-driven (optimal/mobility) vs time-driven (strength).
   const sessionBadge = isStrength
@@ -280,9 +336,11 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
     : "";
 
   // Fixed pause (min === max) collapses to a single value; feedback cadence
-  // has no pre-stimulus delay - the pause IS the post-stimulus late-answer
-  // window, so it is shown only once, after the stimulus.
-  const rangeText = delayMin === delayMax ? `${delayMin}` : `${delayMin}–${delayMax}`;
+    // has no pre-stimulus delay - the pause IS the post-stimulus late-answer
+    // window, so it is shown only once, after the stimulus.
+    const rangeText = usePregeneratedDelay
+      ? (localize("pregeneratedLabel") ?? "pregenerated")
+      : delayMin === delayMax ? `${delayMin}` : `${delayMin}–${delayMax}`;
   const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${rangeText}&nbsp;<span data-localize="ms"></span>]`;
   const pauseChip = `<span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span>`;
   const stimulusChip = `<span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span data-localize="ms"></span>]</span>`;
@@ -333,6 +391,14 @@ function validateParameterRanges(): void {
   const markRange = (minDefinition: ParameterDefinition, errorKey: string | null) => {
     const minInput = document.getElementById(minDefinition.id);
     if (!(minInput instanceof HTMLInputElement)) return;
+    // Skip validation if input is disabled (pregenerated mode)
+    if (minInput.disabled) {
+      minInput.setCustomValidity("");
+      minInput.removeAttribute("aria-invalid");
+      const hint = document.getElementById(`${minDefinition.id}-hint`);
+      hint?.classList.add("hidden");
+      return;
+    }
     minInput.setCustomValidity(errorKey ? localize(errorKey) : "");
     const hint = document.getElementById(`${minDefinition.id}-hint`);
     const rangeText = hint?.querySelector(".hint-range");
@@ -352,6 +418,9 @@ function validateParameterRanges(): void {
     }
   };
   for (const [minDefinition, maxDefinition, errorKey] of parameterPairs) {
+    // Skip if min input is disabled (pregenerated delay)
+    const minInput = document.getElementById(minDefinition.id) as HTMLInputElement | null;
+    if (minInput?.disabled) continue;
     const minValue = readNumberInput(minDefinition);
     const maxValue = readNumberInput(maxDefinition);
     markRange(minDefinition, minValue > maxValue ? errorKey : null);
@@ -388,16 +457,32 @@ function compactStartButtonCallback(): void {
   const feedbackSubmode = (document.getElementById("mode-select") as HTMLSelectElement).value;
   const testType = (document.getElementById("test-type-select") as HTMLSelectElement).value as TestType;
   const testMode = (document.getElementById("stimulus-select") as HTMLSelectElement).value as TestMode;
-  const delayMin = readNumberInput(parameters.exposureDelayMin);
-  const delayMax = readNumberInput(parameters.exposureDelayMax);
+
+  // Read delay min/max only if NOT using pregenerated delay (optimal mode only)
+  const delayPregenCheckbox = document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null;
+  const useDelayPregen = delayPregenCheckbox?.checked ?? (current.testSettings.protocolMode === 'optimal' ? current.testSettings.usePregenerated.exposureDelay : false);
+
+  let delayMin = 500;
+  let delayMax = 1900;
+  if (!useDelayPregen && protocolMode === "optimal") {
+    delayMin = readNumberInput(parameters.exposureDelayMin);
+    delayMax = readNumberInput(parameters.exposureDelayMax);
+  } else if (protocolMode === "optimal") {
+    // Use current stored values when pregenerated is enabled
+    const ts = current.testSettings;
+    if (ts.protocolMode === 'optimal') {
+      delayMin = ts.exposureDelay[0];
+      delayMax = ts.exposureDelay[1];
+    }
+  }
+
   const feedbackMinExposure = readNumberInput(parameters.feedbackMinExposure);
   const feedbackMaxExposure = readNumberInput(parameters.feedbackMaxExposure);
 
   const useStimuli = (document.getElementById("compact-use-pregenerated-stimuli") as HTMLInputElement).checked;
   // Hidden in feedback mode (the pause replaces the delay range), so fall back
   // to the stored flag instead of a null-deref.
-  const useDelay = (document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null)?.checked
-    ?? (current.testSettings.protocolMode === 'optimal' ? current.testSettings.usePregenerated.exposureDelay : false);
+  const useDelay = useDelayPregen;
 
   const base = {
     testMode,

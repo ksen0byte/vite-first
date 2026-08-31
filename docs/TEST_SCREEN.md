@@ -26,7 +26,7 @@ the current context.
 | `ShowingStimulus`                         | `exposureTime` timeout              | `Delayed` (index+1)      | Calls `onStimulusTimeout()` -> `scheduleNextStimulus(index+1)`.                   |
 | `ShowingStimulus`                         | `exposureTime` timeout (last index) | `Finished`               | Calls `onStimulusTimeout()` -> `onTestComplete()`.                                |
 | *Any* (except `Finished`, `CountingDown`) | Excessive input (>3)                | `SpamDetected`           | Clears timers, destroys the active test screen, and redirects to `/spam-warning`. |
-| `SpamDetected`                            | User clicks "Start Test Again"      | Test type selection page | The warning page routes back to `/testTypeSelection`.                             |
+| `SpamDetected`                            | User clicks "Start Test Again"      | Settings page            | The warning page routes back to `/settings`.                                      |
 
 ### Feedback-protocol differences (`protocolMode === "feedback"`)
 

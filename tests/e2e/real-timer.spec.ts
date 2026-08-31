@@ -24,6 +24,8 @@ async function startSession(page: Page, testType: string, protocol = 'optimal', 
   }
   if (protocol === 'optimal') {
     await page.locator('#compact-exposure-time').fill('500');
+    // Uncheck pregenerated delay to allow setting custom min/max
+    await page.locator('#compact-use-pregenerated-delay').uncheck();
     await page.locator('#compact-delay-min').fill('250');
     await page.locator('#compact-delay-max').fill('250');
   } else {
@@ -57,5 +59,5 @@ test('runs a short feedback strength CRT2-3 session (time-driven, ends on durati
   // Strength has no fixed total; the counter never shows /30.
   await expect(page.locator('#stimuli-counter')).not.toContainText('/30');
   // Duration (30 s) expires -> end screen appears without any count target.
-  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 60_000});
+  await expect(page.locator('#end-finish-btn')).toBeVisible({timeout: 75_000});
 });

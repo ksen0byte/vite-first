@@ -2,8 +2,6 @@ import 'katex/dist/katex.min.css';
 import {updateLanguageUI} from "./localization/localization.ts";
 import {setupSettingsScreen} from "./screens/settings-screen.ts";
 import {TestScreen} from "./screens/test-screen.ts";
-import {setupBeginTestScreen} from "./screens/begin-test-screen.ts";
-import {setupTestTypeSelectionScreen} from "./screens/test-type-selection-screen.ts";
 import {setupResultsScreen} from "./screens/results-screen.ts";
 import {UsersScreen} from "./screens/user-profiles-screen.ts";
 import Router from "./routing/router.ts";
@@ -17,8 +15,6 @@ const appContainer = document.getElementById('app')! as HTMLElement;
 // Register routes
 Router.registerRoute('/', () => setupDashboardScreen(appContainer));
 Router.registerRoute('/settings', () => setupSettingsScreen(appContainer));
-Router.registerRoute('/testTypeSelection', () => setupTestTypeSelectionScreen(appContainer));
-Router.registerRoute('/beginTest', () => setupBeginTestScreen(appContainer));
 Router.registerRoute('/test', () => {
   const testScreen = new TestScreen(appContainer);
   testScreen.setupScreen();

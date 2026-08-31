@@ -97,7 +97,7 @@ test('rejects repeated non-Space SVMR keys without recording input or detecting 
   await expect(page).not.toHaveURL(/spam-warning/);
 });
 
-test('routes accepted input spam to the warning screen and recovers to test selection', async ({page}) => {
+test('routes accepted input spam to the warning screen and recovers to settings', async ({page}) => {
   await startDefaultTest(page);
   await page.waitForTimeout(5_000);
 
@@ -108,7 +108,7 @@ test('routes accepted input spam to the warning screen and recovers to test sele
 
   await expect(page.locator('#spam-warning-screen')).toBeVisible();
   await page.locator('#spam-warning-retry-btn').click();
-  await expect(page.locator('#test-type-selection-screen')).toBeVisible();
+  await expect(page.locator('#personal-data-form')).toBeVisible();
 });
 
 test('renders imported hostile names as literal text without injected markup', async ({page}) => {

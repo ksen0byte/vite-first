@@ -371,6 +371,7 @@ const localization: LocalizationKeys = {
 
   usePregeneratedDelay: {en: "Use pregenerated exposure delays", uk: "Використовувати заздалегідь визначені затримки експозиції"},
   usePregeneratedStimuli: {en: "Use pregenerated stimulus sequence", uk: "Використовувати заздалегідь визначену послідовність стимулів"},
+  pregeneratedLabel: {en: "pregenerated", uk: "попередньо визначені"},
 
   binMs: {en: "Bin (ms)", uk: "Інтервали (мс)"},
   frequency: {en: "Frequency", uk: "Частота"},
