@@ -1,4 +1,15 @@
-import {AppContext, TestMode, TestType, TestSettings, OptimalSettings, FeedbackMobilitySettings, FeedbackStrengthSettings, isFeedback, isFeedbackMobility, feedbackTuning} from "../config/domain.ts";
+import {
+  AppContext,
+  TestMode,
+  TestType,
+  TestSettings,
+  OptimalSettings,
+  FeedbackMobilitySettings,
+  FeedbackStrengthSettings,
+  isFeedback,
+  isFeedbackMobility,
+  feedbackTuning
+} from "../config/domain.ts";
 import {defaultAppContext, parameterPairs, parameters, ParameterDefinition} from "../config/settings.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {setupFooter} from "../components/footer.ts";
@@ -13,6 +24,17 @@ import {escapeHtml} from "../util/html.ts";
 const PREVIEW_STIMULUS_SIZE = 28;
 const PREVIEW_COMBINED_COMPONENT_SIZE = 14;
 const PREVIEW_WORD_SIZE = 8;
+
+type CompactProtocolValue = "optimal" | "feedback";
+type CompactFeedbackModeValue = "mobility" | "strength";
+type CompactModeValue = "standard" | CompactFeedbackModeValue;
+
+type CompactSettingsState = Readonly<{
+  protocol: CompactProtocolValue;
+  feedbackMode: CompactFeedbackModeValue;
+  testType: TestType;
+  stimulus: TestMode;
+}>;
 
 /**
  * Renders one numeric parameter as a responsive text input, driven entirely by
@@ -131,64 +153,85 @@ function setupCompactSettings(appContext: AppContext): void {
   const mode = document.getElementById("mode-select") as HTMLSelectElement;
   const testType = document.getElementById("test-type-select") as HTMLSelectElement;
   const stimulus = document.getElementById("stimulus-select") as HTMLSelectElement;
-  let selectedProtocol: string = appContext.testSettings.protocolMode;
-  let selectedMode = appContext.testSettings.protocolMode === "feedback-strength" ? "strength" : "mobility";
-  let selectedTestType = appContext.testSettings.testType;
-  let selectedStimulus = appContext.testSettings.testMode;
-  const modes = () => selectedProtocol === "feedback" ? [{value: "mobility", key: "feedbackMobility"}, {
-    value: "strength",
-    key: "feedbackStrength"
-  }] : [{value: "standard", key: "optimalMode"}];
-  const fill = (select: HTMLSelectElement, values: { value: string, key: string }[], selected: string) => {
-    select.innerHTML = values.map(v => `<option value="${v.value}" ${v.value === selected ? "selected" : ""} data-localize="${v.key}"></option>`).join("");
+  const initialProtocol: CompactProtocolValue = appContext.testSettings.protocolMode === "optimal" ? "optimal" : "feedback";
+  const initialFeedbackMode: CompactFeedbackModeValue =
+    appContext.testSettings.protocolMode === "feedback-strength" ? "strength" : "mobility";
+  let state: CompactSettingsState = {
+    protocol: initialProtocol,
+    feedbackMode: initialFeedbackMode,
+    testType: appContext.testSettings.testType,
+    stimulus: appContext.testSettings.testMode,
   };
-  const refresh = () => {
-    fill(mode, modes(), selectedMode);
-    fill(testType, [{value: "svmr", key: "testTypePzmrShort"}, {value: "crt1-3", key: "testTypeRV13Short"}, {
-      value: "crt2-3",
-      key: "testTypeRV23Short"
-    }], selectedTestType);
-    fill(stimulus, [{value: "shapes", key: "shapesOption"}, {value: "words", key: "wordsOption"}, {value: "colors", key: "colorsOption"}, {
-      value: "combined",
-      key: "combinedOption"
-    }], selectedStimulus);
-    renderCompactParameters(appContext, selectedProtocol, selectedMode);
-    renderCompactInstruction(selectedTestType, selectedStimulus, selectedProtocol);
+  const getModeValue = (currentState: CompactSettingsState): CompactModeValue =>
+    currentState.protocol === "optimal" ? "standard" : currentState.feedbackMode;
+  const modeOptions = (currentState: CompactSettingsState): readonly { value: CompactModeValue; key: string }[] =>
+    currentState.protocol === "optimal"
+      ? [{value: "standard", key: "optimalMode"}]
+      : [
+        {value: "mobility", key: "feedbackMobility"},
+        {value: "strength", key: "feedbackStrength"},
+      ];
+  const fill = <T extends string>(select: HTMLSelectElement, values: readonly { value: T; key: string }[], selected: T): void => {
+    select.innerHTML = values
+      .map(v => `<option value="${v.value}" ${v.value === selected ? "selected" : ""} data-localize="${v.key}"></option>`)
+      .join("");
+  };
+  const refresh = (currentState: CompactSettingsState): void => {
+    const currentMode = getModeValue(currentState);
+    fill(mode, modeOptions(currentState), currentMode);
+    fill(testType, [
+      {value: "svmr", key: "testTypePzmrShort"},
+      {value: "crt1-3", key: "testTypeRV13Short"},
+      {value: "crt2-3", key: "testTypeRV23Short"},
+    ], currentState.testType);
+    fill(stimulus, [
+      {value: "shapes", key: "shapesOption"},
+      {value: "words", key: "wordsOption"},
+      {value: "colors", key: "colorsOption"},
+      {value: "combined", key: "combinedOption"},
+    ], currentState.stimulus);
+    renderCompactParameters(appContext, currentState.protocol, currentMode);
+    renderCompactInstruction(currentState.testType, currentState.stimulus, currentState.protocol);
     updateLanguageUI();
-    renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol, selectedMode);
+    renderCompactPreview(currentState.stimulus, currentState.testType, currentState.protocol, currentMode);
     validateParameterRanges();
     syncParameterHints();
   };
   const onParametersChanged = () => {
     validateParameterRanges();
     syncParameterHints();
-    renderCompactPreview(selectedStimulus, selectedTestType, selectedProtocol, selectedMode);
+    renderCompactPreview(state.stimulus, state.testType, state.protocol, getModeValue(state));
   };
   protocol.addEventListener("change", () => {
-    selectedProtocol = protocol.value;
-    selectedMode = selectedProtocol === "feedback" ? "mobility" : "standard";
-    refresh();
+    const nextProtocol = protocol.value as CompactProtocolValue;
+    state = nextProtocol === "optimal"
+      ? {...state, protocol: "optimal"}
+      : {...state, protocol: "feedback"};
+    refresh(state);
   });
   mode.addEventListener("change", () => {
-    selectedMode = mode.value;
-    refresh();
+    const nextMode = mode.value as CompactModeValue;
+    state = nextMode === "standard"
+      ? {...state, protocol: "optimal"}
+      : {...state, protocol: "feedback", feedbackMode: nextMode};
+    refresh(state);
   });
   testType.addEventListener("change", () => {
-    selectedTestType = testType.value as TestType;
-    refresh();
+    state = {...state, testType: testType.value as TestType};
+    refresh(state);
   });
   stimulus.addEventListener("change", () => {
-    selectedStimulus = stimulus.value as TestMode;
-    refresh();
+    state = {...state, stimulus: stimulus.value as TestMode};
+    refresh(state);
   });
   const parametersRoot = document.getElementById("compact-parameters")!;
   parametersRoot.addEventListener("input", onParametersChanged);
   // :user-invalid only matches once the field loses focus, so re-sync on blur.
   parametersRoot.addEventListener("focusout", () => syncParameterHints());
-  refresh();
+  refresh(state);
 }
 
-function renderCompactParameters(appContext: AppContext, protocol: string, submode: string): void {
+function renderCompactParameters(appContext: AppContext, protocol: CompactProtocolValue, submode: CompactModeValue): void {
   const ts = appContext.testSettings;
   // Build a preview settings object that reflects the chosen protocol/submode.
   // The stored context may still be optimal while the user is previewing the
@@ -196,34 +239,41 @@ function renderCompactParameters(appContext: AppContext, protocol: string, submo
   const previewSettings: TestSettings = protocol === "feedback"
     ? submode === "strength"
       ? {
-          protocolMode: "feedback-strength",
-          testMode: ts.testMode,
-          stimulusSize: ts.stimulusSize,
-          testType: ts.testType,
-          usePregenerated: {stimuli: ts.usePregenerated.stimuli},
-          feedback: (isFeedback(ts) ? ts.feedback : {initialExposure: 900, adjustmentStep: 20, minExposure: 20, maxExposure: 900, pause: 200, duration: 300}) as FeedbackStrengthSettings["feedback"],
-        }
-      : {
-          protocolMode: "feedback-mobility",
-          testMode: ts.testMode,
-          stimulusSize: ts.stimulusSize,
-          stimulusCount: isFeedbackMobility(ts) ? ts.stimulusCount : 120,
-          testType: ts.testType,
-          usePregenerated: {stimuli: ts.usePregenerated.stimuli},
-          feedback: isFeedback(ts)
-            ? ts.feedback
-            : {initialExposure: 900, adjustmentStep: 20, minExposure: 20, maxExposure: 900, pause: 200},
-        }
-    : {
-        protocolMode: "optimal",
+        protocolMode: "feedback-strength",
         testMode: ts.testMode,
         stimulusSize: ts.stimulusSize,
-        exposureTime: (ts as OptimalSettings).exposureTime ?? 700,
-        exposureDelay: (ts as OptimalSettings).exposureDelay ?? [500, 1900],
-        stimulusCount: (ts as OptimalSettings).stimulusCount ?? 50,
         testType: ts.testType,
-        usePregenerated: {exposureDelay: (ts as OptimalSettings).usePregenerated?.exposureDelay ?? true, stimuli: ts.usePregenerated.stimuli},
-      };
+        usePregenerated: {stimuli: ts.usePregenerated.stimuli},
+        feedback: (isFeedback(ts) ? ts.feedback : {
+          initialExposure: 900,
+          adjustmentStep: 20,
+          minExposure: 20,
+          maxExposure: 900,
+          pause: 200,
+          duration: 300
+        }) as FeedbackStrengthSettings["feedback"],
+      }
+      : {
+        protocolMode: "feedback-mobility",
+        testMode: ts.testMode,
+        stimulusSize: ts.stimulusSize,
+        stimulusCount: isFeedbackMobility(ts) ? ts.stimulusCount : 120,
+        testType: ts.testType,
+        usePregenerated: {stimuli: ts.usePregenerated.stimuli},
+        feedback: isFeedback(ts)
+          ? ts.feedback
+          : {initialExposure: 900, adjustmentStep: 20, minExposure: 20, maxExposure: 900, pause: 200},
+      }
+    : {
+      protocolMode: "optimal",
+      testMode: ts.testMode,
+      stimulusSize: ts.stimulusSize,
+      exposureTime: (ts as OptimalSettings).exposureTime ?? 700,
+      exposureDelay: (ts as OptimalSettings).exposureDelay ?? [500, 1900],
+      stimulusCount: (ts as OptimalSettings).stimulusCount ?? 50,
+      testType: ts.testType,
+      usePregenerated: {exposureDelay: (ts as OptimalSettings).usePregenerated?.exposureDelay ?? true, stimuli: ts.usePregenerated.stimuli},
+    };
 
   const rows = protocol === "feedback"
     ? submode === "strength"
@@ -292,14 +342,14 @@ function renderCompactParameters(appContext: AppContext, protocol: string, submo
   }
 }
 
-function renderCompactInstruction(testType: TestType, testMode: TestMode, protocol: string): void {
+function renderCompactInstruction(testType: TestType, testMode: TestMode, protocol: CompactProtocolValue): void {
   const key = protocol === "feedback"
     ? "instructionFeedback"
     : testType === "svmr" ? "instructionSvmr" : testType === "crt1-3" ? `instructionCRT13_${testMode}` : `instructionCRT23_${testMode}`;
   document.getElementById("compact-instruction")!.dataset.localizeHtml = key;
 }
 
-function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: string, submode: string): void {
+function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: CompactProtocolValue, submode: CompactModeValue): void {
   const preview = document.getElementById("compact-preview")!;
   const isFeedback = protocol === "feedback";
   const isStrength = isFeedback && submode === "strength";
@@ -329,9 +379,9 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
       delayMax = readNumberInput(parameters.exposureDelayMax);
     }
   } else {
-      delayMin = pauseMs ?? 200;
-      delayMax = pauseMs ?? 200;
-    }
+    delayMin = pauseMs ?? 200;
+    delayMax = pauseMs ?? 200;
+  }
 
   // Session-extent badge: count-driven (optimal/mobility) vs time-driven (strength).
   const sessionBadge = isStrength
@@ -343,11 +393,11 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
     : "";
 
   // Fixed pause (min === max) collapses to a single value; feedback cadence
-    // has no pre-stimulus delay - the pause IS the post-stimulus late-answer
-    // window, so it is shown only once, after the stimulus.
-    const rangeText = usePregeneratedDelay
-      ? (localize("pregeneratedLabel") ?? "pregenerated")
-      : delayMin === delayMax ? `${delayMin}` : `${delayMin}–${delayMax}`;
+  // has no pre-stimulus delay - the pause IS the post-stimulus late-answer
+  // window, so it is shown only once, after the stimulus.
+  const rangeText = usePregeneratedDelay
+    ? (localize("pregeneratedLabel") ?? "pregenerated")
+    : delayMin === delayMax ? `${delayMin}` : `${delayMin}–${delayMax}`;
   const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${rangeText}&nbsp;<span data-localize="ms"></span>]`;
   const pauseChip = `<span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span>`;
   const stimulusChip = `<span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span data-localize="ms"></span>]</span>`;
@@ -433,6 +483,7 @@ function validateParameterRanges(): void {
     markRange(minDefinition, minValue > maxValue ? errorKey : null);
   }
 }
+
 /**
  * Reveals a field's validator hint only while it is actually invalid - either
  * through the cross-field range error (aria-invalid, set by
@@ -495,14 +546,14 @@ function compactStartButtonCallback(): void {
     testMode,
     stimulusSize: readNumberInput(parameters.stimulusSize),
     testType,
-    usePregenerated: { stimuli: useStimuli } as { stimuli: boolean },
+    usePregenerated: {stimuli: useStimuli} as { stimuli: boolean },
   };
 
   let testSettings: TestSettings;
   if (protocolMode === "optimal") {
     testSettings = {
       ...base,
-      usePregenerated: { exposureDelay: useDelay, stimuli: useStimuli },
+      usePregenerated: {exposureDelay: useDelay, stimuli: useStimuli},
       protocolMode: "optimal",
       exposureTime: readNumberInput(parameters.exposureTime),
       exposureDelay: [delayMin, delayMax],
