@@ -50,7 +50,7 @@ const renderDelayRangeFields = (minValue: number, maxValue: number, disabled = f
   </div>`;
 
 const renderPregeneratedOptions = (settings: AppContext["testSettings"], showDelayOption: boolean): string => `
-  <div class="col-span-full grid min-w-0 grid-cols-1 gap-3 border-t border-base-300 pt-3 sm:grid-cols-2">
+  <div class="col-span-full grid min-w-0 gap-3 border-t border-base-300 pt-3">
     ${showDelayOption ? `<label class="flex min-w-0 items-start gap-3 rounded-box px-2 py-2 cursor-pointer hover:bg-base-200">
       <input id="compact-use-pregenerated-delay" type="checkbox" class="checkbox checkbox-md mt-0.5 shrink-0" ${(settings as OptimalSettings).usePregenerated.exposureDelay ? "checked" : ""} />
       <span class="min-w-0">
@@ -193,7 +193,7 @@ function renderCompactParameters(appContext: AppContext, protocol: string, submo
   // Build a preview settings object that reflects the chosen protocol/submode.
   // The stored context may still be optimal while the user is previewing the
   // feedback fields, so we project onto the selected arm.
-  const preview: TestSettings = protocol === "feedback"
+  const previewSettings: TestSettings = protocol === "feedback"
     ? submode === "strength"
       ? {
           protocolMode: "feedback-strength",
@@ -228,38 +228,38 @@ function renderCompactParameters(appContext: AppContext, protocol: string, submo
   const rows = protocol === "feedback"
     ? submode === "strength"
       ? [
-        parameterField(parameters.stimulusSize, preview.stimulusSize),
-        parameterField(parameters.feedbackInitialExposure, feedbackTuning(preview).initialExposure),
-        parameterField(parameters.feedbackAdjustmentStep, feedbackTuning(preview).adjustmentStep),
-        parameterField(parameters.feedbackMinExposure, feedbackTuning(preview).minExposure, "exposureMinExceedsMaxError"),
-        parameterField(parameters.feedbackMaxExposure, feedbackTuning(preview).maxExposure),
-        parameterField(parameters.feedbackPause, feedbackTuning(preview).pause),
-        parameterField(parameters.feedbackDuration, (preview as FeedbackStrengthSettings).feedback.duration),
+        parameterField(parameters.stimulusSize, previewSettings.stimulusSize),
+        parameterField(parameters.feedbackDuration, (previewSettings as FeedbackStrengthSettings).feedback.duration),
+        parameterField(parameters.feedbackInitialExposure, feedbackTuning(previewSettings).initialExposure),
+        parameterField(parameters.feedbackAdjustmentStep, feedbackTuning(previewSettings).adjustmentStep),
+        parameterField(parameters.feedbackMinExposure, feedbackTuning(previewSettings).minExposure, "exposureMinExceedsMaxError"),
+        parameterField(parameters.feedbackMaxExposure, feedbackTuning(previewSettings).maxExposure),
+        parameterField(parameters.feedbackPause, feedbackTuning(previewSettings).pause),
       ]
       : [
-        parameterField(parameters.stimulusSize, preview.stimulusSize),
-        parameterField(parameters.feedbackStimulusCount, (preview as FeedbackMobilitySettings).stimulusCount),
-        parameterField(parameters.feedbackInitialExposure, feedbackTuning(preview).initialExposure),
-        parameterField(parameters.feedbackAdjustmentStep, feedbackTuning(preview).adjustmentStep),
-        parameterField(parameters.feedbackMinExposure, feedbackTuning(preview).minExposure, "exposureMinExceedsMaxError"),
-        parameterField(parameters.feedbackMaxExposure, feedbackTuning(preview).maxExposure),
-        parameterField(parameters.feedbackPause, feedbackTuning(preview).pause),
+        parameterField(parameters.stimulusSize, previewSettings.stimulusSize),
+        parameterField(parameters.feedbackStimulusCount, (previewSettings as FeedbackMobilitySettings).stimulusCount),
+        parameterField(parameters.feedbackInitialExposure, feedbackTuning(previewSettings).initialExposure),
+        parameterField(parameters.feedbackAdjustmentStep, feedbackTuning(previewSettings).adjustmentStep),
+        parameterField(parameters.feedbackMinExposure, feedbackTuning(previewSettings).minExposure, "exposureMinExceedsMaxError"),
+        parameterField(parameters.feedbackMaxExposure, feedbackTuning(previewSettings).maxExposure),
+        parameterField(parameters.feedbackPause, feedbackTuning(previewSettings).pause),
       ]
     : [
-      parameterField(parameters.stimulusSize, preview.stimulusSize),
-      parameterField(parameters.stimulusCount, (preview as OptimalSettings).stimulusCount),
-      parameterField(parameters.exposureTime, (preview as OptimalSettings).exposureTime),
+      parameterField(parameters.stimulusSize, previewSettings.stimulusSize),
+      parameterField(parameters.stimulusCount, (previewSettings as OptimalSettings).stimulusCount),
+      parameterField(parameters.exposureTime, (previewSettings as OptimalSettings).exposureTime),
       renderDelayRangeFields(
-        (preview as OptimalSettings).exposureDelay[0],
-        (preview as OptimalSettings).exposureDelay[1],
-        (preview as OptimalSettings).usePregenerated.exposureDelay
+        (previewSettings as OptimalSettings).exposureDelay[0],
+        (previewSettings as OptimalSettings).exposureDelay[1],
+        (previewSettings as OptimalSettings).usePregenerated.exposureDelay
       ),
     ];
   // The pregenerated-delays option only applies to the optimal protocol's
   // random delay range; feedback cadence uses the fixed pause, so the checkbox
   // is hidden there and the stored flag is passed through untouched.
   document.getElementById("compact-parameters")!.innerHTML =
-    rows.join("") + renderPregeneratedOptions(preview, protocol === "optimal");
+    rows.join("") + renderPregeneratedOptions(previewSettings, protocol === "optimal");
 
   // If pregenerated delay is checked, disable the delay min/max inputs
   if (protocol === "optimal") {
