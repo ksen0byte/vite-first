@@ -233,7 +233,7 @@ describe('FEEDBACK protocol state machine rules', () => {
 
   it('STRENGTH ends at the first closed window past the configured duration', () => {
     AppContextManager.setContext(createContext({
-      feedbackSubmode: 'strength',
+      protocolMode: 'feedback-strength',
       feedback: {...FEEDBACK, duration: 3}, // seconds; start 4000 -> deadline 7000
     }));
     boot();
