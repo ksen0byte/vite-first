@@ -370,7 +370,10 @@ const localization: LocalizationKeys = {
   statP90: {en: "↗ p90", uk: "↗ p90"},
 
   usePregeneratedDelay: {en: "Use pregenerated exposure delays", uk: "Використовувати заздалегідь визначені затримки експозиції"},
+  usePregeneratedDelayHint: {en: "Reuses the same delay order for every run.", uk: "Повторно використовує однаковий (табличний) порядок затримок для кожного запуску."},
+  pregeneratedDelayActive: {en: "Using pregenerated delays", uk: "Використовуються заздалегідь визначені затримки"},
   usePregeneratedStimuli: {en: "Use pregenerated stimulus sequence", uk: "Використовувати заздалегідь визначену послідовність стимулів"},
+  usePregeneratedStimuliHint: {en: "Reuses the same stimulus order for every run.", uk: "Повторно використовує однаковий (табличний) порядок стимулів для кожного запуску."},
   pregeneratedLabel: {en: "pregenerated", uk: "попередньо визначені"},
 
   binMs: {en: "Bin (ms)", uk: "Інтервали (мс)"},

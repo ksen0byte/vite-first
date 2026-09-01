@@ -25,16 +25,23 @@ const PREVIEW_WORD_SIZE = 8;
  */
 const parameterField = (definition: ParameterDefinition, value: number, errorKey: string | null = null, disabled = false): string => `
   <div class="block w-full min-w-0">
-    <span class="mb-1 block text-sm font-medium" data-localize="${definition.labelKey}"></span>
-    <div class="flex items-center gap-2">
-      <input id="${definition.id}" class="input input-md input-bordered validator w-full text-base" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" ${disabled ? "disabled" : ""} />
-      <div class="shrink-0 text-sm font-bold unit-suffix" data-localize="${definition.unitKey}"></div>
+    <div class="mb-1.5 flex flex-col cursor-default" id="${definition.id}-meta">
+      <span class="text-sm font-medium leading-tight text-base-content" data-localize="${definition.labelKey}"></span>
+      <div class="mt-0.5 flex items-center justify-between text-xs tabular-nums text-base-content/55">
+        <span>${definition.min}&ndash;${definition.max} <span data-localize="${definition.unitKey}"></span></span>
+        <span>±${definition.step}</span>
+      </div>
+    </div>
+    <div class="relative flex items-center gap-2 rounded-box border border-base-300 bg-base-100 px-3 py-2">
+      <input id="${definition.id}" class="min-w-0 flex-1 border-0 bg-transparent p-0 text-base outline-none ${disabled ? "text-transparent" : ""}" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" ${disabled ? "disabled" : ""} />
+      <div class="shrink-0 text-sm font-semibold text-base-content/60 cursor-default ${disabled ? "invisible" : ""}" data-localize="${definition.unitKey}"></div>
+      <span id="${definition.id}-preset" class="pointer-events-none absolute inset-0 hidden items-center px-3 text-sm italic text-base-content/45" data-localize="pregeneratedDelayActive"></span>
     </div>
     <div class="validator-hint hidden text-left" id="${definition.id}-hint">
       <span class="hint-range"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span class="unit-suffix" data-localize="${definition.unitKey}"></span></span>
       ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
     </div>
-  </div>`;
+  </div>`
 
 const renderDelayRangeFields = (minValue: number, maxValue: number, disabled = false): string => `
   <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
@@ -44,13 +51,19 @@ const renderDelayRangeFields = (minValue: number, maxValue: number, disabled = f
 
 const renderPregeneratedOptions = (settings: AppContext["testSettings"], showDelayOption: boolean): string => `
   <div class="col-span-full grid min-w-0 grid-cols-1 gap-3 border-t border-base-300 pt-3 sm:grid-cols-2">
-    ${showDelayOption ? `<label class="flex min-w-0 cursor-pointer items-start gap-2">
+    ${showDelayOption ? `<label class="flex min-w-0 items-start gap-3 rounded-box px-2 py-2 cursor-pointer hover:bg-base-200">
       <input id="compact-use-pregenerated-delay" type="checkbox" class="checkbox checkbox-md mt-0.5 shrink-0" ${(settings as OptimalSettings).usePregenerated.exposureDelay ? "checked" : ""} />
-      <span class="min-w-0 text-sm leading-6" data-localize="usePregeneratedDelay"></span>
+      <span class="min-w-0">
+        <span class="block text-sm font-medium leading-6" data-localize="usePregeneratedDelay"></span>
+        <span class="block text-xs leading-5 text-base-content/70" data-localize="usePregeneratedDelayHint"></span>
+      </span>
     </label>` : ""}
-    <label class="flex min-w-0 cursor-pointer items-start gap-2">
+    <label class="flex min-w-0 items-start gap-3 rounded-box px-2 py-2 cursor-pointer hover:bg-base-200">
       <input id="compact-use-pregenerated-stimuli" type="checkbox" class="checkbox checkbox-md mt-0.5 shrink-0" ${settings.usePregenerated.stimuli ? "checked" : ""} />
-      <span class="min-w-0 text-sm leading-6" data-localize="usePregeneratedStimuli"></span>
+      <span class="min-w-0">
+        <span class="block text-sm font-medium leading-6" data-localize="usePregeneratedStimuli"></span>
+        <span class="block text-xs leading-5 text-base-content/70" data-localize="usePregeneratedStimuliHint"></span>
+      </span>
     </label>
   </div>`;
 
@@ -252,35 +265,29 @@ function renderCompactParameters(appContext: AppContext, protocol: string, submo
   if (protocol === "optimal") {
     const usePregeneratedDelayCheckbox = document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null;
     if (usePregeneratedDelayCheckbox) {
+      const setPregeneratedDelayState = (disabled: boolean) => {
+        for (const id of [parameters.exposureDelayMin.id, parameters.exposureDelayMax.id]) {
+          const input = document.getElementById(id) as HTMLInputElement | null;
+          const labelRow = document.getElementById(`${id}-meta`) as HTMLElement | null;
+          const preset = document.getElementById(`${id}-preset`) as HTMLElement | null;
+          if (!input || !labelRow) continue;
+          const unitSuffix = input.nextElementSibling as HTMLElement | null;
+          labelRow.classList.toggle("opacity-40", disabled);
+          labelRow.classList.toggle("pointer-events-none", disabled);
+          preset?.classList.toggle("hidden", !disabled);
+          preset?.classList.toggle("flex", disabled);
+          unitSuffix?.classList.toggle("invisible", disabled);
+          input.classList.toggle("text-transparent", disabled);
+          input.classList.toggle("cursor-not-allowed", disabled);
+          input.classList.toggle("opacity-60", disabled);
+          input.disabled = disabled;
+        }
+      };
+
       usePregeneratedDelayCheckbox.addEventListener("change", () => {
-        const disabled = usePregeneratedDelayCheckbox.checked;
-        const minInput = document.getElementById(parameters.exposureDelayMin.id) as HTMLInputElement | null;
-        const maxInput = document.getElementById(parameters.exposureDelayMax.id) as HTMLInputElement | null;
-        if (minInput) {
-          minInput.disabled = disabled;
-          minInput.classList.toggle("opacity-50", disabled);
-          minInput.classList.toggle("cursor-not-allowed", disabled);
-        }
-        if (maxInput) {
-          maxInput.disabled = disabled;
-          maxInput.classList.toggle("opacity-50", disabled);
-          maxInput.classList.toggle("cursor-not-allowed", disabled);
-        }
+        setPregeneratedDelayState(usePregeneratedDelayCheckbox.checked);
       });
-      // Apply initial state
-      const disabled = usePregeneratedDelayCheckbox.checked;
-      const minInput = document.getElementById(parameters.exposureDelayMin.id) as HTMLInputElement | null;
-      const maxInput = document.getElementById(parameters.exposureDelayMax.id) as HTMLInputElement | null;
-      if (minInput) {
-        minInput.disabled = disabled;
-        minInput.classList.toggle("opacity-50", disabled);
-        minInput.classList.toggle("cursor-not-allowed", disabled);
-      }
-      if (maxInput) {
-        maxInput.disabled = disabled;
-        maxInput.classList.toggle("opacity-50", disabled);
-        maxInput.classList.toggle("cursor-not-allowed", disabled);
-      }
+      setPregeneratedDelayState(usePregeneratedDelayCheckbox.checked);
     }
   }
 }
