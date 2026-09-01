@@ -26,22 +26,22 @@ const PREVIEW_WORD_SIZE = 8;
 const parameterField = (definition: ParameterDefinition, value: number, errorKey: string | null = null, disabled = false): string => `
   <div class="block w-full min-w-0">
     <div class="mb-1.5 flex flex-col cursor-default" id="${definition.id}-meta">
-      <span class="text-sm font-medium leading-tight text-base-content" data-localize="${definition.labelKey}"></span>
+      <span class="truncate text-sm font-medium leading-tight text-base-content" data-localize="${definition.labelKey}"></span>
       <div class="mt-0.5 flex items-center justify-between text-xs tabular-nums text-base-content/55">
-        <span>${definition.min}&ndash;${definition.max} <span data-localize="${definition.unitKey}"></span></span>
-        <span>±${definition.step}</span>
+        <span class="truncate pr-2">${definition.min}&ndash;${definition.max} <span data-localize="${definition.unitKey}"></span></span>
+        <span class="shrink-0">±${definition.step}</span>
       </div>
     </div>
     <div class="relative flex items-center gap-2 rounded-box border border-base-300 bg-base-100 px-3 py-2">
       <input id="${definition.id}" class="min-w-0 flex-1 border-0 bg-transparent p-0 text-base outline-none ${disabled ? "text-transparent" : ""}" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" ${disabled ? "disabled" : ""} />
       <div class="shrink-0 text-sm font-semibold text-base-content/60 cursor-default ${disabled ? "invisible" : ""}" data-localize="${definition.unitKey}"></div>
-      <span id="${definition.id}-preset" class="pointer-events-none absolute inset-0 hidden items-center px-3 text-sm italic text-base-content/45" data-localize="pregeneratedDelayActive"></span>
+      <span id="${definition.id}-preset" class="pointer-events-none absolute inset-0 hidden items-center px-3 text-sm italic text-base-content/45 truncate" data-localize="pregeneratedDelayActive"></span>
     </div>
     <div class="validator-hint hidden text-left" id="${definition.id}-hint">
       <span class="hint-range"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span class="unit-suffix" data-localize="${definition.unitKey}"></span></span>
       ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
     </div>
-  </div>`
+  </div>`;
 
 const renderDelayRangeFields = (minValue: number, maxValue: number, disabled = false): string => `
   <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
