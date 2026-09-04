@@ -5,11 +5,33 @@ export interface ExposurePoint {
   readonly exposureMs: number;
 }
 
+export interface ExposureSummary {
+  readonly minExposureMs: number;
+  readonly reachedAfterTrial: number;
+  readonly processedCount: number;
+}
+
 /** Trials that carry an exposure stamp, in presentation order. */
 export function extractExposureSeries(trials: readonly TrialResult[]): ExposurePoint[] {
   return trials
     .filter((trial): trial is TrialResult & {exposureMs: number} => typeof trial.exposureMs === "number")
     .map((trial) => ({index: trial.trialIndex, exposureMs: trial.exposureMs}));
+}
+
+/** Summarize adaptation using human-facing, one-based trial numbers. */
+export function summarizeExposure(trials: readonly TrialResult[]): ExposureSummary | null {
+  const points = extractExposureSeries(trials);
+  if (points.length === 0) return null;
+
+  const minExposureMs = Math.min(...points.map((point) => point.exposureMs));
+  const firstMinPosition = points.findIndex((point) => point.exposureMs === minExposureMs);
+  // Exposure on a stimulus was selected after the preceding trial. The first
+  // stimulus is the exception: its exposure is the configured initial value.
+  const reachedAfterTrial = firstMinPosition === 0
+    ? points[0].index + 1
+    : points[firstMinPosition - 1].index + 1;
+
+  return {minExposureMs, reachedAfterTrial, processedCount: points.length};
 }
 
 const isNumberSeries = (input: readonly unknown[]): input is readonly number[] =>

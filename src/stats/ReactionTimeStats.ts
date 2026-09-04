@@ -22,6 +22,8 @@ export class ReactionTimeStats {
   private readonly bins: FrequencyBin[];
   // Calculate stats using simple-statistics
   public readonly count;
+  /** Successful reactions removed by hard-bound or MAD filtering. */
+  public readonly filteredCount;
   public readonly meanVal;
   public readonly modeVal;
   public readonly stdevVal;
@@ -50,6 +52,7 @@ export class ReactionTimeStats {
    * Create a new instance with the given array of reaction times.
    */
   constructor(trialResults: TrialResult[], upperBound: number = 700, lowerBound: number = 100) {
+    const successfulCount = trialResults.filter(trialResult => trialResult.outcome === "Success").length;
     // Step 1: Remove hard outliers based on fixed range
     let cleanedData = trialResults
       .filter(trialResult => trialResult.outcome === "Success")
@@ -65,6 +68,7 @@ export class ReactionTimeStats {
     // Calculate statistics on cleaned data
     this.bins = this.computeFrequencyDistribution();
     this.count = cleanedData.length;
+    this.filteredCount = successfulCount - this.count;
 
     if (this.count > 0) {
       this.meanVal = mean(cleanedData);

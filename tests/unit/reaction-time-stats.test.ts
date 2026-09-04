@@ -48,7 +48,7 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
 
   it('includes values exactly at the hard bounds and excludes outside values', () => {
     const stats = new Stats([trial(99), trial(100), trial(700), trial(701)], 700, 100);
-    expect(stats).toMatchObject({count: 2, meanVal: 400});
+    expect(stats).toMatchObject({count: 2, filteredCount: 2, meanVal: 400});
   });
 
   it('counts every error outcome without treating it as a successful reaction', () => {

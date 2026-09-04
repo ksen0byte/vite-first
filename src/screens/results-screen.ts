@@ -8,6 +8,7 @@ import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
 import {TrialResult, isFeedback, feedbackTuning} from "../config/domain.ts";
+import {summarizeExposure} from "../stats/exposure-curve.ts";
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
@@ -58,7 +59,7 @@ export function setupResultsScreen(
         <!-- Count -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statCount">Count</div>
-          <div class="stat-value text-lg">${reactionTimeStats.count}</div>
+          <div class="stat-value text-lg">${reactionTimeStats.count}${filteredCountHtml(reactionTimeStats.filteredCount)}</div>
           ${handBreakdownDescHtml(multiHandStats.left.count, multiHandStats.right.count, showHandBreakdown)}
         </div>
 
@@ -178,31 +179,34 @@ export function setupResultsScreen(
   updateLanguageUI();
 }
 
+function filteredCountHtml(filteredCount: number): string {
+  return filteredCount > 0
+    ? ` <span class="text-error" title="Filtered reactions">(${filteredCount})</span>`
+    : "";
+}
+
 /**
  * Feedback-only results block: minimum exposure reached, when it was reached
  * (trial number), and the exposure-dynamics curve (doc §2.1/§2.2 "дод.
  * результати"). Hidden entirely for optimal-protocol sessions.
  */
 function feedbackExposureStatsHtml(trialResults: readonly TrialResult[]): string {
-  const stamped = trialResults.filter((t): t is TrialResult & {exposureMs: number} => typeof t.exposureMs === "number");
-  if (stamped.length === 0) return "";
-
-  const minExposure = Math.min(...stamped.map((t) => t.exposureMs));
-  const firstAtMin = stamped.find((t) => t.exposureMs === minExposure)!;
+  const summary = summarizeExposure(trialResults);
+  if (!summary) return "";
 
   return `
     <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
       <div class="stat place-items-center">
         <div class="stat-title text-base" data-localize="statMinExposure"></div>
-        <div class="stat-value text-lg">${minExposure}${localize("ms")}</div>
+        <div class="stat-value text-lg">${summary.minExposureMs}${localize("ms")}</div>
       </div>
       <div class="stat place-items-center">
         <div class="stat-title text-base" data-localize="statMinExposureTrial"></div>
-        <div class="stat-value text-lg">#${firstAtMin.trialIndex + 1}</div>
+        <div class="stat-value text-lg">#${summary.reachedAfterTrial}</div>
       </div>
       <div class="stat place-items-center">
         <div class="stat-title text-base" data-localize="statStimuliProcessed"></div>
-        <div class="stat-value text-lg">${stamped.length}</div>
+        <div class="stat-value text-lg">${summary.processedCount}</div>
       </div>
     </div>`;
 }

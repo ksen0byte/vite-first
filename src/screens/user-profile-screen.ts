@@ -10,6 +10,7 @@ import Router, {Cleanup} from "../routing/router.ts";
 import {Chart} from "chart.js";
 import {printConfig} from "../config/settings.ts";
 import {escapeHtml} from "../util/html.ts";
+import {summarizeExposure} from "../stats/exposure-curve.ts";
 
 let chartInstances: Chart[] = [];
 
@@ -207,7 +208,7 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <tr class="text-center">
                   <td><strong data-localize="countLabel"></strong></td>
                   <td>
-                    ${stats.count}
+                    ${stats.count}${filteredCountHtml(stats.filteredCount)}
                     ${handBreakdownValueHtml(statsLeft.count, statsRight.count, showHandBreakdown)}
                   </td>
                 </tr>
@@ -258,6 +259,7 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td><strong data-localize="p97Label"></strong></td>
                   <td>${stats.p97Val.toFixed(2)} <span data-localize="ms"></span></td>
                 </tr>
+                ${isFeedbackSession ? feedbackStatsRowsHtml(trials) : ""}
               </tbody>
             </table>
           </div>
@@ -306,8 +308,6 @@ function testCardHTML(index: number, test: TestRecord): string {
           </div>
         </div>
 
-        ${isFeedbackSession ? feedbackStatsRowsHtml(trials) : ""}
-
         <!-- Histogram -->
         <div class="flex flex-grow p-8 min-h-96">
           <canvas id="histogram-${index}"></canvas>
@@ -319,31 +319,32 @@ function testCardHTML(index: number, test: TestRecord): string {
 }
 
 /**
- * Feedback-only per-test block: minimum exposure reached, when it was reached,
+ * Feedback-only per-test rows: minimum exposure reached, when it was reached,
  * and how many stimuli carried an exposure stamp. Hidden for optimal sessions.
  */
 function feedbackStatsRowsHtml(trials: TestRecord["trials"]): string {
-  const stamped = trials.filter((t): t is typeof t & {exposureMs: number} => typeof t.exposureMs === "number");
-  if (stamped.length === 0) return "";
-
-  const minExposure = Math.min(...stamped.map((t) => t.exposureMs));
-  const firstAtMin = stamped.find((t) => t.exposureMs === minExposure)!;
+  const summary = summarizeExposure(trials);
+  if (!summary) return "";
 
   return `
-    <div class="stats stats-vertical lg:stats-horizontal shadow w-full mt-4">
-      <div class="stat place-items-center">
-        <div class="stat-title text-base" data-localize="statMinExposure"></div>
-        <div class="stat-value text-lg">${minExposure} <span data-localize="ms"></span></div>
-      </div>
-      <div class="stat place-items-center">
-        <div class="stat-title text-base" data-localize="statMinExposureTrial"></div>
-        <div class="stat-value text-lg">#${firstAtMin.trialIndex + 1}</div>
-      </div>
-      <div class="stat place-items-center">
-        <div class="stat-title text-base" data-localize="statStimuliProcessed"></div>
-        <div class="stat-value text-lg">${stamped.length}</div>
-      </div>
-    </div>`;
+    <tr class="text-center">
+      <td><strong data-localize="statMinExposure"></strong></td>
+      <td>${summary.minExposureMs} <span data-localize="ms"></span></td>
+    </tr>
+    <tr class="text-center">
+      <td><strong data-localize="statMinExposureTrial"></strong></td>
+      <td>#${summary.reachedAfterTrial}</td>
+    </tr>
+    <tr class="text-center">
+      <td><strong data-localize="statStimuliProcessed"></strong></td>
+      <td>${summary.processedCount}</td>
+    </tr>`;
+}
+
+function filteredCountHtml(filteredCount: number): string {
+  return filteredCount > 0
+    ? ` <span class="text-error" title="Filtered reactions">(${filteredCount})</span>`
+    : "";
 }
 
 function errorBreakdownRowsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {

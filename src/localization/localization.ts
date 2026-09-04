@@ -86,7 +86,7 @@ const localization: LocalizationKeys = {
   previewIgnore: {en: "ignore", uk: "ігнорувати"},
   previewAdaptationState: {en: "adapt", uk: "адаптація"},
   statMinExposure: {en: "Minimum exposure reached", uk: "Досягнута мінімальна експозиція"},
-  statMinExposureTrial: {en: "Minimum exposure at trial", uk: "Мінімальна експозиція на подразнику"},
+  statMinExposureTrial: {en: "Minimum exposure reached after trial", uk: "Мінімальної експозиції досягнуто після спроби"},
   statStimuliProcessed: {en: "Stimuli processed", uk: "Опрацьовано подразників"},
   exposureCurveTitle: {en: "Exposure dynamics", uk: "Динаміка експозиції"},
   units: {en: "pcs", uk: "од."},

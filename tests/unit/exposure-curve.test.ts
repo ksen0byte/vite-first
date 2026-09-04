@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {exposureCurveSvg, extractExposureSeries} from '../../src/stats/exposure-curve.ts';
+import {exposureCurveSvg, extractExposureSeries, summarizeExposure} from '../../src/stats/exposure-curve.ts';
 
 const series = [900, 880, 860, 840, 900];
 
@@ -23,6 +23,30 @@ describe('extractExposureSeries', () => {
       {trialIndex: 1, stimulus: 'circle', reactionTime: 200, outcome: 'Success', expectedAction: 'LEFT', actualAction: 'LEFT', exposureMs: 700},
     ] as never[]);
     expect(points).toEqual([{index: 1, exposureMs: 700}]);
+  });
+});
+
+describe('summarizeExposure', () => {
+  it('reports the trial whose result caused the minimum exposure', () => {
+    const trials = [900, 880, 860, 840].map((exposureMs, trialIndex) => ({
+      trialIndex, stimulus: 'square', reactionTime: 200, outcome: 'Success',
+      expectedAction: 'DEFAULT', actualAction: 'DEFAULT', exposureMs,
+    })) as never[];
+
+    expect(summarizeExposure(trials)).toEqual({
+      minExposureMs: 840,
+      reachedAfterTrial: 3,
+      processedCount: 4,
+    });
+  });
+
+  it('attributes an initial exposure that is already minimal to trial 1', () => {
+    const trials = [{
+      trialIndex: 0, stimulus: 'square', reactionTime: 200, outcome: 'Success',
+      expectedAction: 'DEFAULT', actualAction: 'DEFAULT', exposureMs: 40,
+    }] as never[];
+
+    expect(summarizeExposure(trials)?.reachedAfterTrial).toBe(1);
   });
 });
 
