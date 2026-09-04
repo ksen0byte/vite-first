@@ -64,6 +64,14 @@
   margin-bottom: 0.375rem;
 }
 
+/* DaisyUI normally delays and stretches the checkmark animation. Settings
+   controls should acknowledge input immediately while retaining subtle motion. */
+.settings-checkbox,
+.settings-checkbox::before {
+  transition-delay: 0s;
+  transition-duration: 0ms;
+}
+
 @media print {
   @page {
     size: landscape;

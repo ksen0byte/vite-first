@@ -74,14 +74,14 @@ const renderDelayRangeFields = (minValue: number, maxValue: number, disabled = f
 const renderPregeneratedOptions = (settings: AppContext["testSettings"], showDelayOption: boolean): string => `
   <div class="col-span-full grid min-w-0 gap-3 border-t border-base-300 pt-3">
     ${showDelayOption ? `<label class="flex min-w-0 items-start gap-3 rounded-box px-2 py-2 cursor-pointer hover:bg-base-200">
-      <input id="compact-use-pregenerated-delay" type="checkbox" class="checkbox checkbox-md mt-0.5 shrink-0" ${(settings as OptimalSettings).usePregenerated.exposureDelay ? "checked" : ""} />
+      <input id="compact-use-pregenerated-delay" type="checkbox" class="checkbox settings-checkbox checkbox-md mt-0.5 shrink-0" ${(settings as OptimalSettings).usePregenerated.exposureDelay ? "checked" : ""} />
       <span class="min-w-0">
         <span class="block text-sm font-medium leading-6" data-localize="usePregeneratedDelay"></span>
         <span class="block text-xs leading-5 text-base-content/70" data-localize="usePregeneratedDelayHint"></span>
       </span>
     </label>` : ""}
     <label class="flex min-w-0 items-start gap-3 rounded-box px-2 py-2 cursor-pointer hover:bg-base-200">
-      <input id="compact-use-pregenerated-stimuli" type="checkbox" class="checkbox checkbox-md mt-0.5 shrink-0" ${settings.usePregenerated.stimuli ? "checked" : ""} />
+      <input id="compact-use-pregenerated-stimuli" type="checkbox" class="checkbox settings-checkbox checkbox-md mt-0.5 shrink-0" ${settings.usePregenerated.stimuli ? "checked" : ""} />
       <span class="min-w-0">
         <span class="block text-sm font-medium leading-6" data-localize="usePregeneratedStimuli"></span>
         <span class="block text-xs leading-5 text-base-content/70" data-localize="usePregeneratedStimuliHint"></span>
@@ -375,7 +375,7 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
     usePregeneratedDelay = pregenCheckbox?.checked ?? false;
     if (usePregeneratedDelay) {
       // Show "pregenerated" in preview instead of min/max
-      delayMin = 0; // placeholder, won't be used for display
+      delayMin = 0; // placeholder won't be used for display
       delayMax = 0;
     } else {
       delayMin = readNumberInput(parameters.exposureDelayMin);
@@ -407,7 +407,7 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
   const leadingPause = isFeedback ? "" : `${pauseChip}<span>→</span>`;
   const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-300">${leadingPause}${stimulusChip}<span>→</span>${pauseChip}${adaptationBadge}${sessionBadge}</div>`;
   preview.innerHTML = `<div class="relative flex min-h-[30rem] w-full items-center justify-center overflow-hidden rounded-box bg-black py-10 text-white">${stimulus}${stateDiagram}</div>`;
-  updateLanguageUI();
+  updateLanguageUI(preview);
 }
 
 function previewReactionColumn(testMode: TestMode, action: "left" | "right" | "space" | "ignore", size: number): string {

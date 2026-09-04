@@ -4,12 +4,14 @@ import katex from 'katex';
 import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.ts";
 import {getRepresentativeWord, type WordCategory} from "../components/Words.ts";
 
-export function updateLanguageUI(): void {
+export function updateLanguageUI(root: ParentNode = document): void {
   const currentLanguage = LanguageManager.getCurrentLanguage();
-  document.documentElement.lang = currentLanguage;
-  document.title = localize('appTitle');
+  if (root === document) {
+    document.documentElement.lang = currentLanguage;
+    document.title = localize('appTitle');
+  }
 
-  const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
+  const localizableElements = root.querySelectorAll<HTMLElement>("[data-localize]");
   localizableElements.forEach((element) => {
     const key = element.dataset.localize!;
     const textContent = localize(key);
@@ -21,29 +23,29 @@ export function updateLanguageUI(): void {
     }
   });
 
-  const htmlLocalizableElements = document.querySelectorAll<HTMLElement>("[data-localize-html]");
+  const htmlLocalizableElements = root.querySelectorAll<HTMLElement>("[data-localize-html]");
   htmlLocalizableElements.forEach((element) => {
     const key = element.dataset.localizeHtml!;
     element.innerHTML = localize(key);
   });
 
-  const instructionElements = document.querySelectorAll<HTMLElement>("[data-instruction-task][data-instruction-protocol]");
+  const instructionElements = root.querySelectorAll<HTMLElement>("[data-instruction-task][data-instruction-protocol]");
   instructionElements.forEach((element) => {
     element.innerHTML = `${localize(element.dataset.instructionTask!)}${localize(element.dataset.instructionProtocol!)}`;
   });
 
-  const wordCategoryElements = document.querySelectorAll<HTMLElement>("[data-localize-word-category]");
+  const wordCategoryElements = root.querySelectorAll<HTMLElement>("[data-localize-word-category]");
   wordCategoryElements.forEach((element) => {
     const category = element.dataset.localizeWordCategory! as WordCategory;
     element.textContent = getRepresentativeWord(getLocalizedVar("randomWords"), category);
   });
 
-  const ariaLocalizableElements = document.querySelectorAll<HTMLElement>('[data-localize-aria]');
+  const ariaLocalizableElements = root.querySelectorAll<HTMLElement>('[data-localize-aria]');
   ariaLocalizableElements.forEach((element) => {
     element.setAttribute('aria-label', localize(element.dataset.localizeAria!));
   });
 
-  const mathElements = document.querySelectorAll<HTMLElement>("[data-localize-math]");
+  const mathElements = root.querySelectorAll<HTMLElement>("[data-localize-math]");
   mathElements.forEach((element) => {
     const key = element.dataset.localizeMath!;
     const latexString = localize(key);
