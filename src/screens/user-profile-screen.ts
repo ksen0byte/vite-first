@@ -118,12 +118,13 @@ function testCardHTML(index: number, test: TestRecord): string {
   const rtUpperBound = isFeedbackSession
     ? feedbackTuning(testSettings).maxExposure + feedbackTuning(testSettings).pause
     : (testSettings as OptimalSettings).exposureTime;
+  const statsDebugLabel = `Profile test #${index} (${new Date(date).toLocaleString()}, ${testType})`;
 
   const showHandBreakdown = testType === "crt2-3";
   const multiHandStats = showHandBreakdown
-    ? new MultiHandReactionTimeStats(trials, rtUpperBound)
+    ? new MultiHandReactionTimeStats(trials, rtUpperBound, 100, statsDebugLabel)
     : null;
-  const stats = multiHandStats?.total ?? new ReactionTimeStats(trials, rtUpperBound);
+  const stats = multiHandStats?.total ?? new ReactionTimeStats(trials, rtUpperBound, 100, statsDebugLabel);
   const statsRight = multiHandStats?.right;
   const statsLeft = multiHandStats?.left;
 

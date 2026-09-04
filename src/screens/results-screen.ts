@@ -37,7 +37,7 @@ export function setupResultsScreen(
   const rtUpperBound = isFeedbackSession
     ? feedbackTuning(testSettings).maxExposure + feedbackTuning(testSettings).pause
     : testSettings.exposureTime;
-  const multiHandStats = new MultiHandReactionTimeStats(trialResults, rtUpperBound);
+  const multiHandStats = new MultiHandReactionTimeStats(trialResults, rtUpperBound, 100, "Current test results");
   const reactionTimeStats = multiHandStats.total;
   const showHandBreakdown = testType === "crt2-3";
   const errorBreakdownStats = errorBreakdownStatsHtml(multiHandStats, showHandBreakdown);

@@ -18,6 +18,7 @@ export const OUTCOME_BREAKDOWN: readonly OutcomeBreakdown[] = [...ERROR_OUTCOMES
 export class ReactionTimeStats {
   private readonly data: number[];
   private readonly bins: FrequencyBin[];
+  private readonly debugLabel?: string;
   // Calculate stats using simple-statistics
   public readonly count;
   public readonly filteredCount;
@@ -48,7 +49,8 @@ export class ReactionTimeStats {
   /**
    * Create a new instance with the given array of reaction times.
    */
-  constructor(trialResults: TrialResult[], upperBound: number = 500, lowerBound: number = 100) {
+  constructor(trialResults: TrialResult[], upperBound: number = 500, lowerBound: number = 100, debugLabel?: string) {
+    this.debugLabel = debugLabel;
     const successfulCount = trialResults.filter(trialResult => trialResult.outcome === "Success").length;
     // Step 1: Remove hard outliers based on fixed range
     let cleanedData = trialResults
@@ -230,6 +232,7 @@ export class ReactionTimeStats {
   private getMode(): number | null {
     if (this.bins.length < 3) {
       console.warn("Cannot interpolate the statistical mode: fewer than three histogram bins.", {
+        test: this.debugLabel ?? "unspecified",
         sampleCount: this.data.length,
         cleanedReactionTimes: this.data,
         bins: this.bins,
@@ -250,6 +253,7 @@ export class ReactionTimeStats {
     // Ensure there are bins before and after the modal class
     if (modeIndex <= 0 || modeIndex >= this.bins.length - 1) {
       console.warn("Cannot interpolate the statistical mode: the modal class is an edge bin.", {
+        test: this.debugLabel ?? "unspecified",
         reason: "The grouped-mode formula requires neighboring bins on both sides.",
         sampleCount: this.data.length,
         cleanedReactionTimes: this.data,
