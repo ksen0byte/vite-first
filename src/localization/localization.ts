@@ -27,6 +27,11 @@ export function updateLanguageUI(): void {
     element.innerHTML = localize(key);
   });
 
+  const instructionElements = document.querySelectorAll<HTMLElement>("[data-instruction-task][data-instruction-protocol]");
+  instructionElements.forEach((element) => {
+    element.innerHTML = `${localize(element.dataset.instructionTask!)}${localize(element.dataset.instructionProtocol!)}`;
+  });
+
   const wordCategoryElements = document.querySelectorAll<HTMLElement>("[data-localize-word-category]");
   wordCategoryElements.forEach((element) => {
     const category = element.dataset.localizeWordCategory! as WordCategory;
@@ -198,46 +203,50 @@ const localization: LocalizationKeys = {
 
   // Test instructions | modes -> "shapes" | "words" | "colors" | "combined"
   instructionSvmr: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when <b>ANY</b> stimulus appears on the screen.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли на екрані з'явиться <b>БУДЬ-ЯКИЙ</b> подразник."
+    en: "<p>When <b>any stimulus</b> appears on the screen, press <kbd class='kbd'>Space</kbd> as quickly as possible.</p>",
+    uk: "<p>Коли на екрані з'являється <b>будь-який подразник</b>, якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>.</p>"
+  },
+  instructionOptimal: {
+    en: "<p>Respond as quickly and accurately as possible. If you make a mistake or miss a stimulus, do not stop; refocus and continue following the rules.</p><p>Continue until the <b>TEST FINISHED</b> message appears.</p>",
+    uk: "<p>Відповідайте якомога швидше й точніше. Якщо Ви помилилися або пропустили подразник, не зупиняйтеся: зосередьтеся та продовжуйте виконувати завдання за правилами.</p><p>Виконуйте тест до появи напису <b>ТЕСТ ЗАВЕРШЕНО</b>.</p>"
   },
   instructionFeedback: {
-    en: "<p>React to each stimulus as in the corresponding selection test. If you answer correctly, the next stimulus is shown <b>faster</b>. If you make a mistake, it is shown <b>slower</b>.</p><p>Your goal is to reach the highest possible presentation speed and to hold it for as long as you can.</p><p>Answers given with a short delay are still counted as correct and are not treated as errors. Do not stop when mistakes happen; focus on answering correctly.</p><p>Keep going until the <b>TEST FINISHED</b> message appears.</p>",
-    uk: "<p>Реагуйте на подразники, як у відповідному тесті з вибором. Якщо Ви відповідаєте правильно, наступний подразник з'являється <b>швидше</b>. Якщо помиляєтесь, з'являється <b>повільніше</b>.</p><p>Ваше завдання: вийти на максимально можливу швидкість подачі сигналів і утримувати її якомога довше.</p><p>Відповіді, дані з невеликим запізненням, зараховуються як правильні й помилкою не вважаються. У разі помилок роботу не припиняйте, а зосередьте увагу на правильному виконанні.</p><p>Виконуйте тест до напису <b>ТЕСТ ЗАВЕРШЕНО</b>.</p>"
+    en: "<p>After a correct response, the next stimulus is presented <b>faster</b>; after an error, it is presented <b>slower</b>. Your goal is to reach the highest presentation speed you can and maintain it for as long as possible.</p><p>A response given shortly after a stimulus disappears is still counted as correct and is not treated as an error. If you make a mistake or miss a stimulus, do not stop; refocus and continue following the rules.</p><p>Continue until the <b>TEST FINISHED</b> message appears.</p>",
+    uk: "<p>Після правильної відповіді наступний подразник подається <b>швидше</b>, а після помилки — <b>повільніше</b>. Ваше завдання — вийти на максимально можливу швидкість подачі подразників і утримувати її якомога довше.</p><p>Відповідь, надана невдовзі після зникнення подразника, також зараховується як правильна й не вважається помилкою. Якщо Ви помилилися або пропустили подразник, не зупиняйтеся: зосередьтеся та продовжуйте виконувати завдання за правилами.</p><p>Виконуйте тест до появи напису <b>ТЕСТ ЗАВЕРШЕНО</b>.</p>"
   },
   // en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a target stimulus (Red, Square, or Animal) appears. Ignore other stimuli.",
   // uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (Червоний, Квадрат або Тварина). Ігноруйте інші подразники."
   instructionCRT13_shapes: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a <b>Square</b> appears. Ignore other stimuli.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Квадрат</b>. Ігноруйте інші подразники."
+    en: "<p>When a <b>square</b> appears, press <kbd class='kbd'>Space</kbd> as quickly as possible. Do not press anything for a circle or triangle.</p>",
+    uk: "<p>Коли з'являється <b>квадрат</b>, якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>. Коли з'являється коло або трикутник, нічого не натискайте.</p>"
   },
   instructionCRT13_words: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when an <b>Animal</b> appears. Ignore other stimuli.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Тварина</b>. Ігноруйте інші подразники."
+    en: "<p>When an <b>animal</b> word appears, press <kbd class='kbd'>Space</kbd> as quickly as possible. Do not press anything for plant or non-living-object words.</p>",
+    uk: "<p>Коли з'являється слово, що позначає <b>тварину</b>, якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>. Для слів, що позначають рослини або неживі предмети, нічого не натискайте.</p>"
   },
   instructionCRT13_colors: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a <b>Red</b> appears. Ignore other stimuli.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Червоний</b>. Ігноруйте інші подразники."
+    en: "<p>When a <b>red</b> stimulus appears, press <kbd class='kbd'>Space</kbd> as quickly as possible. Do not press anything for green or yellow stimuli.</p>",
+    uk: "<p>Коли з'являється <b>червоний</b> подразник, якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>. Для зелених і жовтих подразників нічого не натискайте.</p>"
   },
   instructionCRT13_combined: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a target stimulus (Red, Square, or Animal) appears. Ignore other stimuli.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (<b>Червоний, Квадрат або Тварина</b>). Ігноруйте інші подразники."
+    en: "<p>Press <kbd class='kbd'>Space</kbd> as quickly as possible when the stimulus is <b>red, a square, or an animal word</b>. Do not press anything when it is green, a circle, or a plant word, or when it is yellow, a triangle, or a non-living-object word.</p>",
+    uk: "<p>Якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>, якщо подразник є <b>червоним, квадратом або словом, що позначає тварину</b>. Нічого не натискайте, якщо це зелений колір, коло чи слово-назва рослини або жовтий колір, трикутник чи слово-назва неживого предмета.</p>"
   },
   instructionCRT23_shapes: {
-    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Circle</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Square</b>. Ignore <b>Triangle</b>.",
-    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Кола</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Квадрата</b>. Ігноруйте <b>Трикутник</b>."
+    en: "<p>For a <b>circle</b>, press a left-hand key (<kbd class='kbd'>←</kbd>, left <kbd class='kbd'>Shift</kbd>, or left <kbd class='kbd'>Ctrl</kbd>). For a <b>square</b>, press a right-hand key (<kbd class='kbd'>→</kbd>, right <kbd class='kbd'>Shift</kbd>, or right <kbd class='kbd'>Ctrl</kbd>). Press as quickly as possible. For a <b>triangle</b>, do not press anything.</p>",
+    uk: "<p>Для <b>кола</b> натискайте клавішу лівою рукою: <kbd class='kbd'>←</kbd>, ліву <kbd class='kbd'>Shift</kbd> або ліву <kbd class='kbd'>Ctrl</kbd>. Для <b>квадрата</b> натискайте клавішу правою рукою: <kbd class='kbd'>→</kbd>, праву <kbd class='kbd'>Shift</kbd> або праву <kbd class='kbd'>Ctrl</kbd>. Реагуйте якнайшвидше. Для <b>трикутника</b> нічого не натискайте.</p>"
   },
   instructionCRT23_words: {
-    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Plant</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Animal</b>. Ignore <b>Non-living thing</b>.",
-    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Рослини</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Тварини</b>. Ігноруйте <b>Неживі предмети</b>."
+    en: "<p>For a <b>plant</b> word, press a left-hand key (<kbd class='kbd'>←</kbd>, left <kbd class='kbd'>Shift</kbd>, or left <kbd class='kbd'>Ctrl</kbd>). For an <b>animal</b> word, press a right-hand key (<kbd class='kbd'>→</kbd>, right <kbd class='kbd'>Shift</kbd>, or right <kbd class='kbd'>Ctrl</kbd>). Press as quickly as possible. For a <b>non-living-object</b> word, do not press anything.</p>",
+    uk: "<p>Для слова, що позначає <b>рослину</b>, натискайте клавішу лівою рукою: <kbd class='kbd'>←</kbd>, ліву <kbd class='kbd'>Shift</kbd> або ліву <kbd class='kbd'>Ctrl</kbd>. Для слова, що позначає <b>тварину</b>, натискайте клавішу правою рукою: <kbd class='kbd'>→</kbd>, праву <kbd class='kbd'>Shift</kbd> або праву <kbd class='kbd'>Ctrl</kbd>. Реагуйте якнайшвидше. Для слова, що позначає <b>неживий предмет</b>, нічого не натискайте.</p>"
   },
   instructionCRT23_colors: {
-    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red</b>. Ignore <b>Yellow</b>.",
-    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного</b>. Ігноруйте <b>Жовтий</b>."
+    en: "<p>For a <b>green</b> stimulus, press a left-hand key (<kbd class='kbd'>←</kbd>, left <kbd class='kbd'>Shift</kbd>, or left <kbd class='kbd'>Ctrl</kbd>). For a <b>red</b> stimulus, press a right-hand key (<kbd class='kbd'>→</kbd>, right <kbd class='kbd'>Shift</kbd>, or right <kbd class='kbd'>Ctrl</kbd>). Press as quickly as possible. For a <b>yellow</b> stimulus, do not press anything.</p>",
+    uk: "<p>Для <b>зеленого</b> подразника натискайте клавішу лівою рукою: <kbd class='kbd'>←</kbd>, ліву <kbd class='kbd'>Shift</kbd> або ліву <kbd class='kbd'>Ctrl</kbd>. Для <b>червоного</b> подразника натискайте клавішу правою рукою: <kbd class='kbd'>→</kbd>, праву <kbd class='kbd'>Shift</kbd> або праву <kbd class='kbd'>Ctrl</kbd>. Реагуйте якнайшвидше. Для <b>жовтого</b> подразника нічого не натискайте.</p>"
   },
   instructionCRT23_combined: {
-    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green/Circle/Plant</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red/Square/Animal</b>. Ignore <b>Yellow/Triangle/Non-living</b>.",
-    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого/Кола/Рослини</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного/Квадрата/Тварини</b>. Ігноруйте <b>Жовтий/Трикутник/Неживе</b>."
+    en: "<p>For <b>green, a circle, or a plant word</b>, press a left-hand key (<kbd class='kbd'>←</kbd>, left <kbd class='kbd'>Shift</kbd>, or left <kbd class='kbd'>Ctrl</kbd>). For <b>red, a square, or an animal word</b>, press a right-hand key (<kbd class='kbd'>→</kbd>, right <kbd class='kbd'>Shift</kbd>, or right <kbd class='kbd'>Ctrl</kbd>). Press as quickly as possible. For <b>yellow, a triangle, or a non-living-object word</b>, do not press anything.</p>",
+    uk: "<p>Для <b>зеленого кольору, кола або слова-назви рослини</b> натискайте клавішу лівою рукою: <kbd class='kbd'>←</kbd>, ліву <kbd class='kbd'>Shift</kbd> або ліву <kbd class='kbd'>Ctrl</kbd>. Для <b>червоного кольору, квадрата або слова-назви тварини</b> натискайте клавішу правою рукою: <kbd class='kbd'>→</kbd>, праву <kbd class='kbd'>Shift</kbd> або праву <kbd class='kbd'>Ctrl</kbd>. Реагуйте якнайшвидше. Для <b>жовтого кольору, трикутника або слова-назви неживого предмета</b> нічого не натискайте.</p>"
   },
 
   // Biological Age calculator

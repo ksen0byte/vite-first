@@ -343,10 +343,13 @@ function renderCompactParameters(appContext: AppContext, protocol: CompactProtoc
 }
 
 function renderCompactInstruction(testType: TestType, testMode: TestMode, protocol: CompactProtocolValue): void {
-  const key = protocol === "feedback"
-    ? "instructionFeedback"
-    : testType === "svmr" ? "instructionSvmr" : testType === "crt1-3" ? `instructionCRT13_${testMode}` : `instructionCRT23_${testMode}`;
-  document.getElementById("compact-instruction")!.dataset.localizeHtml = key;
+  const taskKey = testType === "svmr" ? "instructionSvmr" : testType === "crt1-3" ? `instructionCRT13_${testMode}` : `instructionCRT23_${testMode}`;
+  const protocolKey = protocol === "feedback" ? "instructionFeedback" : "instructionOptimal";
+  const instruction = document.getElementById("compact-instruction")!;
+  delete instruction.dataset.localizeHtml;
+  instruction.dataset.instructionTask = taskKey;
+  instruction.dataset.instructionProtocol = protocolKey;
+  instruction.innerHTML = `${localize(taskKey)}${localize(protocolKey)}`;
 }
 
 function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: CompactProtocolValue, submode: CompactModeValue): void {
