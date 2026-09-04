@@ -119,12 +119,13 @@ function testCardHTML(index: number, test: TestRecord): string {
     ? feedbackTuning(testSettings).maxExposure + feedbackTuning(testSettings).pause
     : (testSettings as OptimalSettings).exposureTime;
 
-  // Generate statistics using ReactionTimeStats
-  const multiHandStats = new MultiHandReactionTimeStats(trials, rtUpperBound);
-  const stats = multiHandStats.total;
-  const statsRight = multiHandStats.right;
-  const statsLeft = multiHandStats.left;
   const showHandBreakdown = testType === "crt2-3";
+  const multiHandStats = showHandBreakdown
+    ? new MultiHandReactionTimeStats(trials, rtUpperBound)
+    : null;
+  const stats = multiHandStats?.total ?? new ReactionTimeStats(trials, rtUpperBound);
+  const statsRight = multiHandStats?.right;
+  const statsLeft = multiHandStats?.left;
 
   return `
     <div class="card shadow-md bg-base-100">
@@ -209,42 +210,42 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td><strong data-localize="countLabel"></strong></td>
                   <td>
                     ${stats.count}${filteredCountHtml(stats.filteredCount)}
-                    ${handBreakdownValueHtml(statsLeft.count, statsRight.count, showHandBreakdown)}
+                    ${handBreakdownValueHtml(statsLeft?.count, statsRight?.count)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="meanLabel"></strong></td>
                   <td>
                     ${stats.meanVal.toFixed(2)} <span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.meanVal.toFixed(2)} <span data-localize="ms"></span>`)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.meanVal.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statisticalModeLabel"></strong></td>
                   <td>
                     ${stats.modeVal ? stats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.modeVal ? handStats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>`)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.modeVal ? handStats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="stdevLabel"></strong></td>
                   <td>
                     ${stats.stdevVal.toFixed(2)} <span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.stdevVal.toFixed(2)} <span data-localize="ms"></span>`)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.stdevVal.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="cvLabel"></strong></td>
                   <td>
                     ${stats.cvVal.toFixed(2)}%
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => handStats.cvVal.toFixed(2))}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => handStats.cvVal.toFixed(2))}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="entropyLabel"></strong></td>
                   <td>
                     ${stats.entropyVal.toFixed(3)} <span data-localize="bits"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.entropyVal.toFixed(3)} <span data-localize="bits"></span>`)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.entropyVal.toFixed(3)} <span data-localize="bits"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
@@ -280,17 +281,17 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td><strong data-localize="statErrorsTotal"></strong></td>
                   <td>
                     ${stats.errorCount}
-                    ${handBreakdownValueHtml(statsLeft.errorCount, statsRight.errorCount, showHandBreakdown)}
+                    ${handBreakdownValueHtml(statsLeft?.errorCount, statsRight?.errorCount)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statErrorsPercentage"></strong></td>
                   <td>
                     ${stats.errorPercentage.toFixed(2)}%
-                    ${handBreakdownValueHtml(statsLeft.errorPercentage, statsRight.errorPercentage, showHandBreakdown, (value) => `${value.toFixed(2)}%`)}
+                    ${handBreakdownValueHtml(statsLeft?.errorPercentage, statsRight?.errorPercentage, (value) => `${value.toFixed(2)}%`)}
                   </td>
                 </tr>
-                ${errorBreakdownRowsHtml(multiHandStats, showHandBreakdown)}
+                ${errorBreakdownRowsHtml(stats, multiHandStats)}
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalLevel"></strong></td>
                   <td>${formatStatistic(stats.calculateFunctionalLevel())} <span data-localize="au"></td>
@@ -347,17 +348,17 @@ function filteredCountHtml(filteredCount: number): string {
     : "";
 }
 
-function errorBreakdownRowsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {
+function errorBreakdownRowsHtml(stats: ReactionTimeStats, multiHandStats: MultiHandReactionTimeStats | null): string {
   return OUTCOME_BREAKDOWN.map((outcome: OutcomeBreakdown) => {
-    const leftCount = multiHandStats.left.outcomeCountsByOutcome[outcome];
-    const rightCount = multiHandStats.right.outcomeCountsByOutcome[outcome];
+    const leftCount = multiHandStats?.left.outcomeCountsByOutcome[outcome];
+    const rightCount = multiHandStats?.right.outcomeCountsByOutcome[outcome];
 
     return `
       <tr class="text-center">
         <td><strong data-localize="${getTrialOutcomeLocalizationKey(outcome)}"></strong></td>
         <td>
-          <div>${multiHandStats.total.outcomeCountsByOutcome[outcome]}</div>
-          ${handBreakdownValueHtml(leftCount, rightCount, showHandBreakdown)}
+          <div>${stats.outcomeCountsByOutcome[outcome]}</div>
+          ${handBreakdownValueHtml(leftCount, rightCount)}
         </td>
       </tr>
     `;
@@ -365,12 +366,11 @@ function errorBreakdownRowsHtml(multiHandStats: MultiHandReactionTimeStats, show
 }
 
 function handBreakdownValueHtml(
-  leftValue: number,
-  rightValue: number,
-  showHandBreakdown: boolean,
+  leftValue: number | undefined,
+  rightValue: number | undefined,
   formatValue: (value: number) => string = (value) => value.toString()
 ): string {
-  if (!showHandBreakdown || (leftValue === 0 && rightValue === 0)) return "";
+  if (leftValue === undefined || rightValue === undefined || (leftValue === 0 && rightValue === 0)) return "";
 
   return `
     <div class="text-xs opacity-70">
@@ -382,12 +382,11 @@ function handBreakdownValueHtml(
 }
 
 function handBreakdownStatsValueHtml(
-  leftStats: ReactionTimeStats,
-  rightStats: ReactionTimeStats,
-  showHandBreakdown: boolean,
+  leftStats: ReactionTimeStats | undefined,
+  rightStats: ReactionTimeStats | undefined,
   formatValue: (stats: ReactionTimeStats) => string
 ): string {
-  if (!showHandBreakdown || (leftStats.count === 0 && rightStats.count === 0)) return "";
+  if (!leftStats || !rightStats || (leftStats.count === 0 && rightStats.count === 0)) return "";
 
   return `
     <div class="text-xs opacity-70">
