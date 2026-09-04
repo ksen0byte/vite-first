@@ -231,7 +231,11 @@ export class ReactionTimeStats {
    */
   private getMode(): number | null {
     if (this.bins.length < 3) {
-      console.error("At least three bins are required to calculate the mode.");
+      console.warn("Cannot interpolate the statistical mode: fewer than three histogram bins.", {
+        sampleCount: this.data.length,
+        cleanedReactionTimes: this.data,
+        bins: this.bins,
+      });
       return null;
     }
 
@@ -247,7 +251,15 @@ export class ReactionTimeStats {
 
     // Ensure there are bins before and after the modal class
     if (modeIndex <= 0 || modeIndex >= this.bins.length - 1) {
-      console.error("The modal class must not be the first or last bin.");
+      console.warn("Cannot interpolate the statistical mode: the modal class is an edge bin.", {
+        reason: "The grouped-mode formula requires neighboring bins on both sides.",
+        sampleCount: this.data.length,
+        cleanedReactionTimes: this.data,
+        modalBinIndex: modeIndex,
+        modalBin: modeBin,
+        binFrequencies: this.bins.map((bin) => bin.frequency),
+        bins: this.bins,
+      });
       return null;
     }
 
