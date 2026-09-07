@@ -360,10 +360,13 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
     ? readNumberInput(parameters.feedbackInitialExposure)
     : readNumberInput(parameters.exposureTime);
   const stimulusSize = PREVIEW_STIMULUS_SIZE;
+  const isChoiceTest = testType === "crt1-3" || testType === "crt2-3";
   const stimulusColumns = testType === "crt2-3"
     ? `${previewReactionColumn(testMode, "left", stimulusSize)}${previewReactionColumn(testMode, "ignore", stimulusSize)}${previewReactionColumn(testMode, "right", stimulusSize)}`
-    : previewReactionColumn(testMode, "space", stimulusSize);
-  const stimulus = `<div class="grid w-full ${testType === "crt2-3" ? "grid-cols-3" : "grid-cols-1"} items-end gap-2 px-2">${stimulusColumns}</div>`;
+    : testType === "crt1-3"
+      ? `${previewReactionColumn(testMode, "left", stimulusSize, "previewIgnore")}${previewReactionColumn(testMode, "space", stimulusSize, "testScreenTestPZMRActionButtonName")}${previewReactionColumn(testMode, "ignore", stimulusSize, "previewIgnore")}`
+      : previewReactionColumn(testMode, "space", stimulusSize);
+  const stimulus = `<div class="grid w-full ${isChoiceTest ? "grid-cols-3" : "grid-cols-1"} items-end gap-2 px-2">${stimulusColumns}</div>`;
   // Feedback cadence: fixed pause between trials; the pause doubles as the
   // late-answer window. Optimal: random delay range.
   const pauseMs = isFeedback ? readNumberInput(parameters.feedbackPause) : undefined;
@@ -410,8 +413,13 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
   updateLanguageUI(preview);
 }
 
-function previewReactionColumn(testMode: TestMode, action: "left" | "right" | "space" | "ignore", size: number): string {
-  const instruction = action === "left" ? "statLeftHand" : action === "right" ? "statRightHand" : action === "space" ? "testScreenTestPZMRActionButtonName" : "previewIgnore";
+function previewReactionColumn(
+  testMode: TestMode,
+  action: "left" | "right" | "space" | "ignore",
+  size: number,
+  instructionOverride?: string
+): string {
+  const instruction = instructionOverride ?? (action === "left" ? "statLeftHand" : action === "right" ? "statRightHand" : action === "space" ? "testScreenTestPZMRActionButtonName" : "previewIgnore");
   return `<div class="flex min-w-0 flex-col items-center justify-end gap-2 text-center"><div class="flex h-56 w-full items-center justify-center">${compactStimulusForAction(testMode, action, size)}</div><span class="text-sm font-semibold text-gray-200" data-localize="${instruction}"></span></div>`;
 }
 
