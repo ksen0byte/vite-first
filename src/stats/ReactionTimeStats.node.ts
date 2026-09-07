@@ -18,8 +18,10 @@ export const OUTCOME_BREAKDOWN: readonly OutcomeBreakdown[] = [...ERROR_OUTCOMES
 export class ReactionTimeStats {
   private readonly data: number[];
   private readonly bins: FrequencyBin[];
+  private readonly debugLabel?: string;
   // Calculate stats using simple-statistics
   public readonly count;
+  public readonly filteredCount;
   public readonly meanVal;
   public readonly modeVal;
   public readonly stdevVal;
@@ -47,7 +49,9 @@ export class ReactionTimeStats {
   /**
    * Create a new instance with the given array of reaction times.
    */
-  constructor(trialResults: TrialResult[], upperBound: number = 500, lowerBound: number = 100) {
+  constructor(trialResults: TrialResult[], upperBound: number = 500, lowerBound: number = 100, debugLabel?: string) {
+    this.debugLabel = debugLabel;
+    const successfulCount = trialResults.filter(trialResult => trialResult.outcome === "Success").length;
     // Step 1: Remove hard outliers based on fixed range
     let cleanedData = trialResults
       .filter(trialResult => trialResult.outcome === "Success")
@@ -63,6 +67,7 @@ export class ReactionTimeStats {
     // Calculate statistics on cleaned data
     this.bins = this.computeFrequencyDistribution();
     this.count = cleanedData.length;
+    this.filteredCount = successfulCount - this.count;
 
     if (this.count > 0) {
       this.meanVal = mean(cleanedData);
@@ -226,7 +231,12 @@ export class ReactionTimeStats {
    */
   private getMode(): number | null {
     if (this.bins.length < 3) {
-      console.error("At least three bins are required to calculate the mode.");
+      console.warn("Cannot interpolate the statistical mode: fewer than three histogram bins.", {
+        test: this.debugLabel ?? "unspecified",
+        sampleCount: this.data.length,
+        cleanedReactionTimes: this.data,
+        bins: this.bins,
+      });
       return null;
     }
 
@@ -242,7 +252,16 @@ export class ReactionTimeStats {
 
     // Ensure there are bins before and after the modal class
     if (modeIndex <= 0 || modeIndex >= this.bins.length - 1) {
-      console.error("The modal class must not be the first or last bin.");
+      console.warn("Cannot interpolate the statistical mode: the modal class is an edge bin.", {
+        test: this.debugLabel ?? "unspecified",
+        reason: "The grouped-mode formula requires neighboring bins on both sides.",
+        sampleCount: this.data.length,
+        cleanedReactionTimes: this.data,
+        modalBinIndex: modeIndex,
+        modalBin: modeBin,
+        binFrequencies: this.bins.map((bin) => bin.frequency),
+        bins: this.bins,
+      });
       return null;
     }
 

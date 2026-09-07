@@ -5,6 +5,7 @@ import {deleteUserAndTests, getTestsForUser, saveTestRecord, upsertUser} from '.
 import {TestSettings, TrialResult} from '../../src/config/domain.ts';
 
 const settings: TestSettings = {
+  protocolMode: 'optimal',
   testMode: 'shapes',
   stimulusSize: 25,
   exposureTime: 700,

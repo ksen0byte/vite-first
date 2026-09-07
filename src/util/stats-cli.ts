@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {parseImportedJson} from "./import-json";
-import { TrialResult } from "../config/domain";
+import { TrialResult, OptimalSettings, isFeedback, isFeedbackMobility } from "../config/domain";
 
 import { ReactionTimeStats } from "../stats/ReactionTimeStats.node";
 
@@ -25,11 +25,11 @@ type CsvRow = {
   date: string;
   testMode: string;
   testType: string;
-  exposureTime: number;
-  exposureDelayMin: number;
-  exposureDelayMax: number;
+  exposureTime?: number;
+  exposureDelayMin?: number;
+  exposureDelayMax?: number;
   stimulusSize: number;
-  stimulusCount: number;
+  stimulusCount?: number;
 
   // counts
   rtCount: number;
@@ -113,8 +113,9 @@ export class ReactionStatsCli {
         // Use existing calculator
         const stats = new ReactionTimeStats([...trialResults]);
 
-        const exposureDelay = Array.isArray(t.testSettings.exposureDelay)
-          ? t.testSettings.exposureDelay
+        const ts = t.testSettings;
+        const exposureDelay = !isFeedback(ts) && Array.isArray(ts.exposureDelay)
+          ? ts.exposureDelay
           : [Number.NaN, Number.NaN];
 
         const exposureDelayMin = Number(exposureDelay[0]);
@@ -139,11 +140,15 @@ export class ReactionStatsCli {
           date: t.date,
           testMode: t.testSettings.testMode,
           testType: t.testSettings.testType,
-          exposureTime: t.testSettings.exposureTime,
+          exposureTime: !isFeedback(ts) ? (ts as OptimalSettings).exposureTime : undefined,
           exposureDelayMin,
           exposureDelayMax,
           stimulusSize: t.testSettings.stimulusSize,
-          stimulusCount: t.testSettings.stimulusCount,
+          stimulusCount: !isFeedback(ts)
+            ? (ts as OptimalSettings).stimulusCount
+            : isFeedbackMobility(ts)
+              ? ts.stimulusCount
+              : undefined,
 
           rtCount: stats.count,
 

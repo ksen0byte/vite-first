@@ -1,5 +1,5 @@
 // test-screen.ts
-import {AppContext, DebugMode, HandAction, TrialOutcome, TrialResult} from "../config/domain.ts";
+import {AppContext, DebugMode, HandAction, TrialOutcome, TrialResult, isFeedback, isFeedbackStrength} from "../config/domain.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {logWithTime} from "../util/util.ts";
 import {BrowserScheduler, Scheduler} from "../util/scheduleTimeout.ts";
@@ -26,6 +26,16 @@ export class TestScreen {
   private readonly appContainer: HTMLElement;
   private readonly appContext: AppContext;
 
+  /** Recorded trials keyed by stimulus index (read-only view for tests/diagnostics). */
+  public getTrials(): readonly TrialResult[] {
+    return [...this.reactionTimes.values()].sort((a, b) => a.trialIndex - b.trialIndex);
+  }
+
+  /** Current adaptive exposure in ms (equals initialExposure outside feedback mode). */
+  public getCurrentExposureMs(): number {
+    return this.feedbackExposure;
+  }
+
   // DOM elements
   private stimulusContainer!: HTMLElement;
   private retryButton!: HTMLButtonElement;
@@ -49,11 +59,22 @@ export class TestScreen {
   // spam prevention
   private readonly spamPreventionConfig = {clickAllowedFromMs: 100, maxInputsPerStimulus: 3};
   private spamInputCount: number = 0;
+  private feedbackExposure: number;
+  /** Exposure (ms) in force for the currently shown stimulus; recorded on its trial. */
+  private currentTrialExposureMs: number | undefined;
+  /** Scheduler timestamp of runTest(): anchor for the strength-submode deadline. */
+  private testStartedAtMs: number = 0;
+  /** True between stimulus expiry and the late-answer window close (feedback only). */
+  private stimulusExpired: boolean = false;
+  /** Trial indexes whose current record is provisional (may be replaced by one late answer). */
+  private readonly provisionalTrials = new Set<number>();
 
   constructor(appContainer: HTMLElement, scheduler: Scheduler = new BrowserScheduler()) {
     this.appContainer = appContainer;
     this.appContext = AppContextManager.getContext();
     this.scheduler = scheduler;
+    const ts = this.appContext.testSettings;
+    this.feedbackExposure = isFeedback(ts) ? ts.feedback.initialExposure : ts.exposureTime;
 
     // Store the bound reference
     this.handleKeyDownBound = this.handleAppKeyDown.bind(this);
@@ -134,7 +155,7 @@ export class TestScreen {
           <!-- Right side: counter -->
           <div class="flex items-center space-x-4">
             <div id="stimuli-counter" class="text-4xl font-mono text-gray-500">
-              0/${this.appContext.testSettings.stimulusCount}
+              0
             </div>
           </div>
         </div>
@@ -193,7 +214,13 @@ export class TestScreen {
     this.timerManager?.stopAndReset();
     this.scheduler.cancelAll();
     this.reactionTimes.clear();
+    const ts = this.appContext.testSettings;
+    this.feedbackExposure = isFeedback(ts) ? ts.feedback.initialExposure : ts.exposureTime;
     this.spamInputCount = 0;
+    this.currentTrialExposureMs = undefined;
+    this.testStartedAtMs = 0;
+    this.stimulusExpired = false;
+    this.provisionalTrials.clear();
     this.stimuliCounter?.reset();
     this.transitionTo(toIdle());
   }
@@ -229,17 +256,31 @@ export class TestScreen {
   private runTest(): void {
     if (this.isDestroyed) return;
     this.stimulusManager.clearContainer();
+    this.testStartedAtMs = this.scheduler.now();
     this.scheduleNextStimulus(0);
   }
 
   private scheduleNextStimulus(index: number): void {
-    const totalStimuli = this.appContext.testSettings.stimulusCount;
+    const ts = this.appContext.testSettings;
+
+    // Strength submode: stop at the first trial boundary past the configured duration.
+    if (isFeedbackStrength(ts)
+      && (this.scheduler.now() - this.testStartedAtMs) >= ts.feedback.duration * 1000) {
+      this.onTestComplete();
+      return;
+    }
+
+    const totalStimuli = isFeedbackStrength(ts) ? Number.POSITIVE_INFINITY : ts.stimulusCount;
     if (index >= totalStimuli) {
       this.onTestComplete();
       return;
     }
 
-    const delay = getNextDelay(this.appContext.testSettings, index);
+    const delay = isFeedback(ts)
+      ? (index === 0 ? ts.feedback.pause : 0)
+      : getNextDelay(ts, index);
+    // In feedback mode the late-answer window doubles as the inter-stimulus
+    // pause, so after the first trial no extra Delayed phase is inserted.
     this.transitionTo(toDelayed(index, delay));
 
     this.scheduler.schedule(() => {
@@ -250,41 +291,115 @@ export class TestScreen {
   private showStimulus(index: number): void {
     if (this.isDestroyed) return;
     if (this.state._tag !== 'Delayed' || this.state.stimulusIndex !== index) return;
+    const ts = this.appContext.testSettings;
     this.stimuliCounter.set(index + 1);
     const stimulus: Stimulus = this.stimulusManager.showStimulus(index);
     this.timerManager.restart();
+    // In feedback mode the pause doubles as the late-answer window, so the
+    // exposure in force here may differ from the previous trial's.
+    this.currentTrialExposureMs = isFeedback(ts)
+      ? this.feedbackExposure
+      : undefined;
     this.transitionTo(toShowingStimulus(index, this.scheduler.now(), stimulus));
+    this.stimulusExpired = false;
+
+    const exposure = isFeedback(ts)
+      ? this.feedbackExposure
+      : ts.exposureTime;
 
     this.scheduler.schedule(() => {
       this.onStimulusTimeout(index);
-    }, this.appContext.testSettings.exposureTime);
+    }, exposure);
+
+    if (isFeedback(ts)) {
+      this.scheduler.schedule(() => {
+        this.onFeedbackWindowClosed(index);
+      }, exposure + ts.feedback.pause);
+    }
   }
 
   private onStimulusTimeout(index: number): void {
     if (this.isDestroyed) return;
     if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
-
-    this.scheduler.cancelAll();
-
-    const hasReacted = this.reactionTimes.has(this.state.stimulusIndex);
-
-    if (this.state._tag === 'ShowingStimulus') {
-      const stimulus = this.state.stimulusValue;
-      const testType = this.appContext.testSettings.testType;
-      const expectedAction = getExpectedAction(stimulus, testType);
-      const shouldHaveReacted = expectedAction !== "NONE";
-
-      if (!hasReacted && shouldHaveReacted) {
-        this.recordReactionTime(this.state.stimulusValue, -1, "Miss", expectedAction, "NONE");
-      } else if (!hasReacted && !shouldHaveReacted) {
-        this.recordReactionTime(this.state.stimulusValue, -1, "CorrectRejection", expectedAction, "NONE");
-      }
+    if (isFeedback(this.appContext.testSettings)) {
+      this.onFeedbackExpiry(index);
+      return;
     }
 
+    // Optimal mode: resolve an unanswered trial immediately.
+    const hasReacted = this.reactionTimes.has(this.state.stimulusIndex);
+    if (!hasReacted) {
+      const stimulus = this.state.stimulusValue;
+      const expectedAction = getExpectedAction(stimulus, this.appContext.testSettings.testType);
+      const shouldHaveReacted = expectedAction !== "NONE";
+      this.recordReactionTime(stimulus, -1,
+        shouldHaveReacted ? "Miss" : "CorrectRejection",
+        expectedAction, "NONE");
+    }
+
+    this.closeTrialAndContinue(index);
+  }
+
+  /**
+   * Feedback mode: the stimulus visually expires but the trial stays open for
+   * one pause-length window so late answers can still be attributed to it.
+   */
+  private onFeedbackExpiry(index: number): void {
+    if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
+
+    // Visual expiry: the stimulus disappears, but the trial stays open for one
+    // pause-length window so late answers can still be attributed to it.
+    this.stimulusManager.clearContainer();
+    this.timerManager.stop();
+
+    const hasReacted = this.reactionTimes.has(index);
+
+    if (!hasReacted) {
+      const stimulus = this.state.stimulusValue;
+      const expectedAction = getExpectedAction(stimulus, this.appContext.testSettings.testType);
+      const shouldHaveReacted = expectedAction !== "NONE";
+      this.recordReactionTime(stimulus,
+        -1,
+        shouldHaveReacted ? "Miss" : "CorrectRejection",
+        expectedAction,
+        "NONE",
+        true); // provisional: a late answer may still replace it
+      this.provisionalTrials.add(this.state.stimulusIndex);
+    }
+    this.stimulusExpired = true;
+  }
+
+  /**
+   * Feedback mode: end of the late-answer window. Applies adaptation exactly
+   * once per trial, then continues to the next stimulus.
+   */
+  private onFeedbackWindowClosed(index: number): void {
+    if (this.isDestroyed) return;
+    if (this.state._tag !== 'ShowingStimulus' || this.state.stimulusIndex !== index) return;
+    this.updateFeedbackExposure(index);
+    this.stimulusExpired = false;
+    this.provisionalTrials.delete(index);
+    this.closeTrialAndContinue(index);
+  }
+
+  /** Shared tail of a finished trial: clear UI, reset spam counter, advance. */
+  private closeTrialAndContinue(index: number): void {
+    this.scheduler.cancelAll();
     this.stimulusManager.clearContainer();
     this.timerManager.stop();
     this.spamInputCount = 0;
     this.scheduleNextStimulus(index + 1);
+  }
+
+  private updateFeedbackExposure(index: number): void {
+    const ts = this.appContext.testSettings;
+    if (!isFeedback(ts)) return;
+    const result = this.reactionTimes.get(index);
+    if (!result) return;
+    const {adjustmentStep, minExposure, maxExposure} = ts.feedback;
+    const correct = result.outcome === "Success" || result.outcome === "CorrectRejection";
+    this.feedbackExposure = Math.max(minExposure, Math.min(maxExposure,
+      this.feedbackExposure + (correct ? -adjustmentStep : adjustmentStep)));
   }
 
   private handleUserInput(actualAction: HandAction): void {
@@ -297,13 +412,27 @@ export class TestScreen {
       return this.onSpamDetected();
     }
 
-    // 3. State Guard: Only process inputs during stimulus
+    // 3. State Guards
     if (this.state._tag === 'Delayed') {
       this.recordReactionTime("none", -1, "FalseStart", "NONE", actualAction); // We don't have stimulus yet, but we want to record the trial index
       return;
     }
 
     if (this.state._tag !== 'ShowingStimulus') return;
+
+    const isFeedbackSession = isFeedback(this.appContext.testSettings);
+
+    // 3a. Feedback late-answer window: stimulus already expired, but presses
+    // still count as answers to THIS trial until the window closes. The true
+    // elapsed time is recorded (it is a valid, if slow, reaction).
+    if (isFeedbackSession && this.stimulusExpired) {
+      if (!this.provisionalTrials.has(this.state.stimulusIndex)) {
+        return; // already answered during exposure: further presses are ignored
+      }
+      const lateReactionTime = this.scheduler.now() - this.state.startTime;
+      this.processTestResponse(this.state.stimulusValue, lateReactionTime, actualAction, true);
+      return;
+    }
 
     // 4. Threshold Guard
     const reactionTime = this.scheduler.now() - this.state.startTime;
@@ -317,21 +446,36 @@ export class TestScreen {
     this.timerManager.stop();
   }
 
-  private processTestResponse(stimulus: Stimulus, rt: number, actualAction: HandAction): void {
+  private processTestResponse(stimulus: Stimulus, rt: number, actualAction: HandAction, allowReplace = false): void {
     const {testType} = this.appContext.testSettings;
 
     const expectedAction = getExpectedAction(stimulus, testType);
     const outcome = classifyResponse(testType, expectedAction, actualAction);
 
     console.log(`${outcome}: ${stimulus} (expected: ${expectedAction}, actual: ${actualAction})`);
-    this.recordReactionTime(stimulus, rt, outcome, expectedAction, actualAction);
+    this.recordReactionTime(stimulus, rt, outcome, expectedAction, actualAction, allowReplace);
   }
 
-  private recordReactionTime(stimulus: Stimulus, reactionTime: number, outcome: TrialOutcome, expectedAction: HandAction, actualAction: HandAction) {
+  private recordReactionTime(
+    stimulus: Stimulus,
+    reactionTime: number,
+    outcome: TrialOutcome,
+    expectedAction: HandAction,
+    actualAction: HandAction,
+    allowReplace = false,
+  ) {
     if (this.state._tag !== 'ShowingStimulus' && this.state._tag !== 'Delayed') throw new Error("Reaction time can only be recorded when a stimulus is being shown or delayed.");
     if (this.reactionTimes.has(this.state.stimulusIndex)) {
-      console.warn(`Reaction time already recorded for trial ${this.state.stimulusIndex}.`);
-      return;
+      if (!allowReplace) {
+        console.warn(`Reaction time already recorded for trial ${this.state.stimulusIndex}.`);
+        return;
+      }
+      // Feedback late answer replacing the provisional Miss/CorrectRejection.
+      const previous = this.reactionTimes.get(this.state.stimulusIndex)!;
+      if (previous.outcome !== "Miss" && previous.outcome !== "CorrectRejection") return;
+      this.provisionalTrials.delete(this.state.stimulusIndex);
+    } else if (allowReplace) {
+      this.provisionalTrials.add(this.state.stimulusIndex);
     }
 
     const trialResult: TrialResult = {
@@ -341,6 +485,7 @@ export class TestScreen {
       outcome: outcome,
       expectedAction: expectedAction,
       actualAction: actualAction,
+      ...(this.currentTrialExposureMs !== undefined ? {exposureMs: this.currentTrialExposureMs} : {}),
     }
 
     this.reactionTimes.set(this.state.stimulusIndex, trialResult);

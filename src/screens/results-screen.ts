@@ -7,7 +7,8 @@ import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, ReactionTimeStats} from "
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
-import {TrialResult} from "../config/domain.ts";
+import {TrialResult, isFeedback, feedbackTuning} from "../config/domain.ts";
+import {summarizeExposure} from "../stats/exposure-curve.ts";
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
@@ -28,11 +29,19 @@ export function setupResultsScreen(
   }
 
   // Frequency distribution
-  const testType = AppContextManager.getContext().testSettings.testType;
-  const multiHandStats = new MultiHandReactionTimeStats(trialResults, AppContextManager.getContext().testSettings.exposureTime);
+  const testSettings = AppContextManager.getContext().testSettings;
+  const isFeedbackSession = isFeedback(testSettings);
+  const testType = testSettings.testType;
+  // Late answers legitimately exceed the fixed exposure, so feedback sessions
+  // bound the RT cleaning by maxExposure + pause instead of exposureTime.
+  const rtUpperBound = isFeedbackSession
+    ? feedbackTuning(testSettings).maxExposure + feedbackTuning(testSettings).pause
+    : testSettings.exposureTime;
+  const multiHandStats = new MultiHandReactionTimeStats(trialResults, rtUpperBound, 100, "Current test results");
   const reactionTimeStats = multiHandStats.total;
   const showHandBreakdown = testType === "crt2-3";
   const errorBreakdownStats = errorBreakdownStatsHtml(multiHandStats, showHandBreakdown);
+  const exposureSummary = isFeedbackSession ? feedbackExposureStatsHtml(trialResults) : "";
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();
@@ -50,7 +59,7 @@ export function setupResultsScreen(
         <!-- Count -->
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statCount">Count</div>
-          <div class="stat-value text-lg">${reactionTimeStats.count}</div>
+          <div class="stat-value text-lg">${reactionTimeStats.count}${filteredCountHtml(reactionTimeStats.filteredCount)}</div>
           ${handBreakdownDescHtml(multiHandStats.left.count, multiHandStats.right.count, showHandBreakdown)}
         </div>
 
@@ -146,8 +155,10 @@ export function setupResultsScreen(
       
       <!-- Loskutova stats-->
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
-        
+
       </div>
+
+      ${exposureSummary}
 
       <!-- Frequency Distribution Table -->
       <div class="flex flex-grow p-8 min-h-96">
@@ -166,6 +177,38 @@ export function setupResultsScreen(
   ]);
   reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
   updateLanguageUI();
+}
+
+function filteredCountHtml(filteredCount: number): string {
+  return filteredCount > 0
+    ? ` <span class="text-error" title="Filtered reactions">(${filteredCount})</span>`
+    : "";
+}
+
+/**
+ * Feedback-only results block: minimum exposure reached, when it was reached
+ * (trial number), and the exposure-dynamics curve (doc §2.1/§2.2 "дод.
+ * результати"). Hidden entirely for optimal-protocol sessions.
+ */
+function feedbackExposureStatsHtml(trialResults: readonly TrialResult[]): string {
+  const summary = summarizeExposure(trialResults);
+  if (!summary) return "";
+
+  return `
+    <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statMinExposure"></div>
+        <div class="stat-value text-lg">${summary.minExposureMs}${localize("ms")}</div>
+      </div>
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statMinExposureTrial"></div>
+        <div class="stat-value text-lg">#${summary.reachedAfterTrial}</div>
+      </div>
+      <div class="stat place-items-center">
+        <div class="stat-title text-base" data-localize="statStimuliProcessed"></div>
+        <div class="stat-value text-lg">${summary.processedCount}</div>
+      </div>
+    </div>`;
 }
 
 function errorBreakdownStatsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {

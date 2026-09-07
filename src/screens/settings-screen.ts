@@ -1,320 +1,93 @@
-import noUiSlider, {target} from 'nouislider';
-import 'nouislider/dist/nouislider.css';
-import {AppContext, ExposureDelay, ExposureTime, Gender, SliderConfig, StimulusCount, StimulusSize, TestMode} from "../config/domain.ts";
+import {
+  AppContext,
+  TestMode,
+  TestType,
+  TestSettings,
+  OptimalSettings,
+  FeedbackMobilitySettings,
+  FeedbackStrengthSettings,
+  isFeedback,
+  isFeedbackMobility,
+  feedbackTuning
+} from "../config/domain.ts";
+import {defaultAppContext, parameterPairs, parameters, ParameterDefinition} from "../config/settings.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
-import {getSliderValue} from "../util/util.ts";
 import {setupFooter} from "../components/footer.ts";
 import {setupHeader} from "../components/header.ts";
-import {defaultAppContext, inputsConfig, subsectionsConfig} from "../config/settings.ts";
-import {getRandomShapeSvg} from "../components/Shapes.ts";
+import {getShapeSvgWithStroke} from "../components/Shapes.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
 import {getColorRectangleHtml} from "../components/ColorRectangles.ts";
+import {getWordCategoryHtml} from "../components/Words.ts";
 import {escapeHtml} from "../util/html.ts";
 
-function settingsScreenHTML(appContext: AppContext) {
-  return `<main class="flex-grow" id="main">
-          <form id="personal-data-form" class="flex-grow container mx-auto px-4 py-2 space-y-2">
-            <!-- 1. Personal Data Block -->
-            <div class="card bg-base-100 shadow-md">
-                <div class="card-body">
-                    <div class="flex space-x-2">
-                        <label class="flex flex-col form-control max-w-xs">
-                            <input class="input validator input-bordered w-full max-w-xs" type="text" id="surname-input" data-localize="surnameLabel"
-                                   required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${escapeHtml(appContext.personalData.lastName)}" />
-                        </label>
-                        <label class="flex flex-col form-control max-w-xs">
-                            <input class="input validator input-bordered w-full max-w-xs" type="text" id="name-input" data-localize="nameLabel"
-                                   required minlength="2" maxlength="50" placeholder="" inputmode="text" onkeydown="return /\\D/.test(event.key)" value="${escapeHtml(appContext.personalData.firstName)}" />
-                        </label>
-                        <label class="flex flex-col form-control max-w-xs">
-                            <input class="input validator input-bordered max-w-20" type="number" id="age-input" data-localize="ageLabel"
-                                   required min="10" max="99" placeholder="Age" inputmode="numeric" value="${appContext.personalData.age === 0 ? '' : appContext.personalData.age}" />
-                        </label>
-                        <label class="flex flex-col form-control max-w-xs">
-                            <select class="select validator select-bordered" id="gender-select" required data-localize-aria="selectGender">
-                                <option value="" disabled ${(appContext.personalData.gender ? '' : 'selected')} data-localize="selectGender">Select Gender</option>
-                                <option value="male" ${appContext.personalData.gender === 'male' ? 'selected' : ''} data-localize="male"></option>
-                                <option value="female" ${appContext.personalData.gender === 'female' ? 'selected' : ''} data-localize="female"></option>
-                            </select>
-                        </label>
-                    </div>
-                </div>
-            </div>
-    
-            <!-- 2. Stimulus Type (Collapsible sections) -->
-            <div class="card bg-base-100 shadow-md">
-                <div class="card-body">
-                    <h2 class="card-title" data-localize="testModeLabel"></h2>
-    
-                    <!-- Geometric Shapes Subsection -->
-                    <div
-                            tabIndex="0"
-                            class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
-                            id="shapes-subsection"
-                    >
-                        <!-- Radio input to control the collapse -->
-                        <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'shapes' ? 'checked="checked"' : ''} class="peer" data-subsection="shapes"/>
-    
-                        <!-- Subsection Title -->
-                        <div
-                                class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                                data-localize="shapesOption"
-                        >
-                            Geometrical Shapes
-                        </div>
-    
-                        <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
-                            <!-- 2-column layout on medium+ screens -->
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 gap-y-4 lg:gap-6 items-start m-2">
-    
-                                <!-- Left Column: Shape Preview -->
-                                <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
-                                    <div id="shape-preview"
-                                         class="subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
-                                        <!-- Example placeholder or <svg> -->
-                                    </div>
-                                </div>
-    
-                                <!-- Right Column: Label, Shape Size Slider, Exposure Time Slider, Exposure Delay Slider, Stimuli Count Slider -->
-                                <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
-                                    <!-- Shape Size Slider -->
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="shape-size-slider-label" class="text-sm font-medium"></label>
-                                        <div id="shape-size-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="shapes-exposure-time-label" class="text-sm font-medium"></label>
-                                        <div id="shapes-exposure-time-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="shapes-exposure-delay-label" class="text-sm font-medium"></label>
-                                        <div id="shapes-exposure-delay-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="shapes-stimulus-count-label" class="text-sm font-medium"></label>
-                                        <div id="shapes-stimulus-count-slider"></div>
-                                    </div>
-                                    <!-- Use Pregenerated Delays Checkbox -->
-                                    <div class="flex flex-col 2xl:flex-row w-full gap-4">
-                                        <div class="flex flex-col space-y-2 flex-1">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="shapes-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
-                                                <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
-                                            </label>
-                                        </div>
-                                    
-                                        <div class="flex flex-col space-y-2 flex-1">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="shapes-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
-                                                <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-    
-                    <!-- Words Subsection -->
-                    <div
-                            tabIndex="0"
-                            class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
-                            id="words-subsection"
-                    >
-                        <!-- Radio input to control the collapse -->
-                        <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'words' ? 'checked="checked"' : ''} class="peer" data-subsection="words"/>
-                        <!-- Subsection Title -->
-                        <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                             data-localize="wordsOption"
-                        >
-                            Words:
-                        </div>
-                        <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
-                            <!-- 2-column layout on medium+ screens -->
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 gap-y-4 lg:gap-6 items-start m-2">
-    
-                                <!-- Left Column: Word Preview -->
-                                <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
-                                    <div id="word-preview"
-                                         class="col-span-1 subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
-                                    <span id="word-preview-word" class="font-mono text-[2cm] leading-none text-blue-600"
-                                          data-localize="wordPreviewWord">human</span>
-                                    </div>
-                                </div>
-    
-                                <!-- Right Column: Label, Word Size Slider, Exposure Time Slider, Exposure Delay Slider -->
-                                <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
-                                    <!-- Word Size Slider -->
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="word-size-slider-label" class="text-sm font-medium"></label>
-                                        <div id="word-size-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="words-exposure-time-label" class="text-sm font-medium"></label>
-                                        <div id="words-exposure-time-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="words-exposure-delay-label" class="text-sm font-medium"></label>
-                                        <div id="words-exposure-delay-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="words-stimulus-count-label" class="text-sm font-medium"></label>
-                                        <div id="words-stimulus-count-slider"></div>
-                                    </div>
-                                    <!-- Use Pregenerated Delays Checkbox -->
-                                    <div class="flex flex-col 2xl:flex-row w-full gap-4">
-                                        <div class="flex flex-col space-y-2 flex-1">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="words-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
-                                                <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
-                                            </label>
-                                        </div>
-                                    
-                                        <div class="flex flex-col space-y-2 flex-1">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="words-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
-                                                <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-    
-                    <!-- Colors Subsection -->
-                    <div
-                            tabIndex="0"
-                            class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
-                            id="colors-subsection"
-                    >
-                        <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'colors' ? 'checked="checked"' : ''} class="peer" data-subsection="colors"/>
-                        <!-- Subsection Title -->
-                        <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                             data-localize="colorsOption"
-                        >
-                            Colors:
-                        </div>
-                        <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
-                            <!-- 2-column layout on medium+ screens -->
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 gap-y-4 lg:gap-6 items-start m-2">
+const PREVIEW_STIMULUS_SIZE = 28;
+const PREVIEW_COMBINED_COMPONENT_SIZE = 14;
+const PREVIEW_WORD_SIZE = 8;
 
-                                <!-- Left Column: Color Rectangle Preview -->
-                                <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
-                                    <div id="colors-preview"
-                                         class="col-span-1 subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
-                                        
-                                    </div>
-                                </div>
+type CompactProtocolValue = "optimal" | "feedback";
+type CompactFeedbackModeValue = "mobility" | "strength";
+type CompactModeValue = "standard" | CompactFeedbackModeValue;
 
-                                <!-- Right Column: Settings (no size slider for colors) -->
-                                <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="colors-size-slider-label" class="text-sm font-medium"></label>
-                                        <div id="colors-size-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="colors-exposure-time-label" class="text-sm font-medium"></label>
-                                        <div id="colors-exposure-time-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="colors-exposure-delay-label" class="text-sm font-medium"></label>
-                                        <div id="colors-exposure-delay-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="colors-stimulus-count-label" class="text-sm font-medium"></label>
-                                        <div id="colors-stimulus-count-slider"></div>
-                                    </div>
-                                    <!-- Use Pregenerated Delays Checkbox -->
-                                    <div class="flex flex-col 2xl:flex-row w-full gap-4">
-                                        <div class="flex flex-col space-y-2 flex-1">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="colors-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
-                                                <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
-                                            </label>
-                                        </div>
-                                    
-                                        <div class="flex flex-col space-y-2 flex-1">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="colors-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
-                                                <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+type CompactSettingsState = Readonly<{
+  protocol: CompactProtocolValue;
+  feedbackMode: CompactFeedbackModeValue;
+  testType: TestType;
+  stimulus: TestMode;
+}>;
 
-                    <!-- Combined Subsection -->
-                    <div
-                            tabIndex="0"
-                            class="collapse collapse-plus border border-base-300 bg-base-100 rounded-box"
-                            id="combined-subsection"
-                    >
-                        <input type="radio" name="stimulus-type-accordion" ${appContext.testSettings.testMode === 'combined' ? 'checked="checked"' : ''} class="peer" data-subsection="combined"/>
-                        <!-- Subsection Title -->
-                        <div class="collapse-title font-medium subsection-header peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-t-4 peer-checked:border-accent rounded-t-box"
-                             data-localize="combinedOption"
-                        >
-                            Combined:
-                        </div>
-                        <div class="collapse-content expanded-view peer-checked:bg-base-200 peer-checked:border-x-4 peer-checked:border-b-4 peer-checked:border-accent rounded-b-box">
-                            <!-- 2-column layout on medium+ screens -->
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 gap-y-4 lg:gap-6 items-start m-2">
+/**
+ * Renders one numeric parameter as a responsive text input, driven entirely by
+ * its ParameterDefinition: the id, the always-visible localized label, the
+ * localized unit suffix rendered after the field (so the native spin controls
+ * never sit between the value and the unit), the min/max/step constraints and
+ * the daisyUI validator hint all come from the shared config in settings.ts.
+ * The hint reserves no space while valid; fields in a cross-field min/max pair
+ * carry a specific error message that replaces the generic range text.
+ */
+const parameterField = (definition: ParameterDefinition, value: number, errorKey: string | null = null, disabled = false): string => `
+  <div class="block w-full min-w-0">
+    <div class="mb-1.5 flex flex-col cursor-default" id="${definition.id}-meta">
+      <span class="truncate text-sm font-medium leading-tight text-base-content" data-localize="${definition.labelKey}"></span>
+      <div class="mt-0.5 flex items-center justify-between text-xs tabular-nums text-base-content/55">
+        <span class="truncate pr-2">${definition.min}&ndash;${definition.max} <span data-localize="${definition.unitKey}"></span></span>
+        <span class="shrink-0">±${definition.step}</span>
+      </div>
+    </div>
+    <div class="relative flex items-center gap-2 rounded-box border border-base-300 bg-base-100 px-3 py-2">
+      <input id="${definition.id}" class="min-w-0 flex-1 border-0 bg-transparent p-0 text-base outline-none ${disabled ? "text-transparent" : ""}" type="number" value="${value}" min="${definition.min}" max="${definition.max}" step="${definition.step}" placeholder=" " required aria-describedby="${definition.id}-hint" ${disabled ? "disabled" : ""} />
+      <div class="shrink-0 text-sm font-semibold text-base-content/60 cursor-default ${disabled ? "invisible" : ""}" data-localize="${definition.unitKey}"></div>
+      <span id="${definition.id}-preset" class="pointer-events-none absolute inset-0 hidden items-center px-3 text-sm italic text-base-content/45 truncate" data-localize="pregeneratedDelayActive"></span>
+    </div>
+    <div class="validator-hint hidden text-left" id="${definition.id}-hint">
+      <span class="hint-range"><span data-localize="allowedRangeHint"></span> ${definition.min}–${definition.max} <span class="unit-suffix" data-localize="${definition.unitKey}"></span></span>
+      ${errorKey ? `<span class="hint-error hidden" data-localize="${errorKey}"></span>` : ""}
+    </div>
+  </div>`;
 
-                                <!-- Left Column: Color Rectangle Preview -->
-                                <div class="col-span-1 flex items-center lg:items-start justify-center lg:justify-start">
-                                    <div id="combined-preview"
-                                         class="col-span-1 subsection-preview rounded-box bg-black w-[9cm] h-[9cm] flex items-center justify-center">
-                                        
-                                    </div>
-                                </div>
+const renderDelayRangeFields = (minValue: number, maxValue: number, disabled = false): string => `
+  <div class="col-span-full grid min-w-0 grid-cols-2 gap-3">
+    ${parameterField(parameters.exposureDelayMin, minValue, "delayMinExceedsMaxError", disabled)}
+    ${parameterField(parameters.exposureDelayMax, maxValue, null, disabled)}
+  </div>`;
 
-                                <!-- Right Column: Settings -->
-                                <div class="col-span-2 flex flex-col justify-evenly space-y-4 w-full h-full">
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="combined-size-slider-label" class="text-sm font-medium"></label>
-                                        <div id="combined-size-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="combined-exposure-time-label" class="text-sm font-medium"></label>
-                                        <div id="combined-exposure-time-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="combined-exposure-delay-label" class="text-sm font-medium"></label>
-                                        <div id="combined-exposure-delay-slider"></div>
-                                    </div>
-                                    <div class="flex flex-col space-y-2 w-full">
-                                        <label id="combined-stimulus-count-label" class="text-sm font-medium"></label>
-                                        <div id="combined-stimulus-count-slider"></div>
-                                    </div>
-                                    <!-- Use Pregenerated Delays Checkbox -->
-                                    <div class="flex flex-col 2xl:flex-row w-full gap-4">
-                                        <div class="flex flex-col space-y-2 flex-1">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="combined-use-pregenerated-delay" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.exposureDelay ? 'checked' : ''} />
-                                                <span class="label-text font-medium" data-localize="usePregeneratedDelay">Use pregenerated exposure delays</span>
-                                            </label>
-                                        </div>
-                                    
-                                        <div class="flex flex-col space-y-2 flex-1">
-                                            <label class="label cursor-pointer justify-start gap-3">
-                                                <input type="checkbox" id="combined-use-pregenerated-stimuli" class="checkbox checkbox-sm" ${appContext.testSettings.usePregenerated.stimuli ? 'checked' : ''} />
-                                                <span class="label-text font-medium" data-localize="usePregeneratedStimuli">Use pregenerated stimulus sequence</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-          </form>
-        </main>`;
-}
+const renderPregeneratedOptions = (settings: AppContext["testSettings"], showDelayOption: boolean): string => `
+  <div class="col-span-full grid min-w-0 gap-3 border-t border-base-300 pt-3">
+    ${showDelayOption ? `<label class="flex min-w-0 items-start gap-3 rounded-box px-2 py-2 cursor-pointer hover:bg-base-200">
+      <input id="compact-use-pregenerated-delay" type="checkbox" class="checkbox settings-checkbox checkbox-md mt-0.5 shrink-0" ${(settings as OptimalSettings).usePregenerated.exposureDelay ? "checked" : ""} />
+      <span class="min-w-0">
+        <span class="block text-sm font-medium leading-6" data-localize="usePregeneratedDelay"></span>
+        <span class="block text-xs leading-5 text-base-content/70" data-localize="usePregeneratedDelayHint"></span>
+      </span>
+    </label>` : ""}
+    <label class="flex min-w-0 items-start gap-3 rounded-box px-2 py-2 cursor-pointer hover:bg-base-200">
+      <input id="compact-use-pregenerated-stimuli" type="checkbox" class="checkbox settings-checkbox checkbox-md mt-0.5 shrink-0" ${settings.usePregenerated.stimuli ? "checked" : ""} />
+      <span class="min-w-0">
+        <span class="block text-sm font-medium leading-6" data-localize="usePregeneratedStimuli"></span>
+        <span class="block text-xs leading-5 text-base-content/70" data-localize="usePregeneratedStimuliHint"></span>
+      </span>
+    </label>
+  </div>`;
 
 function settingsScreenFooterHTML() {
   return `
@@ -322,7 +95,7 @@ function settingsScreenFooterHTML() {
       <div class="flex-1"></div>
       <div class="flex space-x-2">
         <button id="reset-settings-btn" class="btn btn-outline btn-error" data-localize="resetSettings"></button>
-        <button id="start-test-btn" class="btn btn-success" data-localize="next"></button>
+        <button id="start-test-btn" class="btn btn-success" data-localize="startTest"></button>
       </div>
     </footer>
   `;
@@ -332,257 +105,510 @@ function settingsScreenFooterHTML() {
 export function setupSettingsScreen(appContainer: HTMLElement): void {
   const appContext = AppContextManager.getContext();
 
-  appContainer.innerHTML = settingsScreenHTML(appContext);
+  appContainer.innerHTML = compactSettingsScreenHTML(appContext);
   setupHeader(appContainer);
-
-  setupSubsectionTogglesCallback(
-    [
-      appContainer.querySelector("#shapes-subsection")!,
-      appContainer.querySelector("#words-subsection")!,
-      appContainer.querySelector("#colors-subsection")!,
-      appContainer.querySelector("#combined-subsection")!
-    ]
-  );
-  setupGeometricShapeSection(
-    appContext.testSettings.testMode == "shapes" ? appContext.testSettings.stimulusSize : undefined,
-    appContext.testSettings.testMode == "shapes" ? appContext.testSettings.exposureTime : undefined,
-    appContext.testSettings.testMode == "shapes" ? appContext.testSettings.exposureDelay : undefined,
-    appContext.testSettings.testMode == "shapes" ? appContext.testSettings.stimulusCount : undefined,
-  );
-  setupWordsSection(
-    appContext.testSettings.testMode == "words" ? appContext.testSettings.stimulusSize : undefined,
-    appContext.testSettings.testMode == "words" ? appContext.testSettings.exposureTime : undefined,
-    appContext.testSettings.testMode == "words" ? appContext.testSettings.exposureDelay : undefined,
-    appContext.testSettings.testMode == "words" ? appContext.testSettings.stimulusCount : undefined,
-  );
-  setupColorsSection(
-    appContext.testSettings.testMode == "colors" ? appContext.testSettings.stimulusSize : undefined,
-    appContext.testSettings.testMode == "colors" ? appContext.testSettings.exposureTime : undefined,
-    appContext.testSettings.testMode == "colors" ? appContext.testSettings.exposureDelay : undefined,
-    appContext.testSettings.testMode == "colors" ? appContext.testSettings.stimulusCount : undefined,
-  );
-  setupCombinedSection(
-    appContext.testSettings.testMode == "combined" ? appContext.testSettings.stimulusSize : undefined,
-    appContext.testSettings.testMode == "combined" ? appContext.testSettings.exposureTime : undefined,
-    appContext.testSettings.testMode == "combined" ? appContext.testSettings.exposureDelay : undefined,
-    appContext.testSettings.testMode == "combined" ? appContext.testSettings.stimulusCount : undefined,
-  );
+  setupCompactSettings(appContext);
 
   // footer
   setupFooter(
     appContainer,
     settingsScreenFooterHTML(),
     [
-      {buttonFn: () => document.getElementById("start-test-btn")! as HTMLButtonElement, callback: () => startButtonCallback()},
+      {buttonFn: () => document.getElementById("start-test-btn")! as HTMLButtonElement, callback: () => compactStartButtonCallback()},
       {buttonFn: () => document.getElementById("reset-settings-btn")! as HTMLButtonElement, callback: () => resetSettingsButtonCallback()},
     ]
   );
   updateLanguageUI();
 }
 
+function compactSettingsScreenHTML(appContext: AppContext): string {
+  return `<main class="flex-grow bg-base-200" id="main"><form id="personal-data-form" class="mx-auto w-full max-w-[1800px] space-y-3 px-4 py-3">
+    <section class="card bg-base-100 shadow-sm"><div class="card-body p-4">
+      <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="surnameLabel"></span><input class="input input-md input-bordered w-full text-base" type="text" id="surname-input" inputmode="text" placeholder=" " value="${escapeHtml(appContext.personalData.lastName)}" required minlength="2" maxlength="50" /></label>
+        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="nameLabel"></span><input class="input input-md input-bordered w-full text-base" type="text" id="name-input" inputmode="text" placeholder=" " value="${escapeHtml(appContext.personalData.firstName)}" required minlength="2" maxlength="50" /></label>
+        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="ageLabel"></span><input class="input input-md input-bordered w-full text-base" type="number" id="age-input" inputmode="numeric" placeholder=" " value="${appContext.personalData.age || ''}" min="10" max="99" step="1" required /></label>
+        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="genderLabel"></span><select class="select select-md select-bordered w-full text-base" id="gender-select" required><option value="" disabled ${appContext.personalData.gender ? '' : 'selected'} data-localize="selectGender"></option><option value="male" ${appContext.personalData.gender === 'male' ? 'selected' : ''} data-localize="male"></option><option value="female" ${appContext.personalData.gender === 'female' ? 'selected' : ''} data-localize="female"></option></select></label>
+      </div>
+    </div></section>
 
-const setupSubsectionTogglesCallback = (subsections: HTMLElement[]) => {
-  subsections.forEach(subSection => {
-    const header = subSection.querySelector(".subsection-header") as HTMLElement;
-    header.addEventListener("click", () => {
-      // Collapse all
-      subsections.forEach(s => s.classList.remove("expanded"));
-      // Mark chosen and expand
-      subSection.classList.add("expanded");
-    });
-  });
+    <section class="card bg-base-100 shadow-sm"><div class="card-body p-4">
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="protocolLabel"></span><select id="protocol-select" class="select select-md select-bordered w-full text-base"><option value="optimal" ${appContext.testSettings.protocolMode === 'optimal' ? 'selected' : ''} data-localize="optimalProtocol"></option><option value="feedback" ${appContext.testSettings.protocolMode !== 'optimal' ? 'selected' : ''} data-localize="feedbackProtocol"></option></select></label>
+        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="regimeLabel"></span><select id="mode-select" class="select select-md select-bordered w-full text-base"></select></label>
+        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="submodeLabel"></span><select id="test-type-select" class="select select-md select-bordered w-full text-base"></select></label>
+        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="stimulusTypeLabel"></span><select id="stimulus-select" class="select select-md select-bordered w-full text-base"></select></label>
+      </div>
+    </div></section>
+
+    <section class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div class="card min-w-0 bg-base-100 shadow-sm"><div class="card-body min-w-0 p-4"><h2 class="card-title text-lg" data-localize="testSettingsTitle"></h2><div id="compact-parameters" class="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-5 lg:grid-cols-4"></div></div></div>
+      <div class="card min-w-0 bg-base-100 shadow-sm"><div class="card-body min-w-0 p-4"><h2 class="card-title text-lg" data-localize="instructionTitle"></h2><div id="compact-preview" class="mb-3 flex min-h-28 min-w-0 items-center justify-center rounded-box bg-black p-3"></div><p id="compact-instruction" class="text-center text-sm leading-relaxed"></p></div></div>
+    </section>
+  </form></main>`;
 }
 
-const setupSlider = (
-  sliderConfig: SliderConfig,
-  idPrefix: string = "",
-  currentValue: StimulusSize | ExposureTime | ExposureDelay | StimulusCount | undefined,
-  onUpdate: (size: number, secondValue?: number) => void = () => {
-  },
-) => {
-  const slider = document.getElementById(idPrefix + sliderConfig.id)! as target;
-  const label = document.getElementById(idPrefix + sliderConfig.label.id)! as target;
+function setupCompactSettings(appContext: AppContext): void {
+  const protocol = document.getElementById("protocol-select") as HTMLSelectElement;
+  const mode = document.getElementById("mode-select") as HTMLSelectElement;
+  const testType = document.getElementById("test-type-select") as HTMLSelectElement;
+  const stimulus = document.getElementById("stimulus-select") as HTMLSelectElement;
+  const initialProtocol: CompactProtocolValue = appContext.testSettings.protocolMode === "optimal" ? "optimal" : "feedback";
+  const initialFeedbackMode: CompactFeedbackModeValue =
+    appContext.testSettings.protocolMode === "feedback-strength" ? "strength" : "mobility";
+  let state: CompactSettingsState = {
+    protocol: initialProtocol,
+    feedbackMode: initialFeedbackMode,
+    testType: appContext.testSettings.testType,
+    stimulus: appContext.testSettings.testMode,
+  };
+  const getModeValue = (currentState: CompactSettingsState): CompactModeValue =>
+    currentState.protocol === "optimal" ? "standard" : currentState.feedbackMode;
+  const modeOptions = (currentState: CompactSettingsState): readonly { value: CompactModeValue; key: string }[] =>
+    currentState.protocol === "optimal"
+      ? [{value: "standard", key: "optimalMode"}]
+      : [
+        {value: "mobility", key: "feedbackMobility"},
+        {value: "strength", key: "feedbackStrength"},
+      ];
+  const fill = <T extends string>(select: HTMLSelectElement, values: readonly { value: T; key: string }[], selected: T): void => {
+    select.innerHTML = values
+      .map(v => `<option value="${v.value}" ${v.value === selected ? "selected" : ""} data-localize="${v.key}"></option>`)
+      .join("");
+  };
+  const refresh = (currentState: CompactSettingsState): void => {
+    const currentMode = getModeValue(currentState);
+    fill(mode, modeOptions(currentState), currentMode);
+    fill(testType, [
+      {value: "svmr", key: "testTypePzmrShort"},
+      {value: "crt1-3", key: "testTypeRV13Short"},
+      {value: "crt2-3", key: "testTypeRV23Short"},
+    ], currentState.testType);
+    fill(stimulus, [
+      {value: "shapes", key: "shapesOption"},
+      {value: "words", key: "wordsOption"},
+      {value: "colors", key: "colorsOption"},
+      {value: "combined", key: "combinedOption"},
+    ], currentState.stimulus);
+    renderCompactParameters(appContext, currentState.protocol, currentMode);
+    renderCompactInstruction(currentState.testType, currentState.stimulus, currentState.protocol);
+    updateLanguageUI();
+    renderCompactPreview(currentState.stimulus, currentState.testType, currentState.protocol, currentMode);
+    validateParameterRanges();
+    syncParameterHints();
+  };
+  const onParametersChanged = () => {
+    validateParameterRanges();
+    syncParameterHints();
+    renderCompactPreview(state.stimulus, state.testType, state.protocol, getModeValue(state));
+  };
+  protocol.addEventListener("change", () => {
+    const nextProtocol = protocol.value as CompactProtocolValue;
+    state = nextProtocol === "optimal"
+      ? {...state, protocol: "optimal"}
+      : {...state, protocol: "feedback"};
+    refresh(state);
+  });
+  mode.addEventListener("change", () => {
+    const nextMode = mode.value as CompactModeValue;
+    state = nextMode === "standard"
+      ? {...state, protocol: "optimal"}
+      : {...state, protocol: "feedback", feedbackMode: nextMode};
+    refresh(state);
+  });
+  testType.addEventListener("change", () => {
+    state = {...state, testType: testType.value as TestType};
+    refresh(state);
+  });
+  stimulus.addEventListener("change", () => {
+    state = {...state, stimulus: stimulus.value as TestMode};
+    refresh(state);
+  });
+  const parametersRoot = document.getElementById("compact-parameters")!;
+  parametersRoot.addEventListener("input", onParametersChanged);
+  // :user-invalid only matches once the field loses focus, so re-sync on blur.
+  parametersRoot.addEventListener("focusout", () => syncParameterHints());
+  refresh(state);
+}
 
-  noUiSlider.create(slider, (currentValue === undefined) ? sliderConfig.options : {...sliderConfig.options, start: currentValue as number | number[]});
-  slider.noUiSlider!.on("update", (values, _) => {
-    const firstValue = Number(values[0]);
-    const secondValue = values[1] === undefined ? undefined : Number(values[1]);
+function renderCompactParameters(appContext: AppContext, protocol: CompactProtocolValue, submode: CompactModeValue): void {
+  const ts = appContext.testSettings;
+  // Build a preview settings object that reflects the chosen protocol/submode.
+  // The stored context may still be optimal while the user is previewing the
+  // feedback fields, so we project onto the selected arm.
+  const previewSettings: TestSettings = protocol === "feedback"
+    ? submode === "strength"
+      ? {
+        protocolMode: "feedback-strength",
+        testMode: ts.testMode,
+        stimulusSize: ts.stimulusSize,
+        testType: ts.testType,
+        usePregenerated: {stimuli: ts.usePregenerated.stimuli},
+        feedback: (isFeedback(ts) ? ts.feedback : {
+          initialExposure: 900,
+          adjustmentStep: 20,
+          minExposure: 20,
+          maxExposure: 900,
+          pause: 200,
+          duration: 300
+        }) as FeedbackStrengthSettings["feedback"],
+      }
+      : {
+        protocolMode: "feedback-mobility",
+        testMode: ts.testMode,
+        stimulusSize: ts.stimulusSize,
+        stimulusCount: isFeedbackMobility(ts) ? ts.stimulusCount : 120,
+        testType: ts.testType,
+        usePregenerated: {stimuli: ts.usePregenerated.stimuli},
+        feedback: isFeedback(ts)
+          ? ts.feedback
+          : {initialExposure: 900, adjustmentStep: 20, minExposure: 20, maxExposure: 900, pause: 200},
+      }
+    : {
+      protocolMode: "optimal",
+      testMode: ts.testMode,
+      stimulusSize: ts.stimulusSize,
+      exposureTime: (ts as OptimalSettings).exposureTime ?? 700,
+      exposureDelay: (ts as OptimalSettings).exposureDelay ?? [500, 1900],
+      stimulusCount: (ts as OptimalSettings).stimulusCount ?? 50,
+      testType: ts.testType,
+      usePregenerated: {exposureDelay: (ts as OptimalSettings).usePregenerated?.exposureDelay ?? true, stimuli: ts.usePregenerated.stimuli},
+    };
 
-    if (secondValue !== undefined) {
-      label.textContent = `${localize(sliderConfig.label.localizationKey)}: ${firstValue}-${secondValue} ${localize(sliderConfig.label.unit)}`;
-      onUpdate(firstValue);
-    } else {
-      label.textContent = `${localize(sliderConfig.label.localizationKey)}: ${firstValue} ${localize(sliderConfig.label.unit)}`;
-      onUpdate(firstValue, secondValue);
+  const rows = protocol === "feedback"
+    ? submode === "strength"
+      ? [
+        parameterField(parameters.stimulusSize, previewSettings.stimulusSize),
+        parameterField(parameters.feedbackDuration, (previewSettings as FeedbackStrengthSettings).feedback.duration),
+        parameterField(parameters.feedbackInitialExposure, feedbackTuning(previewSettings).initialExposure),
+        parameterField(parameters.feedbackAdjustmentStep, feedbackTuning(previewSettings).adjustmentStep),
+        parameterField(parameters.feedbackMinExposure, feedbackTuning(previewSettings).minExposure, "exposureMinExceedsMaxError"),
+        parameterField(parameters.feedbackMaxExposure, feedbackTuning(previewSettings).maxExposure),
+        parameterField(parameters.feedbackPause, feedbackTuning(previewSettings).pause),
+      ]
+      : [
+        parameterField(parameters.stimulusSize, previewSettings.stimulusSize),
+        parameterField(parameters.feedbackStimulusCount, (previewSettings as FeedbackMobilitySettings).stimulusCount),
+        parameterField(parameters.feedbackInitialExposure, feedbackTuning(previewSettings).initialExposure),
+        parameterField(parameters.feedbackAdjustmentStep, feedbackTuning(previewSettings).adjustmentStep),
+        parameterField(parameters.feedbackMinExposure, feedbackTuning(previewSettings).minExposure, "exposureMinExceedsMaxError"),
+        parameterField(parameters.feedbackMaxExposure, feedbackTuning(previewSettings).maxExposure),
+        parameterField(parameters.feedbackPause, feedbackTuning(previewSettings).pause),
+      ]
+    : [
+      parameterField(parameters.stimulusSize, previewSettings.stimulusSize),
+      parameterField(parameters.stimulusCount, (previewSettings as OptimalSettings).stimulusCount),
+      parameterField(parameters.exposureTime, (previewSettings as OptimalSettings).exposureTime),
+      renderDelayRangeFields(
+        (previewSettings as OptimalSettings).exposureDelay[0],
+        (previewSettings as OptimalSettings).exposureDelay[1],
+        (previewSettings as OptimalSettings).usePregenerated.exposureDelay
+      ),
+    ];
+  // The pregenerated-delays option only applies to the optimal protocol's
+  // random delay range; feedback cadence uses the fixed pause, so the checkbox
+  // is hidden there and the stored flag is passed through untouched.
+  document.getElementById("compact-parameters")!.innerHTML =
+    rows.join("") + renderPregeneratedOptions(previewSettings, protocol === "optimal");
+
+  // If pregenerated delay is checked, disable the delay min/max inputs
+  if (protocol === "optimal") {
+    const usePregeneratedDelayCheckbox = document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null;
+    if (usePregeneratedDelayCheckbox) {
+      const setPregeneratedDelayState = (disabled: boolean) => {
+        for (const id of [parameters.exposureDelayMin.id, parameters.exposureDelayMax.id]) {
+          const input = document.getElementById(id) as HTMLInputElement | null;
+          const labelRow = document.getElementById(`${id}-meta`) as HTMLElement | null;
+          const preset = document.getElementById(`${id}-preset`) as HTMLElement | null;
+          if (!input || !labelRow) continue;
+          const unitSuffix = input.nextElementSibling as HTMLElement | null;
+          labelRow.classList.toggle("opacity-40", disabled);
+          labelRow.classList.toggle("pointer-events-none", disabled);
+          preset?.classList.toggle("hidden", !disabled);
+          preset?.classList.toggle("flex", disabled);
+          unitSuffix?.classList.toggle("invisible", disabled);
+          input.classList.toggle("text-transparent", disabled);
+          input.classList.toggle("cursor-not-allowed", disabled);
+          input.classList.toggle("opacity-60", disabled);
+          input.disabled = disabled;
+        }
+      };
+
+      usePregeneratedDelayCheckbox.addEventListener("change", () => {
+        setPregeneratedDelayState(usePregeneratedDelayCheckbox.checked);
+      });
+      setPregeneratedDelayState(usePregeneratedDelayCheckbox.checked);
     }
-  });
-
+  }
 }
 
-const setupCheckboxSliderToggle = (checkboxId: string, sliderId: string) => {
-  const checkbox = document.getElementById(checkboxId) as HTMLInputElement;
-  const slider = document.getElementById(sliderId) as target;
+function renderCompactInstruction(testType: TestType, testMode: TestMode, protocol: CompactProtocolValue): void {
+  const taskKey = testType === "svmr" ? "instructionSvmr" : testType === "crt1-3" ? `instructionCRT13_${testMode}` : `instructionCRT23_${testMode}`;
+  const protocolKey = protocol === "feedback" ? "instructionFeedback" : "instructionOptimal";
+  const instruction = document.getElementById("compact-instruction")!;
+  delete instruction.dataset.localizeHtml;
+  instruction.dataset.instructionTask = taskKey;
+  instruction.dataset.instructionProtocol = protocolKey;
+  instruction.innerHTML = `${localize(taskKey)}${localize(protocolKey)}`;
+}
 
-  const toggleSlider = (disabled: boolean) => {
-    if (disabled) {
-      slider.setAttribute("disabled", "true");
-      slider.classList.add("opacity-50", "cursor-not-allowed");
+function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: CompactProtocolValue, submode: CompactModeValue): void {
+  const preview = document.getElementById("compact-preview")!;
+  const isFeedback = protocol === "feedback";
+  const isStrength = isFeedback && submode === "strength";
+  const exposure = isFeedback
+    ? readNumberInput(parameters.feedbackInitialExposure)
+    : readNumberInput(parameters.exposureTime);
+  const stimulusSize = PREVIEW_STIMULUS_SIZE;
+  const isChoiceTest = testType === "crt1-3" || testType === "crt2-3";
+  const stimulusColumns = testType === "crt2-3"
+    ? `${previewReactionColumn(testMode, "left", stimulusSize)}${previewReactionColumn(testMode, "ignore", stimulusSize)}${previewReactionColumn(testMode, "right", stimulusSize)}`
+    : testType === "crt1-3"
+      ? `${previewReactionColumn(testMode, "left", stimulusSize, "previewIgnore")}${previewReactionColumn(testMode, "space", stimulusSize, "testScreenTestPZMRActionButtonName")}${previewReactionColumn(testMode, "ignore", stimulusSize, "previewIgnore")}`
+      : previewReactionColumn(testMode, "space", stimulusSize);
+  const stimulus = `<div class="grid w-full ${isChoiceTest ? "grid-cols-3" : "grid-cols-1"} items-end gap-2 px-2">${stimulusColumns}</div>`;
+  // Feedback cadence: fixed pause between trials; the pause doubles as the
+  // late-answer window. Optimal: random delay range.
+  const pauseMs = isFeedback ? readNumberInput(parameters.feedbackPause) : undefined;
+  let delayMin: number;
+  let delayMax: number;
+  let usePregeneratedDelay = false;
+  if (!isFeedback) {
+    const pregenCheckbox = document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null;
+    usePregeneratedDelay = pregenCheckbox?.checked ?? false;
+    if (usePregeneratedDelay) {
+      // Show "pregenerated" in preview instead of min/max
+      delayMin = 0; // placeholder won't be used for display
+      delayMax = 0;
     } else {
-      slider.removeAttribute("disabled");
-      slider.classList.remove("opacity-50", "cursor-not-allowed");
+      delayMin = readNumberInput(parameters.exposureDelayMin);
+      delayMax = readNumberInput(parameters.exposureDelayMax);
+    }
+  } else {
+    delayMin = pauseMs ?? 200;
+    delayMax = pauseMs ?? 200;
+  }
+
+  // Session-extent badge: count-driven (optimal/mobility) vs time-driven (strength).
+  const sessionBadge = isStrength
+    ? `<span class="rounded border border-gray-500 px-2 py-1 font-mono">⏱ ${readNumberInput(parameters.feedbackDuration)}&nbsp;<span data-localize="s"></span></span>`
+    : `<span class="font-mono">× ${(isFeedback ? readNumberInput(parameters.feedbackStimulusCount) : readNumberInput(parameters.stimulusCount))}&nbsp;<span data-localize="units"></span></span>`;
+
+  const adaptationBadge = isFeedback
+    ? `<span>→</span><span class="rounded border border-emerald-500 px-2 py-1"><span data-localize="previewAdaptationState"></span>&nbsp;±${readNumberInput(parameters.feedbackAdjustmentStep)}&nbsp;<span data-localize="ms"></span></span>`
+    : "";
+
+  // Fixed pause (min === max) collapses to a single value; feedback cadence
+  // has no pre-stimulus delay - the pause IS the post-stimulus late-answer
+  // window, so it is shown only once, after the stimulus.
+  const rangeText = usePregeneratedDelay
+    ? (localize("pregeneratedLabel") ?? "pregenerated")
+    : delayMin === delayMax ? `${delayMin}` : `${delayMin}–${delayMax}`;
+  const pauseLabel = `<span data-localize="previewPauseState"></span>&nbsp;[${rangeText}&nbsp;<span data-localize="ms"></span>]`;
+  const pauseChip = `<span class="rounded border border-gray-700 px-2 py-1">${pauseLabel}</span>`;
+  const stimulusChip = `<span class="rounded border border-gray-500 px-2 py-1"><span data-localize="previewStimulusState"></span>&nbsp;[${exposure}&nbsp;<span data-localize="ms"></span>]</span>`;
+  const leadingPause = isFeedback ? "" : `${pauseChip}<span>→</span>`;
+  const stateDiagram = `<div class="absolute bottom-2 left-3 right-3 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-300">${leadingPause}${stimulusChip}<span>→</span>${pauseChip}${adaptationBadge}${sessionBadge}</div>`;
+  preview.innerHTML = `<div class="relative flex min-h-[30rem] w-full items-center justify-center overflow-hidden rounded-box bg-black py-10 text-white">${stimulus}${stateDiagram}</div>`;
+  updateLanguageUI(preview);
+}
+
+function previewReactionColumn(
+  testMode: TestMode,
+  action: "left" | "right" | "space" | "ignore",
+  size: number,
+  instructionOverride?: string
+): string {
+  const instruction = instructionOverride ?? (action === "left" ? "statLeftHand" : action === "right" ? "statRightHand" : action === "space" ? "testScreenTestPZMRActionButtonName" : "previewIgnore");
+  return `<div class="flex min-w-0 flex-col items-center justify-end gap-2 text-center"><div class="flex h-56 w-full items-center justify-center">${compactStimulusForAction(testMode, action, size)}</div><span class="text-sm font-semibold text-gray-200" data-localize="${instruction}"></span></div>`;
+}
+
+function compactStimulusForAction(testMode: TestMode, action: "left" | "right" | "space" | "ignore", size: number): string {
+  const color = action === "left" ? "green" : action === "right" || action === "space" ? "red" : "yellow";
+  const shape = action === "left" ? "circle" : action === "right" || action === "space" ? "square" : "triangle";
+  const category = action === "left" ? "plant" : action === "right" || action === "space" ? "animal" : "nonLiving";
+  if (testMode === "shapes") return getShapeSvgWithStroke(size, "currentColor", shape);
+  if (testMode === "colors") return getColorRectangleHtml(size, color);
+  if (testMode === "words") return getWordCategoryHtml(category, PREVIEW_WORD_SIZE, "white");
+  return `<div class="grid grid-cols-2 grid-rows-[auto_auto] items-center justify-items-center gap-1 overflow-hidden"><div>${getColorRectangleHtml(PREVIEW_COMBINED_COMPONENT_SIZE, color)}</div><div>${getShapeSvgWithStroke(PREVIEW_COMBINED_COMPONENT_SIZE, "currentColor", shape)}</div><div class="col-span-2 max-w-full overflow-hidden">${getWordCategoryHtml(category, PREVIEW_WORD_SIZE, "white")}</div></div>`;
+}
+
+/**
+ * Reads a numeric parameter strictly against its ParameterDefinition. Empty or
+ * non-numeric input falls back to the definition default; valid numbers are
+ * rounded and clamped to [min, max]. Unlike a `value || fallback` check this
+ * preserves legitimate zero values (e.g. a 0 ms pause).
+ */
+function readNumberInput(definition: ParameterDefinition): number {
+  const element = document.getElementById(definition.id);
+  const raw = element instanceof HTMLInputElement ? Number(element.value) : Number.NaN;
+  if (!Number.isFinite(raw)) {
+    return definition.defaultValue;
+  }
+  return Math.min(definition.max, Math.max(definition.min, Math.round(raw)));
+}
+
+/**
+ * Live cross-field validation for the min/max parameter pairs (delay range,
+ * feedback exposure range). Uses the native constraint API (setCustomValidity)
+ * plus an aria-invalid flag, so daisyUI's validator styling and hint show the
+ * problem exactly like a built-in range error - no alerts, and the form cannot
+ * be submitted while the pair is inconsistent.
+ */
+function validateParameterRanges(): void {
+  const markRange = (minDefinition: ParameterDefinition, errorKey: string | null) => {
+    const minInput = document.getElementById(minDefinition.id);
+    if (!(minInput instanceof HTMLInputElement)) return;
+    // Skip validation if input is disabled (pregenerated mode)
+    if (minInput.disabled) {
+      minInput.setCustomValidity("");
+      minInput.removeAttribute("aria-invalid");
+      const hint = document.getElementById(`${minDefinition.id}-hint`);
+      hint?.classList.add("hidden");
+      return;
+    }
+    minInput.setCustomValidity(errorKey ? localize(errorKey) : "");
+    const hint = document.getElementById(`${minDefinition.id}-hint`);
+    const rangeText = hint?.querySelector(".hint-range");
+    const errorText = hint?.querySelector(".hint-error");
+    if (errorKey) {
+      minInput.setAttribute("aria-invalid", "true");
+      // reveal the hint explicitly: aria-invalid alone only flips visibility,
+      // which a display:none element would still suppress.
+      hint?.classList.remove("hidden");
+      rangeText?.classList.add("hidden");
+      errorText?.classList.remove("hidden");
+    } else {
+      minInput.removeAttribute("aria-invalid");
+      hint?.classList.add("hidden");
+      rangeText?.classList.remove("hidden");
+      errorText?.classList.add("hidden");
     }
   };
-
-  // Set initial state
-  toggleSlider(checkbox.checked);
-
-  // Add event listener
-  checkbox.addEventListener("change", () => {
-    toggleSlider(checkbox.checked);
-  });
-}
-
-const setupGeometricShapeSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
-  function showRedCircle(size: number) {
-    const shapePreview = document.getElementById("shape-preview") as HTMLElement;
-    // Insert the chosen shape
-    shapePreview.innerHTML = getRandomShapeSvg(size, "red", "circle");
+  for (const [minDefinition, maxDefinition, errorKey] of parameterPairs) {
+    // Skip if min input is disabled (pregenerated delay)
+    const minInput = document.getElementById(minDefinition.id) as HTMLInputElement | null;
+    if (minInput?.disabled) continue;
+    const minValue = readNumberInput(minDefinition);
+    const maxValue = readNumberInput(maxDefinition);
+    markRange(minDefinition, minValue > maxValue ? errorKey : null);
   }
-
-  const sectionPrefix = "shapes-";
-  setupSlider(subsectionsConfig.shape.sizeSlider, "", stimulusSize, (size) => showRedCircle(size));
-  setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
-  setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
-  setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
-
-  // Setup checkbox handler for delay slider
-  setupCheckboxSliderToggle("shapes-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
 }
 
-const setupWordsSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
-  const setWordSize = (size: number) => document.getElementById("word-preview-word")!.style.fontSize = size + "mm"
-
-  const sectionPrefix = "words-";
-  setupSlider(subsectionsConfig.word.sizeSlider, "", stimulusSize, (size) => setWordSize(size));
-  setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
-  setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
-  setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
-
-  // Setup checkbox handler for delay slider
-  setupCheckboxSliderToggle("words-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
-}
-
-const setupColorsSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
-  function showPreviewRectangle(sizeMm: number) {
-    const colorPreview = document.getElementById("colors-preview") as HTMLElement;
-    colorPreview.innerHTML = getColorRectangleHtml(sizeMm, "yellow");
+/**
+ * Reveals a field's validator hint only while it is actually invalid - either
+ * through the cross-field range error (aria-invalid, set by
+ * validateParameterRanges) or through a native constraint violation such as an
+ * out-of-range value. checkValidity is evaluated directly (instead of relying
+ * on :user-invalid) so the hint appears immediately while typing, not only
+ * after the field loses focus. Valid fields keep the hint collapsed.
+ */
+function syncParameterHints(): void {
+  for (const definition of Object.values(parameters)) {
+    const input = document.getElementById(definition.id);
+    const hint = document.getElementById(`${definition.id}-hint`);
+    if (!(input instanceof HTMLInputElement) || !hint) continue;
+    const crossFieldInvalid = input.getAttribute("aria-invalid") === "true";
+    const nativeInvalid = !input.checkValidity() && input.value !== "";
+    hint.classList.toggle("hidden", !(crossFieldInvalid || nativeInvalid));
   }
-  const sectionPrefix = "colors-";
-  setupSlider(subsectionsConfig.colors.sizeSlider, "", stimulusSize, (sizeMm) => showPreviewRectangle(sizeMm));
-  setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
-  setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
-  setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
-
-  // Setup checkbox handler for delay slider
-  setupCheckboxSliderToggle("colors-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
 }
 
-const setupCombinedSection = (stimulusSize?: StimulusSize, exposureTime?: ExposureTime, exposureDelay?: ExposureDelay, stimulusCount?: StimulusCount) => {
-  function showLayeredPreview(sizeMm: number) {
-    const combinedPreview = document.getElementById("combined-preview") as HTMLElement;
-
-    // 1. Calculate the mapped font size (20-70 -> 15-30)
-    const mappedFontSize = sizeMm; // Math.round(15 + (sizeMm - 20) * 0.3);
-
-    // Get the current language from your config or a global state
-    // If you have a way to detect current lang, use it here (e.g., currentLang === 'uk' ? 'uk' : 'en')
-    const localizedWord = localize(subsectionsConfig.combined.wordLocalisationKey);
-
-    combinedPreview.innerHTML = `
-      <div class="relative flex items-center justify-center" style="height: ${sizeMm + 20}mm; width: 100%;">
-        
-        <div class="absolute flex items-center justify-center">
-          ${getColorRectangleHtml(sizeMm, "yellow")}
-        </div>
-
-        <div class="absolute flex items-center justify-center">
-          ${getRandomShapeSvg(sizeMm, "red", "circle")}
-        </div>
-        
-        <div class="absolute flex items-center justify-center">
-          <span class="font-mono leading-none text-blue-600 drop-shadow-sm" style="font-size: ${mappedFontSize + 'mm'};">${localizedWord}</span>
-        </div>
-        
-      </div>
-    `;
-  }
-
-  const sectionPrefix = "combined-";
-  setupSlider(subsectionsConfig.combined.sizeSlider, "", stimulusSize, (sizeMm) => showLayeredPreview(sizeMm));
-
-  setupSlider(subsectionsConfig.general.exposureTimeSlider, sectionPrefix, exposureTime);
-  setupSlider(subsectionsConfig.general.exposureDelaySlider, sectionPrefix, exposureDelay);
-  setupSlider(subsectionsConfig.general.stimulusCountSlider, sectionPrefix, stimulusCount);
-  setupCheckboxSliderToggle("combined-use-pregenerated-delay", `${sectionPrefix}${subsectionsConfig.general.exposureDelaySlider.id}`);
-}
-
-const startButtonCallback: () => void = () => {
-  // 1. Check test mode selection
-  const testMode = document.querySelector<HTMLInputElement>('input[name="stimulus-type-accordion"]:checked')!.dataset.subsection! as TestMode;
-
-  // 2. Do the validation
-  const form = document.getElementById('personal-data-form') as HTMLFormElement;
+function compactStartButtonCallback(): void {
+  validateParameterRanges();
+  const form = document.getElementById("personal-data-form") as HTMLFormElement;
   if (!form.checkValidity()) {
     form.reportValidity();
     return;
   }
+  const current = AppContextManager.getContext();
+  const protocolMode = (document.getElementById("protocol-select") as HTMLSelectElement).value;
+  const feedbackSubmode = (document.getElementById("mode-select") as HTMLSelectElement).value;
+  const testType = (document.getElementById("test-type-select") as HTMLSelectElement).value as TestType;
+  const testMode = (document.getElementById("stimulus-select") as HTMLSelectElement).value as TestMode;
 
-  const ageValue = (document.getElementById(inputsConfig.ageInputId) as HTMLSelectElement).value;
-  const age = Number.parseInt(ageValue, 10);
-  if (Number.isNaN(age)) {
-    // Ideally, this should be handled by form validation, but let's keep it safe
-    alert(localize("invalidAgeError") || "Please enter a valid age.");
-    return;
+  // Read delay min/max only if NOT using pregenerated delay (optimal mode only)
+  const delayPregenCheckbox = document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null;
+  const useDelayPregen = delayPregenCheckbox?.checked ?? (current.testSettings.protocolMode === 'optimal' ? current.testSettings.usePregenerated.exposureDelay : false);
+
+  let delayMin = 500;
+  let delayMax = 1900;
+  if (!useDelayPregen && protocolMode === "optimal") {
+    delayMin = readNumberInput(parameters.exposureDelayMin);
+    delayMax = readNumberInput(parameters.exposureDelayMax);
+  } else if (protocolMode === "optimal") {
+    // Use current stored values when pregenerated is enabled
+    const ts = current.testSettings;
+    if (ts.protocolMode === 'optimal') {
+      delayMin = ts.exposureDelay[0];
+      delayMax = ts.exposureDelay[1];
+    }
   }
-  const stimulusSize = getSliderValue(inputsConfig.sizeSliderId[testMode]) as StimulusSize;
-  const exposureTime = getSliderValue(inputsConfig.exposureTimeSliderId[testMode]) as ExposureTime;
-  const exposureDelay = getSliderValue(inputsConfig.exposureDelaySliderId[testMode]) as ExposureDelay;
-  const stimulusCount = getSliderValue(inputsConfig.stimulusCountSliderId[testMode]) as StimulusCount;
-  const firstName = (document.getElementById(inputsConfig.nameInputId) as HTMLInputElement).value;
-  const lastName = (document.getElementById(inputsConfig.surnameInputId) as HTMLInputElement).value;
-  const gender = (document.getElementById(inputsConfig.genderSelectId) as HTMLSelectElement).value as Gender;
 
-  // Get checkbox states
-  const usePregeneratedDelay = (document.getElementById(`${testMode}-use-pregenerated-delay`) as HTMLInputElement).checked;
-  const usePregeneratedStimuli = (document.getElementById(`${testMode}-use-pregenerated-stimuli`) as HTMLInputElement).checked;
+  const feedbackMinExposure = readNumberInput(parameters.feedbackMinExposure);
+  const feedbackMaxExposure = readNumberInput(parameters.feedbackMaxExposure);
 
-  // 3. Gather parameters and log them
-  const appContext: AppContext = {
-    personalData: {
-      firstName: firstName,
-      lastName: lastName,
-      gender: gender,
-      age: age,
-    },
-    testSettings: {
-      testMode: testMode,
-      stimulusSize: stimulusSize,
-      exposureTime: exposureTime,
-      exposureDelay: exposureDelay,
-      stimulusCount: stimulusCount,
-      testType: defaultAppContext.testSettings.testType || 'svmr',
-      usePregenerated: {
-        exposureDelay: usePregeneratedDelay,
-        stimuli: usePregeneratedStimuli,
-      }
-    },
-    debugMode: defaultAppContext.debugMode,
+  const useStimuli = (document.getElementById("compact-use-pregenerated-stimuli") as HTMLInputElement).checked;
+  // Hidden in feedback mode (the pause replaces the delay range), so fall back
+  // to the stored flag instead of a null-deref.
+  const useDelay = useDelayPregen;
+
+  const base = {
+    testMode,
+    stimulusSize: readNumberInput(parameters.stimulusSize),
+    testType,
+    usePregenerated: {stimuli: useStimuli} as { stimuli: boolean },
   };
 
-  AppContextManager.setContext(appContext);
+  let testSettings: TestSettings;
+  if (protocolMode === "optimal") {
+    testSettings = {
+      ...base,
+      usePregenerated: {exposureDelay: useDelay, stimuli: useStimuli},
+      protocolMode: "optimal",
+      exposureTime: readNumberInput(parameters.exposureTime),
+      exposureDelay: [delayMin, delayMax],
+      stimulusCount: readNumberInput(parameters.stimulusCount),
+    };
+  } else if (feedbackSubmode === "strength") {
+    testSettings = {
+      ...base,
+      protocolMode: "feedback-strength",
+      feedback: {
+        initialExposure: readNumberInput(parameters.feedbackInitialExposure),
+        adjustmentStep: readNumberInput(parameters.feedbackAdjustmentStep),
+        minExposure: feedbackMinExposure,
+        maxExposure: feedbackMaxExposure,
+        pause: readNumberInput(parameters.feedbackPause),
+        duration: readNumberInput(parameters.feedbackDuration),
+      },
+    };
+  } else {
+    testSettings = {
+      ...base,
+      protocolMode: "feedback-mobility",
+      stimulusCount: readNumberInput(parameters.feedbackStimulusCount),
+      feedback: {
+        initialExposure: readNumberInput(parameters.feedbackInitialExposure),
+        adjustmentStep: readNumberInput(parameters.feedbackAdjustmentStep),
+        minExposure: feedbackMinExposure,
+        maxExposure: feedbackMaxExposure,
+        pause: readNumberInput(parameters.feedbackPause),
+      },
+    };
+  }
 
-  // transition to the test type selection screen
-  Router.navigate("/testTypeSelection");
+  AppContextManager.setContext({
+    ...current,
+    personalData: {
+      firstName: (document.getElementById("name-input") as HTMLInputElement).value,
+      lastName: (document.getElementById("surname-input") as HTMLInputElement).value,
+      gender: (document.getElementById("gender-select") as HTMLSelectElement).value as "male" | "female",
+      age: Number((document.getElementById("age-input") as HTMLInputElement).value),
+    },
+    testSettings,
+  });
+  Router.navigate("/test");
 }
 
 const resetSettingsButtonCallback: () => void = () => {

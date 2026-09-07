@@ -4,6 +4,7 @@ import { EXPOSITION_DELAY_SEQUENCE } from '../../src/domain/stimulus-sequences.t
 import { getNextDelayForRandom } from '../../src/domain/test-state.ts';
 
 const randomDelaySettings: TestSettings = {
+  protocolMode: 'optimal',
   testMode: 'shapes',
   stimulusSize: 25,
   exposureTime: 700,

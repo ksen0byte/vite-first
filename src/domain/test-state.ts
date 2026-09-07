@@ -1,6 +1,6 @@
 // src/domain/test-state.ts
 
-import {TestSettings, TrialResult} from "../config/domain";
+import {OptimalSettings, TrialResult} from "../config/domain";
 import { EXPOSITION_DELAY_SEQUENCE, getStimulusFromSequence } from "./stimulus-sequences";
 import {Stimulus} from "./types.ts";
 
@@ -82,7 +82,7 @@ export const toFinished = (reactionTimes: Map<number, TrialResult>): FinishedSta
 // Domain logic helpers
 
 export function getNextDelayForRandom(
-  settings: TestSettings,
+  settings: OptimalSettings,
   stimulusIndex: number,
   randomValue: number,
 ): number {
@@ -93,6 +93,6 @@ export function getNextDelayForRandom(
   return Math.floor(randomValue * (max - min + 1)) + min;
 }
 
-export function getNextDelay(settings: TestSettings, stimulusIndex: number): number {
+export function getNextDelay(settings: OptimalSettings, stimulusIndex: number): number {
   return getNextDelayForRandom(settings, stimulusIndex, Math.random());
 }

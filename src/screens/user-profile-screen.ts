@@ -4,11 +4,13 @@ import {setupFooter} from '../components/footer';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
-import {TestMode} from "../config/domain.ts";
+import {TestMode, isFeedback, isFeedbackStrength, feedbackTuning, OptimalSettings, FeedbackMobilitySettings, FeedbackStrengthSettings} from "../config/domain.ts";
+import {localize} from "../localization/localization";
 import Router, {Cleanup} from "../routing/router.ts";
 import {Chart} from "chart.js";
 import {printConfig} from "../config/settings.ts";
 import {escapeHtml} from "../util/html.ts";
+import {summarizeExposure} from "../stats/exposure-curve.ts";
 
 let chartInstances: Chart[] = [];
 
@@ -105,14 +107,26 @@ function personalDataCardHtml(user: User) {
 
 function testCardHTML(index: number, test: TestRecord): string {
   const {testSettings, trials, date} = test;
-  const {testMode, stimulusSize, exposureTime, exposureDelay, stimulusCount, testType} = testSettings;
+  const {testMode, stimulusSize, testType} = testSettings;
+  const isOptimalArm = testSettings.protocolMode === 'optimal';
+  const isFeedbackSession = isFeedback(testSettings);
+  const protocolKey = testSettings.protocolMode === 'optimal' ? 'optimalProtocol' : 'feedbackProtocol';
+  const submodeKey = testSettings.protocolMode === 'feedback-strength' ? 'feedbackStrength' : 'feedbackMobility';
 
-  // Generate statistics using ReactionTimeStats
-  const multiHandStats = new MultiHandReactionTimeStats(trials, exposureTime);
-  const stats = multiHandStats.total;
-  const statsRight = multiHandStats.right;
-  const statsLeft = multiHandStats.left;
+  // Late answers legitimately exceed the fixed exposure in feedback mode, so
+  // bound RT cleaning by maxExposure + pause instead of exposureTime.
+  const rtUpperBound = isFeedbackSession
+    ? feedbackTuning(testSettings).maxExposure + feedbackTuning(testSettings).pause
+    : (testSettings as OptimalSettings).exposureTime;
+  const statsDebugLabel = `Profile test #${index} (${new Date(date).toLocaleString()}, ${testType})`;
+
   const showHandBreakdown = testType === "crt2-3";
+  const multiHandStats = showHandBreakdown
+    ? new MultiHandReactionTimeStats(trials, rtUpperBound, 100, statsDebugLabel)
+    : null;
+  const stats = multiHandStats?.total ?? new ReactionTimeStats(trials, rtUpperBound, 100, statsDebugLabel);
+  const statsRight = multiHandStats?.right;
+  const statsLeft = multiHandStats?.left;
 
   return `
     <div class="card shadow-md bg-base-100">
@@ -141,20 +155,38 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <td><span data-localize="${getTestModeLocalizationKey(testMode)}"></span></td>
               </tr>
               <tr class="text-center">
+                <td><strong data-localize="protocolLabel"></strong></td>
+                <td><span data-localize="${protocolKey}"></span></td>
+              </tr>
+              ${isFeedbackSession ? `
+              <tr class="text-center">
+                <td><strong data-localize="submodeLabel"></strong></td>
+                <td><span data-localize="${submodeKey}"></span></td>
+              </tr>` : ""}
+              <tr class="text-center">
                 <td><strong data-localize="stimulusSizeLabel"></strong></td>
                 <td>${Math.round(stimulusSize)} <span data-localize="mm"></span></td>
               </tr>
+              ${isOptimalArm ? `
               <tr class="text-center">
                 <td><strong data-localize="exposureTimeLabel"></strong></td>
-                <td>${Math.round(exposureTime)} <span data-localize="ms"></span></td>
+                <td>${Math.round(testSettings.exposureTime)} <span data-localize="ms"></span></td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="exposureDelayMinMaxLabel"></strong></td>
-                <td>${Math.round(Math.min(...exposureDelay))} <span data-localize="ms"></span> - ${Math.round(Math.max(...exposureDelay))} <span data-localize="ms"></span></td>
+                <td>${Math.round(Math.min(...testSettings.exposureDelay))} <span data-localize="ms"></span> - ${Math.round(Math.max(...testSettings.exposureDelay))} <span data-localize="ms"></span></td>
+              </tr>` : `
+              <tr class="text-center">
+                <td><strong data-localize="feedbackInitialExposure"></strong></td>
+                <td>${Math.round(feedbackTuning(testSettings).initialExposure)} <span data-localize="ms"></span></td>
               </tr>
               <tr class="text-center">
-                <td><strong data-localize="stimulusCountLabel"></strong></td>
-                <td>${stimulusCount}</td>
+                <td><strong data-localize="feedbackPause"></strong></td>
+                <td>${Math.round(feedbackTuning(testSettings).pause)} <span data-localize="ms"></span></td>
+              </tr>`}
+              <tr class="text-center">
+                <td><strong data-localize="${isFeedbackStrength(testSettings) ? 'durationLabel' : 'stimulusCountLabel'}"></strong></td>
+                <td>${isFeedbackStrength(testSettings) ? `${(testSettings as FeedbackStrengthSettings).feedback.duration} ${localize('s')}` : `${(testSettings as OptimalSettings | FeedbackMobilitySettings).stimulusCount}`}</td>
               </tr>
               <tr class="text-center">
                 <td><strong data-localize="testTypeLabel"></strong></td>
@@ -178,43 +210,43 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <tr class="text-center">
                   <td><strong data-localize="countLabel"></strong></td>
                   <td>
-                    ${stats.count}
-                    ${handBreakdownValueHtml(statsLeft.count, statsRight.count, showHandBreakdown)}
+                    ${stats.count}${filteredCountHtml(stats.filteredCount)}
+                    ${handBreakdownValueHtml(statsLeft?.count, statsRight?.count)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="meanLabel"></strong></td>
                   <td>
                     ${stats.meanVal.toFixed(2)} <span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.meanVal.toFixed(2)} <span data-localize="ms"></span>`)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.meanVal.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
-                  <td><strong data-localize="modeLabel"></strong></td>
+                  <td><strong data-localize="statisticalModeLabel"></strong></td>
                   <td>
                     ${stats.modeVal ? stats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.modeVal ? handStats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>`)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.modeVal ? handStats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="stdevLabel"></strong></td>
                   <td>
                     ${stats.stdevVal.toFixed(2)} <span data-localize="ms"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.stdevVal.toFixed(2)} <span data-localize="ms"></span>`)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.stdevVal.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="cvLabel"></strong></td>
                   <td>
                     ${stats.cvVal.toFixed(2)}%
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => handStats.cvVal.toFixed(2))}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => handStats.cvVal.toFixed(2))}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="entropyLabel"></strong></td>
                   <td>
                     ${stats.entropyVal.toFixed(3)} <span data-localize="bits"></span>
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, showHandBreakdown, (handStats) => `${handStats.entropyVal.toFixed(3)} <span data-localize="bits"></span>`)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.entropyVal.toFixed(3)} <span data-localize="bits"></span>`)}
                   </td>
                 </tr>
                 <tr class="text-center">
@@ -229,6 +261,7 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td><strong data-localize="p97Label"></strong></td>
                   <td>${stats.p97Val.toFixed(2)} <span data-localize="ms"></span></td>
                 </tr>
+                ${isFeedbackSession ? feedbackStatsRowsHtml(trials) : ""}
               </tbody>
             </table>
           </div>
@@ -249,17 +282,17 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td><strong data-localize="statErrorsTotal"></strong></td>
                   <td>
                     ${stats.errorCount}
-                    ${handBreakdownValueHtml(statsLeft.errorCount, statsRight.errorCount, showHandBreakdown)}
+                    ${handBreakdownValueHtml(statsLeft?.errorCount, statsRight?.errorCount)}
                   </td>
                 </tr>
                 <tr class="text-center">
                   <td><strong data-localize="statErrorsPercentage"></strong></td>
                   <td>
                     ${stats.errorPercentage.toFixed(2)}%
-                    ${handBreakdownValueHtml(statsLeft.errorPercentage, statsRight.errorPercentage, showHandBreakdown, (value) => `${value.toFixed(2)}%`)}
+                    ${handBreakdownValueHtml(statsLeft?.errorPercentage, statsRight?.errorPercentage, (value) => `${value.toFixed(2)}%`)}
                   </td>
                 </tr>
-                ${errorBreakdownRowsHtml(multiHandStats, showHandBreakdown)}
+                ${errorBreakdownRowsHtml(stats, multiHandStats)}
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalLevel"></strong></td>
                   <td>${formatStatistic(stats.calculateFunctionalLevel())} <span data-localize="au"></td>
@@ -287,17 +320,46 @@ function testCardHTML(index: number, test: TestRecord): string {
   `;
 }
 
-function errorBreakdownRowsHtml(multiHandStats: MultiHandReactionTimeStats, showHandBreakdown: boolean): string {
+/**
+ * Feedback-only per-test rows: minimum exposure reached, when it was reached,
+ * and how many stimuli carried an exposure stamp. Hidden for optimal sessions.
+ */
+function feedbackStatsRowsHtml(trials: TestRecord["trials"]): string {
+  const summary = summarizeExposure(trials);
+  if (!summary) return "";
+
+  return `
+    <tr class="text-center">
+      <td><strong data-localize="statMinExposure"></strong></td>
+      <td>${summary.minExposureMs} <span data-localize="ms"></span></td>
+    </tr>
+    <tr class="text-center">
+      <td><strong data-localize="statMinExposureTrial"></strong></td>
+      <td>#${summary.reachedAfterTrial}</td>
+    </tr>
+    <tr class="text-center">
+      <td><strong data-localize="statStimuliProcessed"></strong></td>
+      <td>${summary.processedCount}</td>
+    </tr>`;
+}
+
+function filteredCountHtml(filteredCount: number): string {
+  return filteredCount > 0
+    ? ` <span class="text-error" title="Filtered reactions">(${filteredCount})</span>`
+    : "";
+}
+
+function errorBreakdownRowsHtml(stats: ReactionTimeStats, multiHandStats: MultiHandReactionTimeStats | null): string {
   return OUTCOME_BREAKDOWN.map((outcome: OutcomeBreakdown) => {
-    const leftCount = multiHandStats.left.outcomeCountsByOutcome[outcome];
-    const rightCount = multiHandStats.right.outcomeCountsByOutcome[outcome];
+    const leftCount = multiHandStats?.left.outcomeCountsByOutcome[outcome];
+    const rightCount = multiHandStats?.right.outcomeCountsByOutcome[outcome];
 
     return `
       <tr class="text-center">
         <td><strong data-localize="${getTrialOutcomeLocalizationKey(outcome)}"></strong></td>
         <td>
-          <div>${multiHandStats.total.outcomeCountsByOutcome[outcome]}</div>
-          ${handBreakdownValueHtml(leftCount, rightCount, showHandBreakdown)}
+          <div>${stats.outcomeCountsByOutcome[outcome]}</div>
+          ${handBreakdownValueHtml(leftCount, rightCount)}
         </td>
       </tr>
     `;
@@ -305,12 +367,11 @@ function errorBreakdownRowsHtml(multiHandStats: MultiHandReactionTimeStats, show
 }
 
 function handBreakdownValueHtml(
-  leftValue: number,
-  rightValue: number,
-  showHandBreakdown: boolean,
+  leftValue: number | undefined,
+  rightValue: number | undefined,
   formatValue: (value: number) => string = (value) => value.toString()
 ): string {
-  if (!showHandBreakdown || (leftValue === 0 && rightValue === 0)) return "";
+  if (leftValue === undefined || rightValue === undefined || (leftValue === 0 && rightValue === 0)) return "";
 
   return `
     <div class="text-xs opacity-70">
@@ -322,12 +383,11 @@ function handBreakdownValueHtml(
 }
 
 function handBreakdownStatsValueHtml(
-  leftStats: ReactionTimeStats,
-  rightStats: ReactionTimeStats,
-  showHandBreakdown: boolean,
+  leftStats: ReactionTimeStats | undefined,
+  rightStats: ReactionTimeStats | undefined,
   formatValue: (stats: ReactionTimeStats) => string
 ): string {
-  if (!showHandBreakdown || (leftStats.count === 0 && rightStats.count === 0)) return "";
+  if (!leftStats || !rightStats || (leftStats.count === 0 && rightStats.count === 0)) return "";
 
   return `
     <div class="text-xs opacity-70">
@@ -385,7 +445,12 @@ function getTestTypeLocalizationKey(testType: string): string {
 function renderHistograms(tests: TestRecord[]): Chart[] {
   const charts: Chart[] = [];
   tests.forEach((test, index) => {
-    const stats = new ReactionTimeStats(test.trials, test.testSettings.exposureTime);
+    // Match the stats table's cleaning bound (feedback late answers exceed the
+    // fixed exposure legitimately).
+    const upperBound = isFeedback(test.testSettings)
+      ? feedbackTuning(test.testSettings).maxExposure + feedbackTuning(test.testSettings).pause
+      : test.testSettings.exposureTime;
+    const stats = new ReactionTimeStats(test.trials, upperBound);
     const canvasId = `histogram-${index}`;
     const chart = stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
     charts.push(chart);

@@ -4,12 +4,14 @@ import katex from 'katex';
 import {WORD_SEQUENCE_EN, WORD_SEQUENCE_UA} from "../domain/stimulus-sequences.ts";
 import {getRepresentativeWord, type WordCategory} from "../components/Words.ts";
 
-export function updateLanguageUI(): void {
+export function updateLanguageUI(root: ParentNode = document): void {
   const currentLanguage = LanguageManager.getCurrentLanguage();
-  document.documentElement.lang = currentLanguage;
-  document.title = localize('appTitle');
+  if (root === document) {
+    document.documentElement.lang = currentLanguage;
+    document.title = localize('appTitle');
+  }
 
-  const localizableElements = document.querySelectorAll<HTMLElement>("[data-localize]");
+  const localizableElements = root.querySelectorAll<HTMLElement>("[data-localize]");
   localizableElements.forEach((element) => {
     const key = element.dataset.localize!;
     const textContent = localize(key);
@@ -21,24 +23,29 @@ export function updateLanguageUI(): void {
     }
   });
 
-  const htmlLocalizableElements = document.querySelectorAll<HTMLElement>("[data-localize-html]");
+  const htmlLocalizableElements = root.querySelectorAll<HTMLElement>("[data-localize-html]");
   htmlLocalizableElements.forEach((element) => {
     const key = element.dataset.localizeHtml!;
     element.innerHTML = localize(key);
   });
 
-  const wordCategoryElements = document.querySelectorAll<HTMLElement>("[data-localize-word-category]");
+  const instructionElements = root.querySelectorAll<HTMLElement>("[data-instruction-task][data-instruction-protocol]");
+  instructionElements.forEach((element) => {
+    element.innerHTML = `${localize(element.dataset.instructionTask!)}${localize(element.dataset.instructionProtocol!)}`;
+  });
+
+  const wordCategoryElements = root.querySelectorAll<HTMLElement>("[data-localize-word-category]");
   wordCategoryElements.forEach((element) => {
     const category = element.dataset.localizeWordCategory! as WordCategory;
     element.textContent = getRepresentativeWord(getLocalizedVar("randomWords"), category);
   });
 
-  const ariaLocalizableElements = document.querySelectorAll<HTMLElement>('[data-localize-aria]');
+  const ariaLocalizableElements = root.querySelectorAll<HTMLElement>('[data-localize-aria]');
   ariaLocalizableElements.forEach((element) => {
     element.setAttribute('aria-label', localize(element.dataset.localizeAria!));
   });
 
-  const mathElements = document.querySelectorAll<HTMLElement>("[data-localize-math]");
+  const mathElements = root.querySelectorAll<HTMLElement>("[data-localize-math]");
   mathElements.forEach((element) => {
     const key = element.dataset.localizeMath!;
     const latexString = localize(key);
@@ -66,6 +73,35 @@ export function localize(key: string): string {
 }
 
 const localization: LocalizationKeys = {
+  protocolLabel: {en: "Protocol", uk: "Протокол"},
+  regimeLabel: {en: "Regime", uk: "Режим"},
+  submodeLabel: {en: "Submode", uk: "Підрежим"},
+  stimulusTypeLabel: {en: "Stimulus type", uk: "Вид подразника"},
+  genderLabel: {en: "Gender", uk: "Стать"},
+  optimalProtocol: {en: "Optimal protocol", uk: "Оптимальний протокол"},
+  feedbackProtocol: {en: "Feedback protocol", uk: "Протокол зворотного зв’язку"},
+  feedbackInitialExposure: {en: "Initial exposure", uk: "Початкова експозиція"},
+  feedbackAdjustmentStep: {en: "Adjustment step", uk: "Крок зміни"},
+  feedbackMinExposure: {en: "Minimum exposure", uk: "Мінімальна експозиція"},
+  feedbackMaxExposure: {en: "Maximum exposure", uk: "Максимальна експозиція"},
+  feedbackPause: {en: "Pause between stimuli", uk: "Пауза між подразниками"},
+  feedbackDuration: {en: "Test duration", uk: "Тривалість тесту"},
+  testSettingsTitle: {en: "Test settings", uk: "Налаштування тесту"},
+  instructionTitle: {en: "Preview and instruction", uk: "Попередній перегляд та інструкція"},
+  previewPauseState: {en: "pause", uk: "пауза"},
+  previewStimulusState: {en: "stimulus", uk: "подразник"},
+  previewIgnore: {en: "ignore", uk: "ігнорувати"},
+  previewAdaptationState: {en: "adapt", uk: "адаптація"},
+  statMinExposure: {en: "Minimum exposure reached", uk: "Досягнута мінімальна експозиція"},
+  statMinExposureTrial: {en: "Minimum exposure reached after trial", uk: "Мінімальної експозиції досягнуто після спроби"},
+  statStimuliProcessed: {en: "Stimuli processed", uk: "Опрацьовано подразників"},
+  exposureCurveTitle: {en: "Exposure dynamics", uk: "Динаміка експозиції"},
+  units: {en: "pcs", uk: "од."},
+  exposureDelayMinLabel: {en: "Minimum exposure delay", uk: "Мінімальна затримка експозиції"},
+  exposureDelayMaxLabel: {en: "Maximum exposure delay", uk: "Максимальна затримка експозиції"},
+  feedbackMobility: {en: "Functional mobility", uk: "Функціональна рухливість"},
+  feedbackStrength: {en: "Nervous process strength", uk: "Сила нервових процесів"},
+  optimalMode: {en: "Fixed exposure", uk: "Фіксована експозиція"},
   languageSelector: {en: "Language", uk: "Мова"},
   languageEN: {en: "EN", uk: "АНГЛ."}, // Localized label for "EN"
   languageUA: {en: "UA", uk: "УКР."},  // Localized label for "UA"
@@ -102,6 +138,9 @@ const localization: LocalizationKeys = {
   surnameLabel: {en: "Last Name", uk: "Прізвище"},
   ageLabel: {en: "Age", uk: "Вік"},
   selectGender: {en: "Gender", uk: "Стать"},
+  allowedRangeHint: {en: "Allowed range:", uk: "Допустимий діапазон:"},
+  delayMinExceedsMaxError: {en: "Minimum delay cannot exceed maximum delay", uk: "Мінімальна затримка не може перевищувати максимальну"},
+  exposureMinExceedsMaxError: {en: "Minimum exposure cannot exceed maximum exposure", uk: "Мінімальна експозиція не може перевищувати максимальну"},
   male: {en: "Male", uk: "Чоловіча"},
   female: {en: "Female", uk: "Жіноча"},
   savedTestsBtnLabel: {en: "Saved Tests", uk: "Збережені Тести"},
@@ -133,23 +172,14 @@ const localization: LocalizationKeys = {
   au: {en: "arb. u.", uk: "ум. од."},
 
   // Test mode
-  testModeLabel: {en: "Test Mode", uk: "Вид Подразника"},
+  testModeLabel: {en: "Test Mode", uk: "Вид подразника"},
   shapesOption: {en: "🔴 Geometrical Shapes", uk: "🔴 Геометричні Фігури"},
-  shapeSizeSliderLabel: {en: "Shape Size", uk: "Розмір фігури"},
   wordsOption: {en: "🔤 Words", uk: "🔤 Слова"},
-  wordSizeSliderLabel: {en: "Word Size", uk: "Розмір слова"},
-  wordPreviewWord: {en: "Lion", uk: "Лев"},
   colorsOption: {en: "🎨 Colors", uk: "🎨 Кольори"},
-  colorsSizeSliderLabel: {en: "Colored Rectangle Size", uk: "Розмір кольорового прямокутника"},
   combinedOption: {en: "🔀 Combined Stimuli", uk: "🔀 Комбіновані Стимули"},
-  combinedSizeSliderLabel: {en: "Combined Stimuli Size", uk: "Розмір комбінованих стимулів"},
-
-  fontSizeSliderLabel: {en: "Font Size", uk: "Розмір шрифту"},
 
   // Test settings
   exposureTimeLabel: {en: "Stimulus Exposure", uk: "Експозиція подразника"},
-  exposureDelayLabel: {en: "Stimulus Exposure Delay", uk: "Затримка експозиції"},
-  exposureDelayHint: {en: "Delay is picked randomly between min and max.", uk: "З цього діапазону випадково обирається затримка."},
   stimulusCountLabel: {en: "Number of Stimuli", uk: "Кількість подразників"},
 
   // Footer
@@ -157,7 +187,6 @@ const localization: LocalizationKeys = {
   startTest: {en: "Start Test", uk: "Розпочати Тест"},
   back: {en: "Back", uk: "Назад"},
   next: {en: "Next", uk: "Далі"},
-  saveAndStart: {en: "Save & Start", uk: "Зберегти та Розпочати Тест"},
   exportData: {en: "Export Data", uk: "Експорт Даних"},
   exportAllData: {en: "Export All Users Data", uk: "Експорт Даних Всіх Користувачів"},
   importAllData: {en: "Import Data", uk: "Імпорт Даних"},
@@ -176,42 +205,50 @@ const localization: LocalizationKeys = {
 
   // Test instructions | modes -> "shapes" | "words" | "colors" | "combined"
   instructionSvmr: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when <b>ANY</b> stimulus appears on the screen.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли на екрані з'явиться <b>БУДЬ-ЯКИЙ</b> подразник."
+    en: "<p>When <b>any stimulus</b> appears on the screen, press <kbd class='kbd'>Space</kbd> as quickly as possible.</p>",
+    uk: "<p>Коли на екрані з'являється <b>будь-який подразник</b>, якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>.</p>"
+  },
+  instructionOptimal: {
+    en: "<p>Respond as quickly and accurately as possible. If you make a mistake or miss a stimulus, do not stop; refocus and continue following the rules.</p><p>Continue until the <b>TEST FINISHED</b> message appears.</p>",
+    uk: "<p>Відповідайте якомога швидше й точніше. Якщо Ви помилилися або пропустили подразник, не зупиняйтеся: зосередьтеся та продовжуйте виконувати завдання за правилами.</p><p>Виконуйте тест до появи напису <b>ТЕСТ ЗАВЕРШЕНО</b>.</p>"
+  },
+  instructionFeedback: {
+    en: "<p>After a correct response, the next stimulus is presented <b>faster</b>; after an error, it is presented <b>slower</b>. Your goal is to reach the highest presentation speed you can and maintain it for as long as possible.</p><p>A response given shortly after a stimulus disappears is still counted as correct and is not treated as an error. If you make a mistake or miss a stimulus, do not stop; refocus and continue following the rules.</p><p>Continue until the <b>TEST FINISHED</b> message appears.</p>",
+    uk: "<p>Після правильної відповіді наступний подразник подається <b>швидше</b>, а після помилки — <b>повільніше</b>. Ваше завдання — вийти на максимально можливу швидкість подачі подразників і утримувати її якомога довше.</p><p>Відповідь, надана невдовзі після зникнення подразника, також зараховується як правильна й не вважається помилкою. Якщо Ви помилилися або пропустили подразник, не зупиняйтеся: зосередьтеся та продовжуйте виконувати завдання за правилами.</p><p>Виконуйте тест до появи напису <b>ТЕСТ ЗАВЕРШЕНО</b>.</p>"
   },
   // en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a target stimulus (Red, Square, or Animal) appears. Ignore other stimuli.",
   // uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (Червоний, Квадрат або Тварина). Ігноруйте інші подразники."
   instructionCRT13_shapes: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a <b>Square</b> appears. Ignore other stimuli.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Квадрат</b>. Ігноруйте інші подразники."
+    en: "<p>When a <b>square</b> appears, press <kbd class='kbd'>Space</kbd> as quickly as possible. Do not press anything for a circle or triangle.</p>",
+    uk: "<p>Коли з'являється <b>квадрат</b>, якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>. Коли з'являється коло або трикутник, нічого не натискайте.</p>"
   },
   instructionCRT13_words: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when an <b>Animal</b> appears. Ignore other stimuli.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Тварина</b>. Ігноруйте інші подразники."
+    en: "<p>When an <b>animal</b> word appears, press <kbd class='kbd'>Space</kbd> as quickly as possible. Do not press anything for plant or non-living-object words.</p>",
+    uk: "<p>Коли з'являється слово, що позначає <b>тварину</b>, якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>. Для слів, що позначають рослини або неживі предмети, нічого не натискайте.</p>"
   },
   instructionCRT13_colors: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a <b>Red</b> appears. Ignore other stimuli.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться <b>Червоний</b>. Ігноруйте інші подразники."
+    en: "<p>When a <b>red</b> stimulus appears, press <kbd class='kbd'>Space</kbd> as quickly as possible. Do not press anything for green or yellow stimuli.</p>",
+    uk: "<p>Коли з'являється <b>червоний</b> подразник, якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>. Для зелених і жовтих подразників нічого не натискайте.</p>"
   },
   instructionCRT13_combined: {
-    en: "Press the <kbd class='kbd'>Space</kbd> key as quickly as possible when a target stimulus (Red, Square, or Animal) appears. Ignore other stimuli.",
-    uk: "Натискайте клавішу <kbd class='kbd'>Пробіл</kbd> якнайшвидше, коли з'явиться цільовий подразник (<b>Червоний, Квадрат або Тварина</b>). Ігноруйте інші подразники."
+    en: "<p>Press <kbd class='kbd'>Space</kbd> as quickly as possible when the stimulus is <b>red, a square, or an animal word</b>. Do not press anything when it is green, a circle, or a plant word, or when it is yellow, a triangle, or a non-living-object word.</p>",
+    uk: "<p>Якнайшвидше натискайте клавішу <kbd class='kbd'>Пробіл</kbd>, якщо подразник є <b>червоним, квадратом або словом, що позначає тварину</b>. Нічого не натискайте, якщо це зелений колір, коло чи слово-назва рослини або жовтий колір, трикутник чи слово-назва неживого предмета.</p>"
   },
   instructionCRT23_shapes: {
-    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Circle</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Square</b>. Ignore <b>Triangle</b>.",
-    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Кола</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Квадрата</b>. Ігноруйте <b>Трикутник</b>."
+    en: "<p>For a <b>circle</b>, press a left-hand key (<kbd class='kbd'>←</kbd>, left <kbd class='kbd'>Shift</kbd>, or left <kbd class='kbd'>Ctrl</kbd>). For a <b>square</b>, press a right-hand key (<kbd class='kbd'>→</kbd>, right <kbd class='kbd'>Shift</kbd>, or right <kbd class='kbd'>Ctrl</kbd>). Press as quickly as possible. For a <b>triangle</b>, do not press anything.</p>",
+    uk: "<p>Для <b>кола</b> натискайте клавішу лівою рукою: <kbd class='kbd'>←</kbd>, ліву <kbd class='kbd'>Shift</kbd> або ліву <kbd class='kbd'>Ctrl</kbd>. Для <b>квадрата</b> натискайте клавішу правою рукою: <kbd class='kbd'>→</kbd>, праву <kbd class='kbd'>Shift</kbd> або праву <kbd class='kbd'>Ctrl</kbd>. Реагуйте якнайшвидше. Для <b>трикутника</b> нічого не натискайте.</p>"
   },
   instructionCRT23_words: {
-    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Plant</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Animal</b>. Ignore <b>Non-living thing</b>.",
-    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Рослини</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Тварини</b>. Ігноруйте <b>Неживі предмети</b>."
+    en: "<p>For a <b>plant</b> word, press a left-hand key (<kbd class='kbd'>←</kbd>, left <kbd class='kbd'>Shift</kbd>, or left <kbd class='kbd'>Ctrl</kbd>). For an <b>animal</b> word, press a right-hand key (<kbd class='kbd'>→</kbd>, right <kbd class='kbd'>Shift</kbd>, or right <kbd class='kbd'>Ctrl</kbd>). Press as quickly as possible. For a <b>non-living-object</b> word, do not press anything.</p>",
+    uk: "<p>Для слова, що позначає <b>рослину</b>, натискайте клавішу лівою рукою: <kbd class='kbd'>←</kbd>, ліву <kbd class='kbd'>Shift</kbd> або ліву <kbd class='kbd'>Ctrl</kbd>. Для слова, що позначає <b>тварину</b>, натискайте клавішу правою рукою: <kbd class='kbd'>→</kbd>, праву <kbd class='kbd'>Shift</kbd> або праву <kbd class='kbd'>Ctrl</kbd>. Реагуйте якнайшвидше. Для слова, що позначає <b>неживий предмет</b>, нічого не натискайте.</p>"
   },
   instructionCRT23_colors: {
-    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red</b>. Ignore <b>Yellow</b>.",
-    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного</b>. Ігноруйте <b>Жовтий</b>."
+    en: "<p>For a <b>green</b> stimulus, press a left-hand key (<kbd class='kbd'>←</kbd>, left <kbd class='kbd'>Shift</kbd>, or left <kbd class='kbd'>Ctrl</kbd>). For a <b>red</b> stimulus, press a right-hand key (<kbd class='kbd'>→</kbd>, right <kbd class='kbd'>Shift</kbd>, or right <kbd class='kbd'>Ctrl</kbd>). Press as quickly as possible. For a <b>yellow</b> stimulus, do not press anything.</p>",
+    uk: "<p>Для <b>зеленого</b> подразника натискайте клавішу лівою рукою: <kbd class='kbd'>←</kbd>, ліву <kbd class='kbd'>Shift</kbd> або ліву <kbd class='kbd'>Ctrl</kbd>. Для <b>червоного</b> подразника натискайте клавішу правою рукою: <kbd class='kbd'>→</kbd>, праву <kbd class='kbd'>Shift</kbd> або праву <kbd class='kbd'>Ctrl</kbd>. Реагуйте якнайшвидше. Для <b>жовтого</b> подразника нічого не натискайте.</p>"
   },
   instructionCRT23_combined: {
-    en: "Press <b>Left</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Green/Circle/Plant</b>, <b>Right</b> (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) for <b>Red/Square/Animal</b>. Ignore <b>Yellow/Triangle/Non-living</b>.",
-    uk: "Натискайте <b>Ліві</b> (<kbd class='kbd'>←</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Зеленого/Кола/Рослини</b>, <b>Праві</b> клавіші (<kbd class='kbd'>→</kbd>, <kbd class='kbd'>Shift</kbd>, <kbd class='kbd'>Ctrl</kbd>) для <b>Червоного/Квадрата/Тварини</b>. Ігноруйте <b>Жовтий/Трикутник/Неживе</b>."
+    en: "<p>For <b>green, a circle, or a plant word</b>, press a left-hand key (<kbd class='kbd'>←</kbd>, left <kbd class='kbd'>Shift</kbd>, or left <kbd class='kbd'>Ctrl</kbd>). For <b>red, a square, or an animal word</b>, press a right-hand key (<kbd class='kbd'>→</kbd>, right <kbd class='kbd'>Shift</kbd>, or right <kbd class='kbd'>Ctrl</kbd>). Press as quickly as possible. For <b>yellow, a triangle, or a non-living-object word</b>, do not press anything.</p>",
+    uk: "<p>Для <b>зеленого кольору, кола або слова-назви рослини</b> натискайте клавішу лівою рукою: <kbd class='kbd'>←</kbd>, ліву <kbd class='kbd'>Shift</kbd> або ліву <kbd class='kbd'>Ctrl</kbd>. Для <b>червоного кольору, квадрата або слова-назви тварини</b> натискайте клавішу правою рукою: <kbd class='kbd'>→</kbd>, праву <kbd class='kbd'>Shift</kbd> або праву <kbd class='kbd'>Ctrl</kbd>. Реагуйте якнайшвидше. Для <b>жовтого кольору, трикутника або слова-назви неживого предмета</b> нічого не натискайте.</p>"
   },
 
   // Biological Age calculator
@@ -286,6 +323,7 @@ const localization: LocalizationKeys = {
   appContextSummaryExposureTime: {en: "Exposure Time", uk: "Експозиція подразника"},
   appContextSummaryExposureDelay: {en: "Exposure Delay", uk: "Затримка експозиції"},
   appContextSummaryStimulusCount: {en: "Stimulus Count", uk: "Кількість подразників"},
+  durationLabel: {en: "Duration", uk: "Тривалість"},
   appContextSummaryTestType: {en: "Test Type", uk: "Тип тестування"},
 
   // test screen
@@ -319,8 +357,7 @@ const localization: LocalizationKeys = {
   frequencyDistributionTitle: {en: "Frequency Distribution", uk: "Частотний Розподіл"},
   statLeftHand: {en: "Left Hand", uk: "Ліва рука"},
   statRightHand: {en: "Right Hand", uk: "Права рука"},
-  statTotal: {en: "Total", uk: "Всього"},
-  dontSaveAndQuit: {en: "Don't Save and Quite", uk: "Не зберігати"},
+  dontSaveAndQuit: {en: "Don't Save and Quit", uk: "Не зберігати"},
   saveResults: {en: "Save", uk: "Зберегти"},
 
   statFunctionalLevel: {en: "SFL", uk: "ФРС"},
@@ -328,8 +365,6 @@ const localization: LocalizationKeys = {
   statFunctionalCapabilities: {en: "FCL", uk: "РФМ"},
   statErrorsTotal: {en: "Errors Total", uk: "Помилок Всього"},
   statErrorsPercentage: {en: "Error Rate", uk: "Частота Помилок"},
-  errorTypesTitle: {en: "Error Types", uk: "Типи помилок"},
-  errorTypeLabel: {en: "Error Type", uk: "Тип помилки"},
   trialOutcomeMiss: {en: "Miss", uk: "Пропуск"},
   trialOutcomeFalseAlarm: {en: "False Alarm", uk: "Хибна реакція"},
   trialOutcomeFalseStart: {en: "False Start", uk: "Передчасна реакція"},
@@ -338,22 +373,19 @@ const localization: LocalizationKeys = {
   statCount: {en: "Count 🧮", uk: "Кількість 🧮"},
   statMean: {en: "μ Mean", uk: "μ Мат. сподівання"},
   statMode: {en: "Mo Mode", uk: "Mo Мода"},
-  statVariance: {en: "σ² Variance", uk: "σ² Дисперсія"},
   statStdDev: {en: "σ Std Dev", uk: "σ Сер. Квадр. Відхилення"},
   statCV: {en: "Coefficient of Variation", uk: "Коефіцієнт Варіації"},
   statEntropy: {en: "Shannon Entropy", uk: "Ентропія Шеннона"},
   bits: {en: "bits", uk: "біти"},
-  statRange: {en: "↕ Range", uk: "↕ Розмах"},
-  statP3: {en: "↗ p3", uk: "↗ p3"},
-  statP10: {en: "↗ p10", uk: "↗ p10"},
-  statP25: {en: "↗ p25", uk: "↗ p25"},
   statP50: {en: "↗ p50", uk: "↗ p50"},
-  statP75: {en: "↗ p75", uk: "↗ p75"},
   statP90: {en: "↗ p90", uk: "↗ p90"},
-  statP97: {en: "↗ p97", uk: "↗ p97"},
 
   usePregeneratedDelay: {en: "Use pregenerated exposure delays", uk: "Використовувати заздалегідь визначені затримки експозиції"},
+  usePregeneratedDelayHint: {en: "Reuses the same delay order for every run.", uk: "Повторно використовує однаковий (табличний) порядок затримок для кожного запуску."},
+  pregeneratedDelayActive: {en: "Using pregenerated delays", uk: "Використовуються заздалегідь визначені затримки"},
   usePregeneratedStimuli: {en: "Use pregenerated stimulus sequence", uk: "Використовувати заздалегідь визначену послідовність стимулів"},
+  usePregeneratedStimuliHint: {en: "Reuses the same stimulus order for every run.", uk: "Повторно використовує однаковий (табличний) порядок стимулів для кожного запуску."},
+  pregeneratedLabel: {en: "pregenerated", uk: "попередньо визначені"},
 
   binMs: {en: "Bin (ms)", uk: "Інтервали (мс)"},
   frequency: {en: "Frequency", uk: "Частота"},
@@ -367,20 +399,14 @@ const localization: LocalizationKeys = {
   valueLabel: {en: "Value", uk: "Значення"},
   countLabel: {en: "Count", uk: "Кількість"},
   meanLabel: {en: "Mean", uk: "Середнє"},
-  modeLabel: {en: "Mode", uk: "Мода"},
+  statisticalModeLabel: {en: "Mode", uk: "Мода"},
   stdevLabel: {en: "Std. Deviation", uk: "Стандартне Відхилення"},
   cvLabel: {en: "Coefficient of Variation", uk: "Коефіцієнт Варіації"},
   entropyLabel: {en: "Shannon Entropy", uk: "Ентропія Шеннона"},
-  minLabel: {en: "Min", uk: "Мінімум"},
-  maxLabel: {en: "Max", uk: "Максимум"},
-  stimulusSizeLabel: {en: "Stimulus Size", uk: "Розмір Подразника"},
-  exposureDelayMinMaxLabel: {en: "Exposure Delay (min-max)", uk: "Затримка Експозиції (мін-макс)"},
-  testTypeLabel: {en: "Test Type", uk: "Тип Тесту"},
-  p3Label: {en: "P3", uk: "П3"},
-  p10Label: {en: "P10", uk: "П10"},
-  p25Label: {en: "P25", uk: "П25"},
+  stimulusSizeLabel: {en: "Stimulus Size", uk: "Розмір подразника"},
+  exposureDelayMinMaxLabel: {en: "Exposure Delay (min-max)", uk: "Затримка експозиції (мін-макс)"},
+  testTypeLabel: {en: "Test Type", uk: "Тип тесту"},
   medianLabel: {en: "P50 (Median)", uk: "П50 (Медіана)"},
-  p75Label: {en: "P75", uk: "П75"},
   p90Label: {en: "P90", uk: "П90"},
   p97Label: {en: "P97", uk: "П97"},
   backToMainPage: {en: "Back to Main Page", uk: "На головну"},

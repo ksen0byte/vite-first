@@ -16,7 +16,7 @@ export function setupSpamWarningScreen(appContainer: HTMLElement): void {
       },
       {
         buttonFn: () => document.getElementById("spam-warning-retry-btn")! as HTMLButtonElement,
-        callback: () => Router.navigate("/testTypeSelection"),
+        callback: () => Router.navigate("/settings"),
       }
     ]
   );
