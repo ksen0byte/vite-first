@@ -38,7 +38,7 @@ export function setupResultsScreen(
   const rtUpperBound = isFeedbackSession
     ? feedbackTuning(testSettings).maxExposure + feedbackTuning(testSettings).pause
     : testSettings.exposureTime;
-  const multiHandStats = new MultiHandReactionTimeStats(trialResults, rtUpperBound, 100, "Current test results");
+  const multiHandStats = new MultiHandReactionTimeStats(trialResults, rtUpperBound, 100, "Current test results", testType);
   const reactionTimeStats = multiHandStats.total;
   const showHandBreakdown = testType === "crt2-3";
   const errorBreakdownStats = errorBreakdownStatsHtml(multiHandStats, showHandBreakdown);
@@ -119,6 +119,19 @@ export function setupResultsScreen(
             formatMotorComponentText(stats)
           )}
         </div>
+
+        <!-- Sensory Component (SVMR only) -->
+        ${testType === "svmr" ? `
+        <div class="stat place-items-center">
+          <div class="stat-title text-base flex items-center justify-center gap-1">
+            <span data-localize="sensoryComponentLabel">Sensory Component</span>
+            <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="sensoryComponentHelp" data-tip="${localize('sensoryComponentHelp')}">(?)</span>
+          </div>
+          <div class="stat-value text-lg">
+            ${formatSensoryComponentHtml(reactionTimeStats)}
+          </div>
+        </div>
+        ` : ""}
 
       </div>
 
@@ -225,6 +238,19 @@ function formatMotorComponentText(stats: ReactionTimeStats): string {
     return localize("noValidMotorData");
   }
   return `${stats.motorComponent.meanMs.toFixed(2)} ${localize("ms")}`;
+}
+
+function formatSensoryComponentHtml(stats: ReactionTimeStats): string {
+  if (stats.sensoryComponent.kind === "NotRecorded") {
+    return `<span data-localize="notRecorded"></span>`;
+  }
+  if (stats.sensoryComponent.kind === "NoValidMotorData") {
+    return `<span data-localize="noValidMotorData"></span>`;
+  }
+  if (stats.sensoryComponent.kind === "NotApplicable") {
+    return `N/A`;
+  }
+  return `${stats.sensoryComponent.valueMs.toFixed(2)} <span data-localize="ms"></span>`;
 }
 
 /**

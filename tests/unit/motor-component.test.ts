@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import 'fake-indexeddb/auto';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {calculateMotorComponentStats} from '../../src/stats/ReactionTimeStats.ts';
+import {calculateMotorComponentStats, calculateSensoryComponentStats} from '../../src/stats/ReactionTimeStats.ts';
 import {setupProfileScreen} from '../../src/screens/user-profile-screen.ts';
 import {setupResultsScreen} from '../../src/screens/results-screen.ts';
 import {TestScreen} from '../../src/screens/test-screen.ts';
@@ -78,6 +78,32 @@ describe('Motor Component Calculation and Stats', () => {
     ];
     const result = calculateMotorComponentStats(trials);
     expect(result).toMatchObject({kind: 'Available', meanMs: 60, validCount: 1, totalRecorded: 5});
+  });
+});
+
+describe('Sensory Component Calculation', () => {
+  it('returns NotApplicable for non-svmr tests', () => {
+    const motorStats = {kind: 'Available' as const, meanMs: 50, validCount: 2, totalRecorded: 2};
+    expect(calculateSensoryComponentStats(250, motorStats, 'crt1-3')).toEqual({kind: 'NotApplicable'});
+    expect(calculateSensoryComponentStats(250, motorStats, 'crt2-3')).toEqual({kind: 'NotApplicable'});
+  });
+
+  it('returns NotRecorded when motor stats are NotRecorded', () => {
+    expect(calculateSensoryComponentStats(250, {kind: 'NotRecorded'}, 'svmr')).toEqual({kind: 'NotRecorded'});
+  });
+
+  it('returns NoValidMotorData when motor stats are NoValidSamples', () => {
+    expect(calculateSensoryComponentStats(250, {kind: 'NoValidSamples', totalRecorded: 2, successfulRecorded: 2}, 'svmr')).toEqual({
+      kind: 'NoValidMotorData',
+    });
+  });
+
+  it('calculates mean reaction time minus motor component for svmr', () => {
+    const motorStats = {kind: 'Available' as const, meanMs: 60, validCount: 3, totalRecorded: 3};
+    expect(calculateSensoryComponentStats(260, motorStats, 'svmr')).toEqual({
+      kind: 'Available',
+      valueMs: 200,
+    });
   });
 });
 
@@ -264,6 +290,101 @@ describe('User Profile and Results Screen Rendering', () => {
 
     const noValidSpans = container.querySelectorAll('[data-localize="noValidMotorData"]');
     expect(noValidSpans.length).toBeGreaterThan(0);
+  });
+
+  it('renders sensory component in user profile for SVMR tests, and hides it for non-SVMR', () => {
+    const svmrSettings: TestSettings = {
+      protocolMode: 'optimal',
+      testMode: 'shapes',
+      stimulusSize: 50,
+      exposureTime: 700,
+      exposureDelay: [500, 1900],
+      stimulusCount: 2,
+      testType: 'svmr',
+      hand: 'right',
+      usePregenerated: {exposureDelay: true, stimuli: true},
+    };
+
+    const svmrTest = {
+      id: 6,
+      userKey: 'Jane|Doe',
+      testSettings: svmrSettings,
+      trials: [
+        createTrial(0, 250, 'Success', 'DEFAULT', 'DEFAULT', 50),
+        createTrial(1, 350, 'Success', 'DEFAULT', 'DEFAULT', 70),
+      ],
+      date: new Date().toISOString(),
+    };
+
+    LanguageManager.setCurrentLanguage('uk');
+    setupProfileScreen(container, dummyUser, [svmrTest]);
+
+    // Mean = 300ms, Motor = 60ms -> Sensory = 240ms
+    expect(container.textContent).toContain('240.00');
+
+    const sensoryHelpTooltip = container.querySelector('[data-localize-tip="sensoryComponentHelp"]');
+    expect(sensoryHelpTooltip).not.toBeNull();
+    expect(sensoryHelpTooltip?.getAttribute('data-tip')).toContain('Час сенсорної обробки');
+
+    LanguageManager.setCurrentLanguage('en');
+    updateLanguageUI(container);
+    expect(sensoryHelpTooltip?.getAttribute('data-tip')).toContain('Sensory processing time');
+
+    // Test non-SVMR: crt1-3
+    const crtSettings: TestSettings = {
+      ...svmrSettings,
+      testType: 'crt1-3',
+    };
+    const crtTest = {
+      id: 7,
+      userKey: 'Jane|Doe',
+      testSettings: crtSettings,
+      trials: [createTrial(0, 250, 'Success', 'DEFAULT', 'DEFAULT', 50)],
+      date: new Date().toISOString(),
+    };
+
+    container.innerHTML = '';
+    setupProfileScreen(container, dummyUser, [crtTest]);
+    expect(container.querySelector('[data-localize-tip="sensoryComponentHelp"]')).toBeNull();
+  });
+
+  it('renders sensory component on Results screen for SVMR and hides for CRT', () => {
+    AppContextManager.setContext({
+      ...defaultAppContext,
+      testSettings: {
+        ...defaultAppContext.testSettings,
+        testType: 'svmr',
+      },
+    });
+
+    const svmrResults = new Map<number, TrialResult>([
+      [0, createTrial(0, 240, 'Success', 'DEFAULT', 'DEFAULT', 60)],
+      [1, createTrial(1, 360, 'Success', 'DEFAULT', 'DEFAULT', 80)],
+    ]);
+
+    setupResultsScreen(container, svmrResults);
+
+    // Mean = 300ms, Motor = 70ms -> Sensory = 230ms
+    const sensoryTitle = container.querySelector('[data-localize="sensoryComponentLabel"]');
+    expect(sensoryTitle).not.toBeNull();
+    expect(container.textContent).toContain('230.00');
+
+    const sensoryTip = container.querySelector('[data-localize-tip="sensoryComponentHelp"]');
+    expect(sensoryTip).not.toBeNull();
+    expect(sensoryTip?.getAttribute('data-tip')).toBeTruthy();
+
+    // Now test CRT on Results screen
+    AppContextManager.setContext({
+      ...defaultAppContext,
+      testSettings: {
+        ...defaultAppContext.testSettings,
+        testType: 'crt1-3',
+      },
+    });
+
+    container.innerHTML = '';
+    setupResultsScreen(container, svmrResults);
+    expect(container.querySelector('[data-localize="sensoryComponentLabel"]')).toBeNull();
   });
 });
 

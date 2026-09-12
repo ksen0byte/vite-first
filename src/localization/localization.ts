@@ -378,11 +378,17 @@ const localization: LocalizationKeys = {
   statFunctionalCapabilities: {en: "FCL", uk: "РФМ"},
   statMotorComponent: {en: "Motor Component", uk: "Моторний компонент"},
   motorComponentLabel: {en: "Motor Component", uk: "Моторний компонент"},
+  statSensoryComponent: {en: "Sensory Component", uk: "Сенсорний компонент"},
+  sensoryComponentLabel: {en: "Sensory Component", uk: "Сенсорний компонент"},
   notRecorded: {en: "Not recorded", uk: "Не зафіксовано"},
   noValidMotorData: {en: "No valid data (10–150 ms)", uk: "Немає валідних даних (10–150 мс)"},
   motorComponentHelp: {
     en: "Time between key press (keydown) and key release (keyup) during successful reactions (filtered to 10–150 ms)",
     uk: "Час між натисканням (keydown) та відпусканням (keyup) клавіші під час успішних реакцій (фільтрація 10–150 мс)"
+  },
+  sensoryComponentHelp: {
+    en: "Sensory processing time calculated as mean reaction time minus motor component (applicable to SVMR only)",
+    uk: "Час сенсорної обробки, розрахований як середній час реакції мінус моторний компонент (тільки для ПЗМР)"
   },
   statErrorsTotal: {en: "Errors Total", uk: "Помилок Всього"},
   statErrorsPercentage: {en: "Error Rate", uk: "Частота Помилок"},

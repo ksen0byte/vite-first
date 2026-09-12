@@ -122,9 +122,9 @@ function testCardHTML(index: number, test: TestRecord): string {
 
   const showHandBreakdown = testType === "crt2-3";
   const multiHandStats = showHandBreakdown
-    ? new MultiHandReactionTimeStats(trials, rtUpperBound, 100, statsDebugLabel)
+    ? new MultiHandReactionTimeStats(trials, rtUpperBound, 100, statsDebugLabel, testType)
     : null;
-  const stats = multiHandStats?.total ?? new ReactionTimeStats(trials, rtUpperBound, 100, statsDebugLabel);
+  const stats = multiHandStats?.total ?? new ReactionTimeStats(trials, rtUpperBound, 100, testType, statsDebugLabel);
   const statsRight = multiHandStats?.right;
   const statsLeft = multiHandStats?.left;
 
@@ -238,6 +238,18 @@ function testCardHTML(index: number, test: TestRecord): string {
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => formatMotorComponent(handStats))}
                   </td>
                 </tr>
+                ${testType === "svmr" ? `
+                <tr class="text-center">
+                  <td>
+                    <div class="inline-flex items-center justify-center gap-1">
+                      <strong data-localize="sensoryComponentLabel"></strong>
+                      <span class="tooltip tooltip-right cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="sensoryComponentHelp" data-tip="${localize('sensoryComponentHelp')}">(?)</span>
+                    </div>
+                  </td>
+                  <td>
+                    ${formatSensoryComponent(stats)}
+                  </td>
+                </tr>` : ""}
                 <tr class="text-center">
                   <td><strong data-localize="statisticalModeLabel"></strong></td>
                   <td>
@@ -376,6 +388,19 @@ function formatMotorComponent(stats: ReactionTimeStats): string {
   return `${stats.motorComponent.meanMs.toFixed(2)} <span data-localize="ms"></span>`;
 }
 
+function formatSensoryComponent(stats: ReactionTimeStats): string {
+  if (stats.sensoryComponent.kind === "NotRecorded") {
+    return `<span data-localize="notRecorded"></span>`;
+  }
+  if (stats.sensoryComponent.kind === "NoValidMotorData") {
+    return `<span data-localize="noValidMotorData"></span>`;
+  }
+  if (stats.sensoryComponent.kind === "NotApplicable") {
+    return `N/A`;
+  }
+  return `${stats.sensoryComponent.valueMs.toFixed(2)} <span data-localize="ms"></span>`;
+}
+
 function errorBreakdownRowsHtml(stats: ReactionTimeStats, multiHandStats: MultiHandReactionTimeStats | null): string {
   return OUTCOME_BREAKDOWN.map((outcome: OutcomeBreakdown) => {
     const leftCount = multiHandStats?.left.outcomeCountsByOutcome[outcome];
@@ -477,7 +502,7 @@ function renderHistograms(tests: TestRecord[]): Chart[] {
     const upperBound = isFeedback(test.testSettings)
       ? feedbackTuning(test.testSettings).maxExposure + feedbackTuning(test.testSettings).pause
       : test.testSettings.exposureTime;
-    const stats = new ReactionTimeStats(test.trials, upperBound);
+    const stats = new ReactionTimeStats(test.trials, upperBound, 100, test.testSettings.testType, undefined);
     const canvasId = `histogram-${test.id!}`;
     const chart = stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
     charts.push(chart);

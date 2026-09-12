@@ -3,7 +3,7 @@
 import Chart from "chart.js/auto";
 import {localize} from "../localization/localization.ts";
 import {cumulativeStdNormalProbability, mean, median, medianAbsoluteDeviation, quantile, standardDeviation} from "simple-statistics";
-import {TrialOutcome, TrialResult} from "../config/domain.ts";
+import {TestType, TrialOutcome, TrialResult} from "../config/domain.ts";
 import {MOTOR_COMPONENT_BOUNDS} from "../config/settings.ts";
 
 export interface FrequencyBin {
@@ -22,6 +22,12 @@ export type MotorComponentStats =
   | { readonly kind: "NotRecorded" }
   | { readonly kind: "NoValidSamples"; readonly totalRecorded: number; readonly successfulRecorded: number }
   | { readonly kind: "Available"; readonly meanMs: number; readonly validCount: number; readonly totalRecorded: number };
+
+export type SensoryComponentStats =
+  | { readonly kind: "NotApplicable" }
+  | { readonly kind: "NotRecorded" }
+  | { readonly kind: "NoValidMotorData" }
+  | { readonly kind: "Available"; readonly valueMs: number };
 
 export function calculateMotorComponentStats(
   trialResults: readonly TrialResult[],
@@ -57,6 +63,26 @@ export function calculateMotorComponentStats(
   };
 }
 
+export function calculateSensoryComponentStats(
+  meanReactionTimeMs: number,
+  motorStats: MotorComponentStats,
+  testType: TestType = "svmr",
+): SensoryComponentStats {
+  if (testType !== "svmr") {
+    return {kind: "NotApplicable"};
+  }
+  if (motorStats.kind === "NotRecorded") {
+    return {kind: "NotRecorded"};
+  }
+  if (motorStats.kind === "NoValidSamples") {
+    return {kind: "NoValidMotorData"};
+  }
+  return {
+    kind: "Available",
+    valueMs: meanReactionTimeMs - motorStats.meanMs,
+  };
+}
+
 export class ReactionTimeStats {
   private readonly data: number[];
   private readonly bins: FrequencyBin[];
@@ -72,6 +98,8 @@ export class ReactionTimeStats {
   public readonly motorComponent: MotorComponentStats;
   public readonly hasMotorComponentData: boolean;
   public readonly motorComponentVal: number | null;
+  public readonly sensoryComponent: SensoryComponentStats;
+  public readonly sensoryComponentVal: number | null;
 
   // For percentiles (p3, p10, p25, p50, p75, p90, p97):
   //  p50 will match medianVal above, but we’ll keep it for completeness
@@ -90,12 +118,16 @@ export class ReactionTimeStats {
 
   public readonly errorCount: number;
   public readonly errorPercentage: number;
-  public readonly outcomeCountsByOutcome: Record<OutcomeBreakdown, number>;
-
   /**
    * Create a new instance with the given array of reaction times.
    */
-  constructor(trialResults: TrialResult[], upperBound: number = 700, lowerBound: number = 100, debugLabel?: string) {
+  constructor(
+    trialResults: TrialResult[],
+    upperBound: number = 700,
+    lowerBound: number = 100,
+    testType: TestType,
+    debugLabel?: string,
+  ) {
     this.debugLabel = debugLabel;
     const successfulCount = trialResults.filter(trialResult => trialResult.outcome === "Success").length;
     // Step 1: Remove hard outliers based on fixed range
@@ -147,6 +179,9 @@ export class ReactionTimeStats {
     this.hasMotorComponentData = this.motorComponent.kind !== "NotRecorded";
     this.motorComponentVal = this.motorComponent.kind === "Available" ? this.motorComponent.meanMs : null;
 
+    this.sensoryComponent = calculateSensoryComponentStats(this.meanVal, this.motorComponent, testType);
+    this.sensoryComponentVal = this.sensoryComponent.kind === "Available" ? this.sensoryComponent.valueMs : null;
+
     this.outcomeCountsByOutcome = OUTCOME_BREAKDOWN.reduce<Record<OutcomeBreakdown, number>>((acc, outcome) => {
       acc[outcome] = trialResults.filter(t => t.outcome === outcome).length;
       return acc;
@@ -162,6 +197,8 @@ export class ReactionTimeStats {
     this.errorCount = errors.length;
     this.errorPercentage = trialResults.length > 0 ? (this.errorCount / trialResults.length) * 100 : 0;
   }
+
+  public readonly outcomeCountsByOutcome: Record<OutcomeBreakdown, number>;
 
   /**
    * Removes extreme outliers from a dataset using the Modified Z-Score method.
@@ -572,6 +609,18 @@ export class ReactionTimeStats {
     } else {
       motorStr = `${this.motorComponent.meanMs.toFixed(2)} ${localize("ms")}`;
     }
+
+    let sensoryStr: string;
+    if (this.sensoryComponent.kind === "NotRecorded") {
+      sensoryStr = localize("notRecorded");
+    } else if (this.sensoryComponent.kind === "NoValidMotorData") {
+      sensoryStr = localize("noValidMotorData");
+    } else if (this.sensoryComponent.kind === "NotApplicable") {
+      sensoryStr = "N/A";
+    } else {
+      sensoryStr = `${this.sensoryComponent.valueMs.toFixed(2)} ${localize("ms")}`;
+    }
+
     return [
       `${localize("countLabel")}: ${this.count}`,
       `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
@@ -580,6 +629,7 @@ export class ReactionTimeStats {
       `${localize("cvLabel")}: ${this.cvVal.toFixed(2)}%`,
       `${localize("entropyLabel")}: ${this.entropyVal.toFixed(3)} ${localize("bits")}`,
       `${localize("motorComponentLabel")}: ${motorStr}`,
+      `${localize("sensoryComponentLabel")}: ${sensoryStr}`,
       `${localize("statFunctionalLevel")}: ${formatUnavailable(this.calculateFunctionalLevel())}`,
       `${localize("statReactionStability")}: ${formatUnavailable(this.calculateReactionStability())}`,
       `${localize("statFunctionalCapabilities")}: ${formatUnavailable(this.calculateFunctionalCapabilities())}`,
@@ -594,18 +644,26 @@ export class MultiHandReactionTimeStats {
   public readonly left: ReactionTimeStats;
   public readonly right: ReactionTimeStats;
 
-  constructor(trialResults: TrialResult[], upperBound: number = 1000, lowerBound: number = 100, debugLabel?: string) {
-    this.total = new ReactionTimeStats(trialResults, upperBound, lowerBound, debugLabel ? `${debugLabel} / total` : undefined);
+  constructor(
+    trialResults: TrialResult[],
+    upperBound: number = 1000,
+    lowerBound: number = 100,
+    debugLabel?: string,
+    testType: TestType = "crt2-3",
+  ) {
+    this.total = new ReactionTimeStats(trialResults, upperBound, lowerBound, testType, debugLabel ? `${debugLabel} / total` : undefined);
     this.left = new ReactionTimeStats(
       trialResults.filter(t => t.expectedAction === "LEFT"),
       upperBound,
       lowerBound,
+      testType,
       debugLabel ? `${debugLabel} / left` : undefined,
     );
     this.right = new ReactionTimeStats(
       trialResults.filter(t => t.expectedAction === "RIGHT"),
       upperBound,
       lowerBound,
+      testType,
       debugLabel ? `${debugLabel} / right` : undefined,
     );
   }

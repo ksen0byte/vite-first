@@ -111,7 +111,7 @@ export class ReactionStatsCli {
         const trialResults: readonly TrialResult[] = t.trials;
 
         // Use existing calculator
-        const stats = new ReactionTimeStats([...trialResults]);
+        const stats = new ReactionTimeStats([...trialResults], 700, 100, t.testSettings.testType, undefined);
 
         const ts = t.testSettings;
         const exposureDelay = !isFeedback(ts) && Array.isArray(ts.exposureDelay)
