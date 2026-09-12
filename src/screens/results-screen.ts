@@ -96,7 +96,7 @@ export function setupResultsScreen(
         <div class="stat place-items-center">
           <div class="stat-title text-base" data-localize="statCV">CV</div>
           <div class="stat-value text-lg">${reactionTimeStats.cvVal.toFixed(2)}%</div>
-          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => stats.cvVal.toFixed(2))}
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.cvVal.toFixed(2)}%`)}
         </div>
 
         <!-- Discretized Shannon Entropy -->
@@ -104,6 +104,20 @@ export function setupResultsScreen(
           <div class="stat-title text-base" data-localize="statEntropy">Shannon Entropy</div>
           <div class="stat-value text-lg">${reactionTimeStats.entropyVal.toFixed(3)} <span data-localize="bits"></span></div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.entropyVal.toFixed(3)} ${localize("bits")}`)}
+        </div>
+
+        <!-- Motor Component -->
+        <div class="stat place-items-center">
+          <div class="stat-title text-base flex items-center justify-center gap-1">
+            <span data-localize="motorComponentLabel">Motor Component</span>
+            <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="motorComponentHelp" data-tip="${localize('motorComponentHelp')}">(?)</span>
+          </div>
+          <div class="stat-value text-lg">
+            ${formatMotorComponentHtml(reactionTimeStats)}
+          </div>
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) =>
+            formatMotorComponentText(stats)
+          )}
         </div>
 
       </div>
@@ -191,6 +205,26 @@ function filteredCountHtml(filteredCount: number): string {
   return filteredCount > 0
     ? ` <span class="text-error" title="Filtered reactions">(${filteredCount})</span>`
     : "";
+}
+
+function formatMotorComponentHtml(stats: ReactionTimeStats): string {
+  if (stats.motorComponent.kind === "NotRecorded") {
+    return `<span data-localize="notRecorded"></span>`;
+  }
+  if (stats.motorComponent.kind === "NoValidSamples") {
+    return `<span data-localize="noValidMotorData"></span>`;
+  }
+  return `${stats.motorComponent.meanMs.toFixed(2)} <span data-localize="ms"></span>`;
+}
+
+function formatMotorComponentText(stats: ReactionTimeStats): string {
+  if (stats.motorComponent.kind === "NotRecorded") {
+    return localize("notRecorded");
+  }
+  if (stats.motorComponent.kind === "NoValidSamples") {
+    return localize("noValidMotorData");
+  }
+  return `${stats.motorComponent.meanMs.toFixed(2)} ${localize("ms")}`;
 }
 
 /**

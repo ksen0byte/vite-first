@@ -227,6 +227,18 @@ function testCardHTML(index: number, test: TestRecord): string {
                   </td>
                 </tr>
                 <tr class="text-center">
+                  <td>
+                    <div class="inline-flex items-center justify-center gap-1">
+                      <strong data-localize="motorComponentLabel"></strong>
+                      <span class="tooltip tooltip-right cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="motorComponentHelp" data-tip="${localize('motorComponentHelp')}">(?)</span>
+                    </div>
+                  </td>
+                  <td>
+                    ${formatMotorComponent(stats)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => formatMotorComponent(handStats))}
+                  </td>
+                </tr>
+                <tr class="text-center">
                   <td><strong data-localize="statisticalModeLabel"></strong></td>
                   <td>
                     ${stats.modeVal ? stats.modeVal.toFixed(2) : "N/A"} <span data-localize="ms"></span>
@@ -244,7 +256,7 @@ function testCardHTML(index: number, test: TestRecord): string {
                   <td><strong data-localize="cvLabel"></strong></td>
                   <td>
                     ${stats.cvVal.toFixed(2)}%
-                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => handStats.cvVal.toFixed(2))}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.cvVal.toFixed(2)}%`)}
                   </td>
                 </tr>
                 <tr class="text-center">
@@ -352,6 +364,16 @@ function filteredCountHtml(filteredCount: number): string {
   return filteredCount > 0
     ? ` <span class="text-error" title="Filtered reactions">(${filteredCount})</span>`
     : "";
+}
+
+function formatMotorComponent(stats: ReactionTimeStats): string {
+  if (stats.motorComponent.kind === "NotRecorded") {
+    return `<span data-localize="notRecorded"></span>`;
+  }
+  if (stats.motorComponent.kind === "NoValidSamples") {
+    return `<span data-localize="noValidMotorData"></span>`;
+  }
+  return `${stats.motorComponent.meanMs.toFixed(2)} <span data-localize="ms"></span>`;
 }
 
 function errorBreakdownRowsHtml(stats: ReactionTimeStats, multiHandStats: MultiHandReactionTimeStats | null): string {

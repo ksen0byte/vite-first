@@ -109,6 +109,11 @@ export interface TrialResult {
    * omit it (backfilled from the saved settings during the DB v4 migration).
    */
   readonly exposureMs?: number;
+  /**
+   * Motor component duration (ms): time between stimulus reaction key down and key up.
+   * Null or undefined for older persisted records or when keyup was not captured.
+   */
+  readonly motorComponent?: number | null;
 }
 
 // ---------------------------------------------------------------------------

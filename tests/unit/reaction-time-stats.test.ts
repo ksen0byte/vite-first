@@ -9,13 +9,19 @@ Object.defineProperty(globalThis, 'localStorage', {
 
 const {ReactionTimeStats: BrowserStats, MultiHandReactionTimeStats} = await import('../../src/stats/ReactionTimeStats.ts');
 
-const trial = (reactionTime: number, outcome: TrialOutcome = 'Success', expectedAction: TrialResult['expectedAction'] = 'DEFAULT'): TrialResult => ({
+const trial = (
+  reactionTime: number,
+  outcome: TrialOutcome = 'Success',
+  expectedAction: TrialResult['expectedAction'] = 'DEFAULT',
+  motorComponent: number | null = null,
+): TrialResult => ({
   trialIndex: reactionTime,
   stimulus: 'circle',
   reactionTime,
   outcome,
   expectedAction,
   actualAction: expectedAction,
+  motorComponent,
 });
 
 const implementations = [
@@ -77,18 +83,70 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
     expect(stats.calculateReactionStability()).toBeNull();
     expect(stats.calculateFunctionalCapabilities()).toBeNull();
   });
+
+  it('marks motor component as not recorded when trials have no motor data', () => {
+    const stats = new Stats([trial(250), trial(300)]);
+    expect(stats.hasMotorComponentData).toBe(false);
+    expect(stats.motorComponentVal).toBeNull();
+    expect(stats.motorComponent).toEqual({kind: 'NotRecorded'});
+  });
+
+  it('calculates average motor component for successful trials within 10-150ms filter', () => {
+    const stats = new Stats([
+      trial(250, 'Success', 'DEFAULT', 50),
+      trial(300, 'Success', 'DEFAULT', 70),
+    ]);
+    expect(stats.hasMotorComponentData).toBe(true);
+    expect(stats.motorComponentVal).toBe(60);
+    expect(stats.motorComponent).toMatchObject({kind: 'Available', meanMs: 60, validCount: 2});
+  });
+
+  it('filters out motor component values strictly outside 10-150ms and includes boundary values', () => {
+    const stats = new Stats([
+      trial(200, 'Success', 'DEFAULT', 9),    // below 10 -> excluded
+      trial(220, 'Success', 'DEFAULT', 10),   // exact min -> included
+      trial(240, 'Success', 'DEFAULT', 150),  // exact max -> included
+      trial(260, 'Success', 'DEFAULT', 151),  // above 150 -> excluded
+    ]);
+    expect(stats.hasMotorComponentData).toBe(true);
+    expect(stats.motorComponentVal).toBe(80); // (10 + 150) / 2
+    expect(stats.motorComponent).toMatchObject({kind: 'Available', meanMs: 80, validCount: 2});
+  });
+
+  it('ignores motor component on non-successful trials', () => {
+    const stats = new Stats([
+      trial(250, 'Success', 'DEFAULT', 50),
+      trial(260, 'Miss', 'DEFAULT', 40),
+      trial(270, 'FalseAlarm', 'DEFAULT', 45),
+      trial(280, 'FalseStart', 'DEFAULT', 30),
+    ]);
+    expect(stats.hasMotorComponentData).toBe(true);
+    expect(stats.motorComponentVal).toBe(50);
+    expect(stats.motorComponent).toMatchObject({kind: 'Available', meanMs: 50, validCount: 1});
+  });
+
+  it('returns NoValidSamples if all motor values are filtered out', () => {
+    const stats = new Stats([
+      trial(250, 'Success', 'DEFAULT', 5),
+      trial(300, 'Success', 'DEFAULT', 200),
+    ]);
+    expect(stats.hasMotorComponentData).toBe(true);
+    expect(stats.motorComponentVal).toBeNull();
+    expect(stats.motorComponent).toMatchObject({kind: 'NoValidSamples', totalRecorded: 2, successfulRecorded: 2});
+  });
 });
 
 describe('multi-hand CRT2-3 characterization', () => {
   it('splits successful trials by their expected left and right actions', () => {
     const stats = new MultiHandReactionTimeStats([
-      trial(220, 'Success', 'LEFT'),
-      trial(240, 'Success', 'RIGHT'),
-      trial(260, 'Success', 'DEFAULT'),
+      trial(220, 'Success', 'LEFT', 40),
+      trial(240, 'Success', 'RIGHT', 60),
+      trial(260, 'Success', 'DEFAULT', 80),
     ]);
     expect(stats.total.count).toBe(3);
-    expect(stats.left).toMatchObject({count: 1, meanVal: 220});
-    expect(stats.right).toMatchObject({count: 1, meanVal: 240});
+    expect(stats.total.motorComponentVal).toBe(60); // (40 + 60 + 80) / 3
+    expect(stats.left).toMatchObject({count: 1, meanVal: 220, motorComponentVal: 40});
+    expect(stats.right).toMatchObject({count: 1, meanVal: 240, motorComponentVal: 60});
   });
 });
 

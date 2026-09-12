@@ -49,6 +49,8 @@ export class TestScreen {
 
   // event listeners
   private readonly handleKeyDownBound: (event: KeyboardEvent) => void;
+  private readonly handleKeyUpBound: (event: KeyboardEvent) => void;
+  private readonly pendingKeyUps = new Map<string, { readonly trialIndex: number; readonly keyDownTime: number }>();
 
   // State
   private state: TestState = toIdle();
@@ -78,6 +80,7 @@ export class TestScreen {
 
     // Store the bound reference
     this.handleKeyDownBound = this.handleAppKeyDown.bind(this);
+    this.handleKeyUpBound = this.handleAppKeyUp.bind(this);
   }
 
   /**
@@ -102,6 +105,8 @@ export class TestScreen {
     if (this.isDestroyed) return;
     this.isDestroyed = true;
     document.removeEventListener("keydown", this.handleKeyDownBound);
+    document.removeEventListener("keyup", this.handleKeyUpBound);
+    this.pendingKeyUps.clear();
     this.timerManager?.stopAndReset();
     this.scheduler.cancelAll();
   }
@@ -197,9 +202,11 @@ export class TestScreen {
   private attachEventListeners(): void {
     this.retryButton.addEventListener("click", () => this.handleRetry());
     this.homeButton.addEventListener("click", () => this.handleHome());
-    // Listen for keydown to simulate user input
+    // Listen for keydown and keyup to simulate and measure user input
     document.removeEventListener("keydown", this.handleKeyDownBound);
     document.addEventListener("keydown", this.handleKeyDownBound);
+    document.removeEventListener("keyup", this.handleKeyUpBound);
+    document.addEventListener("keyup", this.handleKeyUpBound);
   }
 
   /**
@@ -214,6 +221,7 @@ export class TestScreen {
     this.timerManager?.stopAndReset();
     this.scheduler.cancelAll();
     this.reactionTimes.clear();
+    this.pendingKeyUps.clear();
     const ts = this.appContext.testSettings;
     this.feedbackExposure = isFeedback(ts) ? ts.feedback.initialExposure : ts.exposureTime;
     this.spamInputCount = 0;
@@ -243,9 +251,25 @@ export class TestScreen {
       this.handleHome();
       return;
     }
+    if (event.repeat) return;
     const testType = this.appContext.testSettings.testType;
     if (isAcceptedTrialInput(testType, event.code)) {
-      this.handleUserInput(mapInputCode(event.code));
+      this.handleUserInput(mapInputCode(event.code), event.code);
+    }
+  }
+
+  private handleAppKeyUp(event: KeyboardEvent): void {
+    const pending = this.pendingKeyUps.get(event.code);
+    if (!pending) return;
+    this.pendingKeyUps.delete(event.code);
+
+    const motorComponent = this.scheduler.now() - pending.keyDownTime;
+    const existingTrial = this.reactionTimes.get(pending.trialIndex);
+    if (existingTrial && (existingTrial.motorComponent === undefined || existingTrial.motorComponent === null)) {
+      this.reactionTimes.set(pending.trialIndex, {
+        ...existingTrial,
+        motorComponent,
+      });
     }
   }
 
@@ -402,7 +426,7 @@ export class TestScreen {
       this.feedbackExposure + (correct ? -adjustmentStep : adjustmentStep)));
   }
 
-  private handleUserInput(actualAction: HandAction): void {
+  private handleUserInput(actualAction: HandAction, inputCode: string): void {
     // 1. Immediate Guard: Exit if state is invalid
     const invalidStates = ['SpamDetected', 'Finished', 'CountingDown'];
     if (invalidStates.includes(this.state._tag)) return;
@@ -414,6 +438,7 @@ export class TestScreen {
 
     // 3. State Guards
     if (this.state._tag === 'Delayed') {
+      this.pendingKeyUps.set(inputCode, { trialIndex: this.state.stimulusIndex, keyDownTime: this.scheduler.now() });
       this.recordReactionTime("none", -1, "FalseStart", "NONE", actualAction); // We don't have stimulus yet, but we want to record the trial index
       return;
     }
@@ -430,6 +455,7 @@ export class TestScreen {
         return; // already answered during exposure: further presses are ignored
       }
       const lateReactionTime = this.scheduler.now() - this.state.startTime;
+      this.pendingKeyUps.set(inputCode, { trialIndex: this.state.stimulusIndex, keyDownTime: this.scheduler.now() });
       this.processTestResponse(this.state.stimulusValue, lateReactionTime, actualAction, true);
       return;
     }
@@ -442,6 +468,7 @@ export class TestScreen {
     }
 
     // 5. Functional Dispatch
+    this.pendingKeyUps.set(inputCode, { trialIndex: this.state.stimulusIndex, keyDownTime: this.scheduler.now() });
     this.processTestResponse(this.state.stimulusValue, reactionTime, actualAction);
     this.timerManager.stop();
   }

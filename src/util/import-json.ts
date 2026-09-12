@@ -88,11 +88,23 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
         const expectedAction = trial.expectedAction ?? 'DEFAULT';
         const actualAction = trial.actualAction ?? 'DEFAULT';
         if (!isOneOf(expectedAction, actions) || !isOneOf(actualAction, actions)) return invalidValue(`${trialPath}.action`, 'trial action');
-        trials.push({ trialIndex: trial.trialIndex, stimulus: trial.stimulus, reactionTime: trial.reactionTime, outcome: trial.outcome, expectedAction, actualAction });
+        const motorComponent = typeof trial.motorComponent === 'number' && Number.isFinite(trial.motorComponent)
+          ? trial.motorComponent
+          : null;
+        trials.push({
+          trialIndex: trial.trialIndex,
+          stimulus: trial.stimulus,
+          reactionTime: trial.reactionTime,
+          outcome: trial.outcome,
+          expectedAction,
+          actualAction,
+          ...(typeof trial.exposureMs === 'number' && Number.isFinite(trial.exposureMs) ? {exposureMs: trial.exposureMs} : {}),
+          motorComponent,
+        });
         }
       } else if (Array.isArray(test.reactionTimes) && test.reactionTimes.every((value) => typeof value === 'number' && Number.isFinite(value))) {
         for (let trialIndex = 0; trialIndex < test.reactionTimes.length; trialIndex++) {
-          trials.push({ trialIndex, stimulus: 'circle', reactionTime: test.reactionTimes[trialIndex] as number, outcome: 'Success', expectedAction: 'DEFAULT', actualAction: 'DEFAULT' });
+          trials.push({ trialIndex, stimulus: 'circle', reactionTime: test.reactionTimes[trialIndex] as number, outcome: 'Success', expectedAction: 'DEFAULT', actualAction: 'DEFAULT', motorComponent: null });
         }
       } else {
         return invalidType(`${testPath}.trials`, 'array');

@@ -45,6 +45,16 @@ export function updateLanguageUI(root: ParentNode = document): void {
     element.setAttribute('aria-label', localize(element.dataset.localizeAria!));
   });
 
+  const titleLocalizableElements = root.querySelectorAll<HTMLElement>('[data-localize-title]');
+  titleLocalizableElements.forEach((element) => {
+    element.setAttribute('title', localize(element.dataset.localizeTitle!));
+  });
+
+  const tipLocalizableElements = root.querySelectorAll<HTMLElement>('[data-localize-tip]');
+  tipLocalizableElements.forEach((element) => {
+    element.setAttribute('data-tip', localize(element.dataset.localizeTip!));
+  });
+
   const mathElements = root.querySelectorAll<HTMLElement>("[data-localize-math]");
   mathElements.forEach((element) => {
     const key = element.dataset.localizeMath!;
@@ -366,6 +376,14 @@ const localization: LocalizationKeys = {
   statFunctionalLevel: {en: "SFL", uk: "ФРС"},
   statReactionStability: {en: "RS", uk: "СР"},
   statFunctionalCapabilities: {en: "FCL", uk: "РФМ"},
+  statMotorComponent: {en: "Motor Component", uk: "Моторний компонент"},
+  motorComponentLabel: {en: "Motor Component", uk: "Моторний компонент"},
+  notRecorded: {en: "Not recorded", uk: "Не зафіксовано"},
+  noValidMotorData: {en: "No valid data (10–150 ms)", uk: "Немає валідних даних (10–150 мс)"},
+  motorComponentHelp: {
+    en: "Time between key press (keydown) and key release (keyup) during successful reactions (filtered to 10–150 ms)",
+    uk: "Час між натисканням (keydown) та відпусканням (keyup) клавіші під час успішних реакцій (фільтрація 10–150 мс)"
+  },
   statErrorsTotal: {en: "Errors Total", uk: "Помилок Всього"},
   statErrorsPercentage: {en: "Error Rate", uk: "Частота Помилок"},
   trialOutcomeMiss: {en: "Miss", uk: "Пропуск"},

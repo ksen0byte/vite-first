@@ -4,6 +4,7 @@ import Chart from "chart.js/auto";
 import {localize} from "../localization/localization.ts";
 import {cumulativeStdNormalProbability, mean, median, medianAbsoluteDeviation, quantile, standardDeviation} from "simple-statistics";
 import {TrialOutcome, TrialResult} from "../config/domain.ts";
+import {MOTOR_COMPONENT_BOUNDS} from "../config/settings.ts";
 
 export interface FrequencyBin {
   binStart: number;
@@ -17,6 +18,45 @@ export type OutcomeBreakdown = ErrorOutcome | "CorrectRejection";
 export const ERROR_OUTCOMES: readonly ErrorOutcome[] = ["Miss", "FalseAlarm", "FalseStart", "MixUp"];
 export const OUTCOME_BREAKDOWN: readonly OutcomeBreakdown[] = [...ERROR_OUTCOMES, "CorrectRejection"];
 
+export type MotorComponentStats =
+  | { readonly kind: "NotRecorded" }
+  | { readonly kind: "NoValidSamples"; readonly totalRecorded: number; readonly successfulRecorded: number }
+  | { readonly kind: "Available"; readonly meanMs: number; readonly validCount: number; readonly totalRecorded: number };
+
+export function calculateMotorComponentStats(
+  trialResults: readonly TrialResult[],
+  minMs: number = MOTOR_COMPONENT_BOUNDS.minMs,
+  maxMs: number = MOTOR_COMPONENT_BOUNDS.maxMs,
+): MotorComponentStats {
+  const trialsWithMotor = trialResults.filter(
+    trialResult => typeof trialResult.motorComponent === "number" && !Number.isNaN(trialResult.motorComponent),
+  );
+
+  if (trialsWithMotor.length === 0) {
+    return {kind: "NotRecorded"};
+  }
+
+  const successfulTrialsWithMotor = trialsWithMotor.filter(trialResult => trialResult.outcome === "Success");
+  const validValues = successfulTrialsWithMotor
+    .map(trialResult => trialResult.motorComponent as number)
+    .filter(value => value >= minMs && value <= maxMs);
+
+  if (validValues.length === 0) {
+    return {
+      kind: "NoValidSamples",
+      totalRecorded: trialsWithMotor.length,
+      successfulRecorded: successfulTrialsWithMotor.length,
+    };
+  }
+
+  return {
+    kind: "Available",
+    meanMs: mean(validValues),
+    validCount: validValues.length,
+    totalRecorded: trialsWithMotor.length,
+  };
+}
+
 export class ReactionTimeStats {
   private readonly data: number[];
   private readonly bins: FrequencyBin[];
@@ -29,6 +69,9 @@ export class ReactionTimeStats {
   public readonly modeVal;
   public readonly stdevVal;
   public readonly cvVal;
+  public readonly motorComponent: MotorComponentStats;
+  public readonly hasMotorComponentData: boolean;
+  public readonly motorComponentVal: number | null;
 
   // For percentiles (p3, p10, p25, p50, p75, p90, p97):
   //  p50 will match medianVal above, but we’ll keep it for completeness
@@ -99,6 +142,10 @@ export class ReactionTimeStats {
       this.p97Val = 0;
       this.entropyVal = 0;
     }
+
+    this.motorComponent = calculateMotorComponentStats(trialResults);
+    this.hasMotorComponentData = this.motorComponent.kind !== "NotRecorded";
+    this.motorComponentVal = this.motorComponent.kind === "Available" ? this.motorComponent.meanMs : null;
 
     this.outcomeCountsByOutcome = OUTCOME_BREAKDOWN.reduce<Record<OutcomeBreakdown, number>>((acc, outcome) => {
       acc[outcome] = trialResults.filter(t => t.outcome === outcome).length;
@@ -517,6 +564,14 @@ export class ReactionTimeStats {
   }
 
   private generateStatisticsSummary() {
+    let motorStr: string;
+    if (this.motorComponent.kind === "NotRecorded") {
+      motorStr = localize("notRecorded");
+    } else if (this.motorComponent.kind === "NoValidSamples") {
+      motorStr = localize("noValidMotorData");
+    } else {
+      motorStr = `${this.motorComponent.meanMs.toFixed(2)} ${localize("ms")}`;
+    }
     return [
       `${localize("countLabel")}: ${this.count}`,
       `${localize("meanLabel")}: ${this.meanVal.toFixed(2)}`,
@@ -524,6 +579,7 @@ export class ReactionTimeStats {
       `${localize("stdevLabel")}: ${this.stdevVal.toFixed(2)}`,
       `${localize("cvLabel")}: ${this.cvVal.toFixed(2)}%`,
       `${localize("entropyLabel")}: ${this.entropyVal.toFixed(3)} ${localize("bits")}`,
+      `${localize("motorComponentLabel")}: ${motorStr}`,
       `${localize("statFunctionalLevel")}: ${formatUnavailable(this.calculateFunctionalLevel())}`,
       `${localize("statReactionStability")}: ${formatUnavailable(this.calculateReactionStability())}`,
       `${localize("statFunctionalCapabilities")}: ${formatUnavailable(this.calculateFunctionalCapabilities())}`,

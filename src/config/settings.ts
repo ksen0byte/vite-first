@@ -68,8 +68,14 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+export const MOTOR_COMPONENT_BOUNDS = {
+  minMs: 10,
+  maxMs: 150,
+} as const;
+
 deepFreeze(parameters);
 deepFreeze(parameterPairs);
+deepFreeze(MOTOR_COMPONENT_BOUNDS);
 
 export const settings = {
   default: {
