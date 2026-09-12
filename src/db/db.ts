@@ -192,6 +192,24 @@ export class CnsTestDatabase extends Dexie {
         };
       });
     });
+
+    // Version 6: Backfill hand: 'right' for all test records whose testSettings lack it.
+    this.version(6).stores({
+      users: '[firstName+lastName], gender, age',
+      tests: '++id, userKey, date'
+    }).upgrade(async tx => {
+      console.log("Migration to version 6 started...");
+      await tx.table("tests").toCollection().modify((test: Record<string, unknown>) => {
+        if (!isRecord(test.testSettings)) return;
+        const ts = test.testSettings as Record<string, unknown>;
+        if (ts.hand === undefined) {
+          test.testSettings = {
+            ...ts,
+            hand: 'right',
+          };
+        }
+      });
+    });
   }
 }
 export const db = new CnsTestDatabase();

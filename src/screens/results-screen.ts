@@ -9,6 +9,7 @@ import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
 import {TrialResult, isFeedback, feedbackTuning} from "../config/domain.ts";
 import {summarizeExposure} from "../stats/exposure-curve.ts";
+import {getHandLocalizationKey} from "../config/settings.ts";
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
@@ -50,8 +51,15 @@ export function setupResultsScreen(
   // Render
   appContainer.innerHTML = `
     <div id="results-screen" class="flex flex-col flex-grow p-4 space-y-4">
-      <!-- Title -->
-      <h2 class="text-2xl font-bold mb-4" data-localize="testResultsTitle">Test Results</h2>
+      <!-- Title & Info -->
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h2 class="text-2xl font-bold" data-localize="testResultsTitle">Test Results</h2>
+        ${testType !== "crt2-3" ? `
+        <div id="results-hand-badge" class="badge badge-lg badge-outline gap-2">
+          <strong data-localize="handLabel"></strong>:
+          <span data-localize="${getHandLocalizationKey(testSettings.hand)}"></span>
+        </div>` : ""}
+      </div>
 
       <!-- First stats block (count, mean, median, variance, std dev, range) -->
       <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">

@@ -1,4 +1,4 @@
-import {Gender, TestMode, TestSettings, TestType, TrialResult, FeedbackTuning} from '../config/domain.ts';
+import {Gender, TestMode, TestSettings, TestType, Hand, TrialResult, FeedbackTuning} from '../config/domain.ts';
 import {settings as appDefaults} from '../config/settings.ts';
 import {User} from '../db/db.ts';
 import {Result, failure, success} from './result.ts';
@@ -29,6 +29,7 @@ export interface ExportEnvelopeV1 {
 
 const testModes: readonly TestMode[] = ['shapes', 'words', 'colors', 'combined'];
 const testTypes: readonly TestType[] = ['svmr', 'crt1-3', 'crt2-3'];
+const hands: readonly Hand[] = ['right', 'left'];
 const genders: readonly Gender[] = ['male', 'female'];
 const outcomes = ['Success', 'Miss', 'FalseAlarm', 'CorrectRejection', 'MixUp', 'FalseStart'] as const;
 const actions = ['LEFT', 'RIGHT', 'DEFAULT', 'NONE'] as const;
@@ -71,6 +72,8 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       const parsed = test.testSettings;
       if (!isOneOf(parsed.testMode, testModes)) return invalidValue(`${testPath}.testSettings.testMode`, 'test mode');
       if (!isOneOf(parsed.testType, testTypes)) return invalidValue(`${testPath}.testSettings.testType`, 'test type');
+      if (parsed.hand !== undefined && !isOneOf(parsed.hand, hands)) return invalidValue(`${testPath}.testSettings.hand`, 'right or left');
+      const hand: Hand = (parsed.hand as Hand) ?? 'right';
       if (!Array.isArray(parsed.exposureDelay) || parsed.exposureDelay.length !== 2 || !parsed.exposureDelay.every((value) => typeof value === 'number' && Number.isFinite(value)) || parsed.exposureDelay[0] > parsed.exposureDelay[1]) return invalidValue(`${testPath}.testSettings.exposureDelay`, 'ordered finite pair');
       if (!isRecord(parsed.usePregenerated) || typeof parsed.usePregenerated.exposureDelay !== 'boolean' || typeof parsed.usePregenerated.stimuli !== 'boolean') return invalidValue(`${testPath}.testSettings.usePregenerated`, 'boolean flags');
       if (![parsed.stimulusSize, parsed.exposureTime, parsed.stimulusCount].every((value) => typeof value === 'number' && Number.isFinite(value)) || !Number.isInteger(parsed.stimulusCount)) return invalidValue(`${testPath}.testSettings`, 'finite numeric parsed and integer stimulus count');
@@ -127,6 +130,7 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
         testSettings = {
           protocolMode: 'optimal',
           testMode: parsed.testMode,
+          hand,
           stimulusSize: parsed.stimulusSize as number,
           exposureTime: parsed.exposureTime as number,
           exposureDelay: [parsed.exposureDelay[0] as number, parsed.exposureDelay[1] as number],
@@ -138,6 +142,7 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
         testSettings = {
           protocolMode: 'feedback-strength',
           testMode: parsed.testMode,
+          hand,
           stimulusSize: parsed.stimulusSize as number,
           testType: parsed.testType,
           usePregenerated: { stimuli: parsed.usePregenerated.stimuli },
@@ -154,6 +159,7 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
         testSettings = {
           protocolMode: 'feedback-mobility',
           testMode: parsed.testMode,
+          hand,
           stimulusSize: parsed.stimulusSize as number,
           stimulusCount: parsed.stimulusCount as number,
           testType: parsed.testType,

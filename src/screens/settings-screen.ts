@@ -2,6 +2,7 @@ import {
   AppContext,
   TestMode,
   TestType,
+  Hand,
   TestSettings,
   OptimalSettings,
   FeedbackMobilitySettings,
@@ -34,6 +35,7 @@ type CompactSettingsState = Readonly<{
   feedbackMode: CompactFeedbackModeValue;
   testType: TestType;
   stimulus: TestMode;
+  hand: Hand;
 }>;
 
 /**
@@ -133,11 +135,12 @@ function compactSettingsScreenHTML(appContext: AppContext): string {
     </div></section>
 
     <section class="card bg-base-100 shadow-sm"><div class="card-body p-4">
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="protocolLabel"></span><select id="protocol-select" class="select select-md select-bordered w-full text-base"><option value="optimal" ${appContext.testSettings.protocolMode === 'optimal' ? 'selected' : ''} data-localize="optimalProtocol"></option><option value="feedback" ${appContext.testSettings.protocolMode !== 'optimal' ? 'selected' : ''} data-localize="feedbackProtocol"></option></select></label>
         <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="regimeLabel"></span><select id="mode-select" class="select select-md select-bordered w-full text-base"></select></label>
         <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="submodeLabel"></span><select id="test-type-select" class="select select-md select-bordered w-full text-base"></select></label>
         <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="stimulusTypeLabel"></span><select id="stimulus-select" class="select select-md select-bordered w-full text-base"></select></label>
+        <label id="hand-select-label" class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="handLabel"></span><select id="hand-select" class="select select-md select-bordered w-full text-base"></select></label>
       </div>
     </div></section>
 
@@ -153,14 +156,18 @@ function setupCompactSettings(appContext: AppContext): void {
   const mode = document.getElementById("mode-select") as HTMLSelectElement;
   const testType = document.getElementById("test-type-select") as HTMLSelectElement;
   const stimulus = document.getElementById("stimulus-select") as HTMLSelectElement;
+  const hand = document.getElementById("hand-select") as HTMLSelectElement;
+  const handLabel = document.getElementById("hand-select-label") as HTMLElement;
   const initialProtocol: CompactProtocolValue = appContext.testSettings.protocolMode === "optimal" ? "optimal" : "feedback";
   const initialFeedbackMode: CompactFeedbackModeValue =
     appContext.testSettings.protocolMode === "feedback-strength" ? "strength" : "mobility";
+  const initialHand: Hand = appContext.testSettings.hand ?? "right";
   let state: CompactSettingsState = {
     protocol: initialProtocol,
     feedbackMode: initialFeedbackMode,
     testType: appContext.testSettings.testType,
     stimulus: appContext.testSettings.testMode,
+    hand: initialHand,
   };
   const getModeValue = (currentState: CompactSettingsState): CompactModeValue =>
     currentState.protocol === "optimal" ? "standard" : currentState.feedbackMode;
@@ -178,6 +185,7 @@ function setupCompactSettings(appContext: AppContext): void {
   };
   const refresh = (currentState: CompactSettingsState): void => {
     const currentMode = getModeValue(currentState);
+    const isCrt23 = currentState.testType === "crt2-3";
     fill(mode, modeOptions(currentState), currentMode);
     fill(testType, [
       {value: "svmr", key: "testTypePzmrShort"},
@@ -190,6 +198,15 @@ function setupCompactSettings(appContext: AppContext): void {
       {value: "colors", key: "colorsOption"},
       {value: "combined", key: "combinedOption"},
     ], currentState.stimulus);
+    fill(hand, [
+      {value: "right", key: "rightHand"},
+      {value: "left", key: "leftHand"},
+    ], currentState.hand);
+    hand.disabled = isCrt23;
+    hand.classList.toggle("cursor-not-allowed", isCrt23);
+    hand.classList.toggle("opacity-60", isCrt23);
+    handLabel?.classList.toggle("opacity-40", isCrt23);
+    handLabel?.classList.toggle("cursor-not-allowed", isCrt23);
     renderCompactParameters(appContext, currentState.protocol, currentMode);
     renderCompactInstruction(currentState.testType, currentState.stimulus, currentState.protocol);
     updateLanguageUI();
@@ -224,6 +241,10 @@ function setupCompactSettings(appContext: AppContext): void {
     state = {...state, stimulus: stimulus.value as TestMode};
     refresh(state);
   });
+  hand.addEventListener("change", () => {
+    state = {...state, hand: hand.value as Hand};
+    refresh(state);
+  });
   const parametersRoot = document.getElementById("compact-parameters")!;
   parametersRoot.addEventListener("input", onParametersChanged);
   // :user-invalid only matches once the field loses focus, so re-sync on blur.
@@ -241,6 +262,7 @@ function renderCompactParameters(appContext: AppContext, protocol: CompactProtoc
       ? {
         protocolMode: "feedback-strength",
         testMode: ts.testMode,
+        hand: ts.hand ?? 'right',
         stimulusSize: ts.stimulusSize,
         testType: ts.testType,
         usePregenerated: {stimuli: ts.usePregenerated.stimuli},
@@ -256,6 +278,7 @@ function renderCompactParameters(appContext: AppContext, protocol: CompactProtoc
       : {
         protocolMode: "feedback-mobility",
         testMode: ts.testMode,
+        hand: ts.hand ?? 'right',
         stimulusSize: ts.stimulusSize,
         stimulusCount: isFeedbackMobility(ts) ? ts.stimulusCount : 120,
         testType: ts.testType,
@@ -267,6 +290,7 @@ function renderCompactParameters(appContext: AppContext, protocol: CompactProtoc
     : {
       protocolMode: "optimal",
       testMode: ts.testMode,
+      hand: ts.hand ?? 'right',
       stimulusSize: ts.stimulusSize,
       exposureTime: (ts as OptimalSettings).exposureTime ?? 700,
       exposureDelay: (ts as OptimalSettings).exposureDelay ?? [500, 1900],
@@ -366,6 +390,7 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
     : testType === "crt1-3"
       ? `${previewReactionColumn(testMode, "left", stimulusSize, "previewIgnore")}${previewReactionColumn(testMode, "space", stimulusSize, "testScreenTestPZMRActionButtonName")}${previewReactionColumn(testMode, "ignore", stimulusSize, "previewIgnore")}`
       : previewReactionColumn(testMode, "space", stimulusSize);
+  console.log(stimulusColumns);
   const stimulus = `<div class="grid w-full ${isChoiceTest ? "grid-cols-3" : "grid-cols-1"} items-end gap-2 px-2">${stimulusColumns}</div>`;
   // Feedback cadence: fixed pause between trials; the pause doubles as the
   // late-answer window. Optimal: random delay range.
@@ -526,6 +551,8 @@ function compactStartButtonCallback(): void {
   const feedbackSubmode = (document.getElementById("mode-select") as HTMLSelectElement).value;
   const testType = (document.getElementById("test-type-select") as HTMLSelectElement).value as TestType;
   const testMode = (document.getElementById("stimulus-select") as HTMLSelectElement).value as TestMode;
+  const handSelect = document.getElementById("hand-select") as HTMLSelectElement | null;
+  const hand: Hand = (handSelect?.value as Hand) || "right";
 
   // Read delay min/max only if NOT using pregenerated delay (optimal mode only)
   const delayPregenCheckbox = document.getElementById("compact-use-pregenerated-delay") as HTMLInputElement | null;
@@ -557,6 +584,7 @@ function compactStartButtonCallback(): void {
     testMode,
     stimulusSize: readNumberInput(parameters.stimulusSize),
     testType,
+    hand,
     usePregenerated: {stimuli: useStimuli} as { stimuli: boolean },
   };
 

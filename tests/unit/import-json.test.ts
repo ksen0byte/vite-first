@@ -80,4 +80,27 @@ describe('parseImportedJson', () => {
       ]);
     }
   });
+
+  it('accepts explicit hand property and defaults to right hand when missing', () => {
+    const raw = structuredClone(currentExport);
+    (raw[0].tests[0] as any).testSettings.hand = 'left';
+
+    const result = parseImportedJson(raw);
+    expect(result._tag).toBe('Success');
+    if (result._tag === 'Success') {
+      expect(result.value[0].tests[0].testSettings.hand).toBe('left');
+      expect(result.value[0].tests[1].testSettings.hand).toBe('right');
+    }
+  });
+
+  it('rejects imported JSON with invalid hand value', () => {
+    const raw = structuredClone(currentExport);
+    (raw[0].tests[0] as any).testSettings.hand = 'both';
+
+    const result = parseImportedJson(raw);
+    expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure') {
+      expect(result.error.path).toContain('testSettings.hand');
+    }
+  });
 });

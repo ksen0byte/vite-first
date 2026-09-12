@@ -8,7 +8,7 @@ import {TestMode, isFeedback, isFeedbackStrength, feedbackTuning, OptimalSetting
 import {localize} from "../localization/localization";
 import Router, {Cleanup} from "../routing/router.ts";
 import {Chart} from "chart.js";
-import {printConfig} from "../config/settings.ts";
+import {printConfig, getHandLocalizationKey} from "../config/settings.ts";
 import {escapeHtml} from "../util/html.ts";
 import {summarizeExposure} from "../stats/exposure-curve.ts";
 
@@ -192,6 +192,11 @@ function testCardHTML(index: number, test: TestRecord): string {
                 <td><strong data-localize="testTypeLabel"></strong></td>
                 <td><span data-localize="${getTestTypeLocalizationKey(testType)}"></span></td>
               </tr>
+              ${testType !== "crt2-3" ? `
+              <tr class="text-center">
+                <td><strong data-localize="handLabel"></strong></td>
+                <td><span data-localize="${getHandLocalizationKey(testSettings.hand)}"></span></td>
+              </tr>` : ""}
             </table>
           </div>
           <!-- Divider -->
