@@ -31,7 +31,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
       <div class="flex-1 space-y-4">
           ${personalDataCardHtml(user)}
           <!-- Test Cards -->
-          ${sortedTests.map((test, index) => testCardHTML(index, test)).join("")}
+          ${sortedTests.map((test, index) => testCardHTML((sortedTests.length - index), test)).join("")}
       </div>
     </div>
   `;
@@ -317,7 +317,7 @@ function testCardHTML(index: number, test: TestRecord): string {
 
         <!-- Histogram -->
         <div class="flex flex-grow p-8 min-h-96">
-          <canvas id="histogram-${index}"></canvas>
+          <canvas id="histogram-${test.id!}"></canvas>
         </div>
 
       </div>
@@ -449,14 +449,14 @@ function getTestTypeLocalizationKey(testType: string): string {
 
 function renderHistograms(tests: TestRecord[]): Chart[] {
   const charts: Chart[] = [];
-  tests.forEach((test, index) => {
+  tests.forEach((test) => {
     // Match the stats table's cleaning bound (feedback late answers exceed the
     // fixed exposure legitimately).
     const upperBound = isFeedback(test.testSettings)
       ? feedbackTuning(test.testSettings).maxExposure + feedbackTuning(test.testSettings).pause
       : test.testSettings.exposureTime;
     const stats = new ReactionTimeStats(test.trials, upperBound);
-    const canvasId = `histogram-${index}`;
+    const canvasId = `histogram-${test.id!}`;
     const chart = stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
     charts.push(chart);
   });
