@@ -392,7 +392,6 @@ function renderCompactPreview(testMode: TestMode, testType: TestType, protocol: 
     : testType === "crt1-3"
       ? `${previewReactionColumn(testMode, "left", stimulusSize, "previewIgnore")}${previewReactionColumn(testMode, "space", stimulusSize, "testScreenTestPZMRActionButtonName")}${previewReactionColumn(testMode, "ignore", stimulusSize, "previewIgnore")}`
       : previewReactionColumn(testMode, "space", stimulusSize);
-  console.log(stimulusColumns);
   const stimulus = `<div class="grid w-full ${isChoiceTest ? "grid-cols-3" : "grid-cols-1"} items-end gap-2 px-2">${stimulusColumns}</div>`;
   // Feedback cadence: fixed pause between trials; the pause doubles as the
   // late-answer window. Optimal: random delay range.

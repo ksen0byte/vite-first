@@ -70,14 +70,42 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       const test = bundle.tests[testIndex];
       if (!isRecord(test) || !isRecord(test.testSettings)) return invalidType(testPath, 'test record');
       const parsed = test.testSettings;
-      if (!isOneOf(parsed.testMode, testModes)) return invalidValue(`${testPath}.testSettings.testMode`, 'test mode');
+      // `syllables` was the historical name for the word-based stimulus mode.
+      const testMode: TestMode = parsed.testMode === 'syllables' ? 'words' : parsed.testMode as TestMode;
+      if (!isOneOf(testMode, testModes)) return invalidValue(`${testPath}.testSettings.testMode`, 'test mode');
       if (!isOneOf(parsed.testType, testTypes)) return invalidValue(`${testPath}.testSettings.testType`, 'test type');
       if (parsed.hand !== undefined && !isOneOf(parsed.hand, hands)) return invalidValue(`${testPath}.testSettings.hand`, 'right or left');
       // Exports predating hand selection implicitly represented right-hand tests.
       const hand: Hand = (parsed.hand as Hand) ?? 'right';
-      if (!Array.isArray(parsed.exposureDelay) || parsed.exposureDelay.length !== 2 || !parsed.exposureDelay.every((value) => typeof value === 'number' && Number.isFinite(value)) || parsed.exposureDelay[0] > parsed.exposureDelay[1]) return invalidValue(`${testPath}.testSettings.exposureDelay`, 'ordered finite pair');
-      if (!isRecord(parsed.usePregenerated) || typeof parsed.usePregenerated.exposureDelay !== 'boolean' || typeof parsed.usePregenerated.stimuli !== 'boolean') return invalidValue(`${testPath}.testSettings.usePregenerated`, 'boolean flags');
-      if (![parsed.stimulusSize, parsed.exposureTime, parsed.stimulusCount].every((value) => typeof value === 'number' && Number.isFinite(value)) || !Number.isInteger(parsed.stimulusCount)) return invalidValue(`${testPath}.testSettings`, 'finite numeric parsed and integer stimulus count');
+      const fb = isRecord(parsed.feedback) ? parsed.feedback : undefined;
+      const parsedMode = parsed.protocolMode;
+      const submode = parsed.feedbackSubmode === 'strength' ? 'strength' : 'mobility';
+      const isFeedbackArm =
+        parsedMode === 'feedback-mobility' || parsedMode === 'feedback-strength'
+        || (parsedMode === 'feedback' || (parsedMode !== 'optimal' && fb !== undefined));
+
+      if (typeof parsed.stimulusSize !== 'number' || !Number.isFinite(parsed.stimulusSize)) return invalidValue(`${testPath}.testSettings.stimulusSize`, 'finite number');
+      // Sessions exported before pregeneration controls were persisted used
+      // pregenerated delays and stimuli implicitly.
+      let usePregenerated = {exposureDelay: true, stimuli: true};
+      if (parsed.usePregenerated !== undefined) {
+        if (!isRecord(parsed.usePregenerated)) return invalidValue(`${testPath}.testSettings.usePregenerated`, 'boolean flags');
+        if (parsed.usePregenerated.stimuli !== undefined && typeof parsed.usePregenerated.stimuli !== 'boolean') return invalidValue(`${testPath}.testSettings.usePregenerated.stimuli`, 'boolean');
+        if (parsed.usePregenerated.exposureDelay !== undefined && typeof parsed.usePregenerated.exposureDelay !== 'boolean') return invalidValue(`${testPath}.testSettings.usePregenerated.exposureDelay`, 'boolean');
+        usePregenerated = {
+          exposureDelay: (parsed.usePregenerated.exposureDelay as boolean | undefined) ?? true,
+          stimuli: (parsed.usePregenerated.stimuli as boolean | undefined) ?? true,
+        };
+      }
+      let exposureDelay: [number, number] | undefined;
+      if (!isFeedbackArm) {
+        if (!Array.isArray(parsed.exposureDelay) || parsed.exposureDelay.length !== 2 || !parsed.exposureDelay.every((value) => typeof value === 'number' && Number.isFinite(value)) || parsed.exposureDelay[0] > parsed.exposureDelay[1]) return invalidValue(`${testPath}.testSettings.exposureDelay`, 'ordered finite pair');
+        exposureDelay = [parsed.exposureDelay[0] as number, parsed.exposureDelay[1] as number];
+        if (typeof parsed.exposureTime !== 'number' || !Number.isFinite(parsed.exposureTime)) return invalidValue(`${testPath}.testSettings.exposureTime`, 'finite number');
+        if (typeof parsed.stimulusCount !== 'number' || !Number.isFinite(parsed.stimulusCount) || !Number.isInteger(parsed.stimulusCount)) return invalidValue(`${testPath}.testSettings.stimulusCount`, 'finite integer');
+      } else if (parsedMode !== 'feedback-strength' && submode !== 'strength' && !(fb !== undefined && typeof fb.duration === 'number')) {
+        if (typeof parsed.stimulusCount !== 'number' || !Number.isFinite(parsed.stimulusCount) || !Number.isInteger(parsed.stimulusCount)) return invalidValue(`${testPath}.testSettings.stimulusCount`, 'finite integer');
+      }
       if (typeof test.date !== 'string' || Number.isNaN(Date.parse(test.date))) return invalidValue(`${testPath}.date`, 'ISO date');
       const trials: TrialResult[] = [];
       if (Array.isArray(test.trials)) {
@@ -112,7 +140,6 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       } else {
         return invalidType(`${testPath}.trials`, 'array');
       }
-      const fb = isRecord(parsed.feedback) ? parsed.feedback : undefined;
       const tuning: FeedbackTuning & { duration?: number } = fb && typeof fb.initialExposure === 'number'
         ? {
             initialExposure: fb.initialExposure as number,
@@ -134,33 +161,27 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       // Determine the real protocol arm. Older exports used a flat shape with a
       // `protocolMode` of 'optimal'|'feedback' plus an unconditional `feedback`
       // block and `feedbackSubmode`; newer exports already use the union literals.
-      const parsedMode = parsed.protocolMode;
-      const submode = parsed.feedbackSubmode === 'strength' ? 'strength' : 'mobility';
-      const isFeedbackArm =
-        parsedMode === 'feedback-mobility' || parsedMode === 'feedback-strength'
-        || (parsedMode === 'feedback' || (parsedMode !== 'optimal' && fb !== undefined));
-
       let testSettings: TestSettings;
       if (!isFeedbackArm) {
         testSettings = {
           protocolMode: 'optimal',
-          testMode: parsed.testMode,
+          testMode,
           hand,
           stimulusSize: parsed.stimulusSize as number,
           exposureTime: parsed.exposureTime as number,
-          exposureDelay: [parsed.exposureDelay[0] as number, parsed.exposureDelay[1] as number],
+          exposureDelay: exposureDelay!,
           stimulusCount: parsed.stimulusCount as number,
           testType: parsed.testType,
-          usePregenerated: parsed.usePregenerated as { exposureDelay: boolean; stimuli: boolean },
+          usePregenerated,
         };
       } else if (submode === 'strength' || parsedMode === 'feedback-strength' || (fb !== undefined && typeof fb.duration === 'number')) {
         testSettings = {
           protocolMode: 'feedback-strength',
-          testMode: parsed.testMode,
+          testMode,
           hand,
           stimulusSize: parsed.stimulusSize as number,
           testType: parsed.testType,
-          usePregenerated: { stimuli: parsed.usePregenerated.stimuli },
+          usePregenerated: { stimuli: usePregenerated.stimuli },
           feedback: {
             initialExposure: tuning.initialExposure,
             adjustmentStep: tuning.adjustmentStep,
@@ -173,12 +194,12 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       } else {
         testSettings = {
           protocolMode: 'feedback-mobility',
-          testMode: parsed.testMode,
+          testMode,
           hand,
           stimulusSize: parsed.stimulusSize as number,
           stimulusCount: parsed.stimulusCount as number,
           testType: parsed.testType,
-          usePregenerated: { stimuli: parsed.usePregenerated.stimuli },
+          usePregenerated: { stimuli: usePregenerated.stimuli },
           feedback: {
             initialExposure: tuning.initialExposure,
             adjustmentStep: tuning.adjustmentStep,
