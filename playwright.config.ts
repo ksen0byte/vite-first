@@ -6,6 +6,8 @@ export default defineConfig({
   retries: 1,
   use: {
     baseURL: 'http://127.0.0.1:4173/vite-first/',
+    timezoneId: 'UTC',
+    locale: 'en-US',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
