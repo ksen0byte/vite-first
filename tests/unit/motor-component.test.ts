@@ -105,6 +105,20 @@ describe('Sensory Component Calculation', () => {
       valueMs: 200,
     });
   });
+
+  it('rejects sensory calculation when no valid reaction samples remain', () => {
+    const motorStats = {kind: 'Available' as const, meanMs: 60, validCount: 1, totalRecorded: 1};
+    expect(calculateSensoryComponentStats(0, motorStats, 'svmr', 0)).toEqual({
+      kind: 'NoValidReactionData',
+    });
+  });
+
+  it('rejects sensory calculation when the motor component is not below total reaction time', () => {
+    const motorStats = {kind: 'Available' as const, meanMs: 260, validCount: 1, totalRecorded: 1};
+    expect(calculateSensoryComponentStats(260, motorStats, 'svmr', 1)).toEqual({
+      kind: 'InvalidComponentOrder',
+    });
+  });
 });
 
 describe('User Profile and Results Screen Rendering', () => {

@@ -50,6 +50,8 @@ export class TestScreen {
   // event listeners
   private readonly handleKeyDownBound: (event: KeyboardEvent) => void;
   private readonly handleKeyUpBound: (event: KeyboardEvent) => void;
+  // Keyup can arrive after the state machine has advanced, so retain the trial
+  // identity captured at keydown rather than reading mutable current state later.
   private readonly pendingKeyUps = new Map<string, { readonly trialIndex: number; readonly keyDownTime: number }>();
 
   // State
@@ -251,6 +253,8 @@ export class TestScreen {
       this.handleHome();
       return;
     }
+    // Auto-repeat is not a new physical press and would overwrite attribution or
+    // trigger spam handling while the participant is still holding one key.
     if (event.repeat) return;
     const testType = this.appContext.testSettings.testType;
     if (isAcceptedTrialInput(testType, event.code)) {
@@ -265,6 +269,8 @@ export class TestScreen {
 
     const motorComponent = this.scheduler.now() - pending.keyDownTime;
     const existingTrial = this.reactionTimes.get(pending.trialIndex);
+    // A late keyup must enrich the recorded outcome, never replace an existing
+    // motor measurement if duplicate browser events are delivered.
     if (existingTrial && (existingTrial.motorComponent === undefined || existingTrial.motorComponent === null)) {
       this.reactionTimes.set(pending.trialIndex, {
         ...existingTrial,

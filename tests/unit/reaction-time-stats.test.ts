@@ -14,13 +14,14 @@ const trial = (
   outcome: TrialOutcome = 'Success',
   expectedAction: TrialResult['expectedAction'] = 'DEFAULT',
   motorComponent: number | null = null,
+  actualAction: TrialResult['actualAction'] = expectedAction,
 ): TrialResult => ({
   trialIndex: reactionTime,
   stimulus: 'circle',
   reactionTime,
   outcome,
   expectedAction,
-  actualAction: expectedAction,
+  actualAction,
   motorComponent,
 });
 
@@ -28,6 +29,24 @@ const implementations = [
   ['browser', BrowserStats],
   ['node', NodeStats],
 ] as const;
+
+describe('MultiHandReactionTimeStats hand attribution', () => {
+  it('uses expected hand first, then actual hand, and leaves correct rejections unassigned', () => {
+    const stats = new MultiHandReactionTimeStats([
+      trial(250, 'Miss', 'LEFT', null, 'NONE'),
+      trial(260, 'MixUp', 'RIGHT', null, 'LEFT'),
+      trial(270, 'FalseAlarm', 'NONE', null, 'LEFT'),
+      trial(280, 'FalseStart', 'NONE', null, 'RIGHT'),
+      trial(290, 'CorrectRejection', 'NONE', null, 'NONE'),
+    ]);
+
+    expect(stats.total.errorCount).toBe(4);
+    expect(stats.left.errorCount).toBe(2);
+    expect(stats.right.errorCount).toBe(2);
+    expect(stats.left.outcomeCountsByOutcome.CorrectRejection).toBe(0);
+    expect(stats.right.outcomeCountsByOutcome.CorrectRejection).toBe(0);
+  });
+});
 
 describe.each(implementations)('%s ReactionTimeStats characterization', (_name, Stats) => {
   it('handles an empty result set', () => {

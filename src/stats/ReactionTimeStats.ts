@@ -27,6 +27,8 @@ export type SensoryComponentStats =
   | { readonly kind: "NotApplicable" }
   | { readonly kind: "NotRecorded" }
   | { readonly kind: "NoValidMotorData" }
+  | { readonly kind: "NoValidReactionData" }
+  | { readonly kind: "InvalidComponentOrder" }
   | { readonly kind: "Available"; readonly valueMs: number };
 
 export function calculateMotorComponentStats(
@@ -34,6 +36,8 @@ export function calculateMotorComponentStats(
   minMs: number = MOTOR_COMPONENT_BOUNDS.minMs,
   maxMs: number = MOTOR_COMPONENT_BOUNDS.maxMs,
 ): MotorComponentStats {
+  // Keep recorded-but-invalid values distinguishable from legacy trials that
+  // never captured motor timing; the UI communicates those states differently.
   const trialsWithMotor = trialResults.filter(
     trialResult => typeof trialResult.motorComponent === "number" && !Number.isNaN(trialResult.motorComponent),
   );
@@ -42,6 +46,8 @@ export function calculateMotorComponentStats(
     return {kind: "NotRecorded"};
   }
 
+  // Error trials do not represent the intended stimulus-response movement and
+  // would bias the motor estimate with premature or incorrect actions.
   const successfulTrialsWithMotor = trialsWithMotor.filter(trialResult => trialResult.outcome === "Success");
   const validValues = successfulTrialsWithMotor
     .map(trialResult => trialResult.motorComponent as number)
@@ -67,6 +73,7 @@ export function calculateSensoryComponentStats(
   meanReactionTimeMs: number,
   motorStats: MotorComponentStats,
   testType: TestType = "svmr",
+  validReactionCount: number = 1,
 ): SensoryComponentStats {
   if (testType !== "svmr") {
     return {kind: "NotApplicable"};
@@ -76,6 +83,16 @@ export function calculateSensoryComponentStats(
   }
   if (motorStats.kind === "NoValidSamples") {
     return {kind: "NoValidMotorData"};
+  }
+  // ReactionTimeStats uses zero when cleaning removes every RT sample. Without
+  // the count guard that sentinel would produce a plausible-looking negative value.
+  if (validReactionCount <= 0 || !Number.isFinite(meanReactionTimeMs) || meanReactionTimeMs <= 0) {
+    return {kind: "NoValidReactionData"};
+  }
+  // The motor interval is a subset of total reaction time. Equality or a larger
+  // motor value therefore signals inconsistent measurements, not sensory time.
+  if (!Number.isFinite(motorStats.meanMs) || motorStats.meanMs >= meanReactionTimeMs) {
+    return {kind: "InvalidComponentOrder"};
   }
   return {
     kind: "Available",
@@ -176,10 +193,12 @@ export class ReactionTimeStats {
     }
 
     this.motorComponent = calculateMotorComponentStats(trialResults);
+    // Keep scalar aliases for existing consumers, while the tagged results retain
+    // the reason a value is unavailable for newer UI code.
     this.hasMotorComponentData = this.motorComponent.kind !== "NotRecorded";
     this.motorComponentVal = this.motorComponent.kind === "Available" ? this.motorComponent.meanMs : null;
 
-    this.sensoryComponent = calculateSensoryComponentStats(this.meanVal, this.motorComponent, testType);
+    this.sensoryComponent = calculateSensoryComponentStats(this.meanVal, this.motorComponent, testType, this.count);
     this.sensoryComponentVal = this.sensoryComponent.kind === "Available" ? this.sensoryComponent.valueMs : null;
 
     this.outcomeCountsByOutcome = OUTCOME_BREAKDOWN.reduce<Record<OutcomeBreakdown, number>>((acc, outcome) => {
@@ -615,6 +634,8 @@ export class ReactionTimeStats {
       sensoryStr = localize("notRecorded");
     } else if (this.sensoryComponent.kind === "NoValidMotorData") {
       sensoryStr = localize("noValidMotorData");
+    } else if (this.sensoryComponent.kind === "NoValidReactionData" || this.sensoryComponent.kind === "InvalidComponentOrder") {
+      sensoryStr = localize("noValidSensoryData");
     } else if (this.sensoryComponent.kind === "NotApplicable") {
       sensoryStr = "N/A";
     } else {
@@ -653,18 +674,30 @@ export class MultiHandReactionTimeStats {
   ) {
     this.total = new ReactionTimeStats(trialResults, upperBound, lowerBound, testType, debugLabel ? `${debugLabel} / total` : undefined);
     this.left = new ReactionTimeStats(
-      trialResults.filter(t => t.expectedAction === "LEFT"),
+      trialResults.filter(t => isTrialForHand(t, "LEFT")),
       upperBound,
       lowerBound,
       testType,
       debugLabel ? `${debugLabel} / left` : undefined,
     );
     this.right = new ReactionTimeStats(
-      trialResults.filter(t => t.expectedAction === "RIGHT"),
+      trialResults.filter(t => isTrialForHand(t, "RIGHT")),
       upperBound,
       lowerBound,
       testType,
       debugLabel ? `${debugLabel} / right` : undefined,
     );
   }
+}
+
+function isTrialForHand(trial: TrialResult, hand: "LEFT" | "RIGHT"): boolean {
+  // Target trials belong to the requested hand even when the participant presses
+  // the other key; this keeps misses and mix-ups attributed to the expected hand.
+  if (trial.expectedAction === "LEFT" || trial.expectedAction === "RIGHT") {
+    return trial.expectedAction === hand;
+  }
+  // Non-target errors and false starts have no expected hand, but the pressed
+  // key still identifies which hand produced the error. NONE/NONE trials, such
+  // as correct rejections, consequently belong to neither hand.
+  return trial.actualAction === hand;
 }

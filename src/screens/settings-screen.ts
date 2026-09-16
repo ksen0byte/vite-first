@@ -185,6 +185,8 @@ function setupCompactSettings(appContext: AppContext): void {
   };
   const refresh = (currentState: CompactSettingsState): void => {
     const currentMode = getModeValue(currentState);
+    // CRT2-3 maps different targets to both hands, so a single-hand choice has
+    // no effect and would misleadingly imply that only one hand is tested.
     const isCrt23 = currentState.testType === "crt2-3";
     fill(mode, modeOptions(currentState), currentMode);
     fill(testType, [
@@ -552,6 +554,8 @@ function compactStartButtonCallback(): void {
   const testType = (document.getElementById("test-type-select") as HTMLSelectElement).value as TestType;
   const testMode = (document.getElementById("stimulus-select") as HTMLSelectElement).value as TestMode;
   const handSelect = document.getElementById("hand-select") as HTMLSelectElement | null;
+  // The fallback keeps programmatic/legacy entry points compatible even if the
+  // compact form was rendered before the hand selector existed.
   const hand: Hand = (handSelect?.value as Hand) || "right";
 
   // Read delay min/max only if NOT using pregenerated delay (optimal mode only)

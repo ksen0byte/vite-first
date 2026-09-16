@@ -193,7 +193,8 @@ export class CnsTestDatabase extends Dexie {
       });
     });
 
-    // Version 6: Backfill hand: 'right' for all test records whose testSettings lack it.
+    // Version 6: old sessions behaved as right-hand tests, so backfilling that
+    // value preserves their original meaning instead of inventing new data.
     this.version(6).stores({
       users: '[firstName+lastName], gender, age',
       tests: '++id, userKey, date'

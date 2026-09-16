@@ -73,6 +73,7 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
       if (!isOneOf(parsed.testMode, testModes)) return invalidValue(`${testPath}.testSettings.testMode`, 'test mode');
       if (!isOneOf(parsed.testType, testTypes)) return invalidValue(`${testPath}.testSettings.testType`, 'test type');
       if (parsed.hand !== undefined && !isOneOf(parsed.hand, hands)) return invalidValue(`${testPath}.testSettings.hand`, 'right or left');
+      // Exports predating hand selection implicitly represented right-hand tests.
       const hand: Hand = (parsed.hand as Hand) ?? 'right';
       if (!Array.isArray(parsed.exposureDelay) || parsed.exposureDelay.length !== 2 || !parsed.exposureDelay.every((value) => typeof value === 'number' && Number.isFinite(value)) || parsed.exposureDelay[0] > parsed.exposureDelay[1]) return invalidValue(`${testPath}.testSettings.exposureDelay`, 'ordered finite pair');
       if (!isRecord(parsed.usePregenerated) || typeof parsed.usePregenerated.exposureDelay !== 'boolean' || typeof parsed.usePregenerated.stimuli !== 'boolean') return invalidValue(`${testPath}.testSettings.usePregenerated`, 'boolean flags');
@@ -88,6 +89,8 @@ export function parseImportedJson(raw: unknown): Result<NormalizedImport, Import
         const expectedAction = trial.expectedAction ?? 'DEFAULT';
         const actualAction = trial.actualAction ?? 'DEFAULT';
         if (!isOneOf(expectedAction, actions) || !isOneOf(actualAction, actions)) return invalidValue(`${trialPath}.action`, 'trial action');
+        // Motor data is optional enrichment. Treat absent legacy values as not
+        // recorded while the surrounding required trial fields remain strict.
         const motorComponent = typeof trial.motorComponent === 'number' && Number.isFinite(trial.motorComponent)
           ? trial.motorComponent
           : null;

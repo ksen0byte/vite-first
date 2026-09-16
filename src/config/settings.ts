@@ -68,6 +68,8 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+// Extremely short/long holds are usually keyboard bounce, missed keyup events,
+// or pauses rather than the motor phase we intend to measure.
 export const MOTOR_COMPONENT_BOUNDS = {
   minMs: 10,
   maxMs: 150,
@@ -81,6 +83,8 @@ export const settings = {
   default: {
     language: "uk" as "uk" | "en",
     testMode: "shapes" as TestMode,
+    // Right preserves the behavior of records and sessions created before hand
+    // selection became an explicit setting.
     hand: "right" as Hand,
     stimulusSize: parameters.stimulusSize.defaultValue as StimulusSize,
     exposureTime: parameters.exposureTime.defaultValue as ExposureTime,
@@ -125,6 +129,8 @@ export const defaultAppContext: AppContext = {
 deepFreeze(defaultAppContext);
 
 export function getHandLocalizationKey(hand?: Hand): string {
+  // Undefined is accepted for legacy in-memory settings that have not passed
+  // through the IndexedDB migration or import normalizer yet.
   switch (hand) {
     case 'left':
       return 'leftHand';

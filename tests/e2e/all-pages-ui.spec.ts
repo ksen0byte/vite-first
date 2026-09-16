@@ -51,16 +51,22 @@ async function importExampleUser(page: Page): Promise<void> {
       hand: 'right',
       usePregenerated: {exposureDelay: true, stimuli: true},
     },
-    trials: reactionSamples.map((reactionTime, trialIndex) => ({
-      trialIndex,
-      stimulus: definition.stimulus,
-      reactionTime: reactionTime + testIndex * 18,
-      outcome: 'Success',
-      expectedAction: definition.expectedAction,
-      actualAction: definition.expectedAction,
-      exposureMs: 700,
-      motorComponent: 82 + (trialIndex % 5) * 4,
-    })),
+    trials: reactionSamples.map((reactionTime, trialIndex) => {
+      const action = definition.testType === 'crt2-3'
+        ? (trialIndex % 2 === 0 ? 'LEFT' : 'RIGHT')
+        : definition.expectedAction;
+
+      return {
+        trialIndex,
+        stimulus: definition.stimulus,
+        reactionTime: reactionTime + testIndex * 18,
+        outcome: 'Success',
+        expectedAction: action,
+        actualAction: action,
+        exposureMs: 700,
+        motorComponent: 82 + (trialIndex % 5) * 4,
+      };
+    }),
     date: `2026-01-${15 + testIndex}T10:00:00.000Z`,
   }));
   await chooser.setFiles({
@@ -123,13 +129,22 @@ test('users page with saved data', async ({page}) => {
   await expect(page).toHaveScreenshot('users.png', snapshotOptions);
 });
 
-test('user profile page with saved test history', async ({page}) => {
-  await importExampleUser(page);
-  await page.locator('.view-profile-btn').click();
-  await expect(page.locator('#user-profile-screen')).toBeVisible();
-  await expect(page.locator('#user-profile-screen canvas')).toHaveCount(3);
-  await expect(page).toHaveScreenshot('user-profile.png', snapshotOptions);
-});
+for (const language of ['en', 'uk'] as const) {
+  test(`user profile page with saved test history in ${language}`, async ({page}) => {
+    await importExampleUser(page);
+    if (language === 'uk') {
+      await page.locator('#language-toggle').uncheck();
+      await expect(page.locator('html')).toHaveAttribute('lang', 'uk');
+    }
+    await page.locator('.view-profile-btn').click();
+    await expect(page.locator('#user-profile-screen')).toBeVisible();
+    await expect(page.locator('#user-profile-screen canvas')).toHaveCount(3);
+    await expect(page).toHaveScreenshot(
+      language === 'en' ? 'user-profile.png' : 'user-profile-uk.png',
+      snapshotOptions,
+    );
+  });
+}
 
 test('results page with completed trials', async ({page}) => {
   await page.locator('#service-reaction').click();
@@ -156,8 +171,75 @@ test('results page with completed trials', async ({page}) => {
 
   await expect(page.locator('#results-screen')).toBeVisible();
   await expect(page.locator('#frequencyChart')).toBeVisible();
+  await expect(page.locator('#secondary-stats-grid > div')).toHaveCount(3);
   await expect(page).toHaveScreenshot('results.png', snapshotOptions);
 });
+
+const crtResultCases = [
+  {testType: 'crt1-3', language: 'en'},
+  {testType: 'crt2-3', language: 'en'},
+  {testType: 'crt2-3', language: 'uk'},
+] as const;
+
+for (const {testType, language} of crtResultCases) {
+  test(`results page for ${testType} with CPI in ${language}`, async ({page}) => {
+    // Importing the example user supplies the SVMR baseline used to calculate CPI.
+    await importExampleUser(page);
+    if (language === 'uk') {
+      await page.locator('#language-toggle').uncheck();
+      await expect(page.locator('html')).toHaveAttribute('lang', 'uk');
+    }
+    await openRoute(page, '/settings');
+    await fillPersonalData(page);
+    await page.locator('#test-type-select').selectOption(testType);
+    await page.locator('#start-test-btn').click();
+    await expect(page.locator('#test-screen')).toBeVisible();
+
+    await page.evaluate(({samples, selectedTestType}) => {
+      const destination = new URL('./results', new URL('.', window.location.href));
+      const stimuli = selectedTestType === 'crt1-3'
+        ? ['red', 'green', 'yellow']
+        : ['cat', 'dog', 'bird'];
+      const reactionTimes = new Map(samples.map((reactionTime, trialIndex) => {
+        const action = selectedTestType === 'crt2-3'
+          ? (trialIndex % 2 === 0 ? 'LEFT' : 'RIGHT')
+          : 'DEFAULT';
+        return [trialIndex, {
+          trialIndex,
+          stimulus: stimuli[trialIndex % stimuli.length],
+          reactionTime: reactionTime + (selectedTestType === 'crt2-3' ? 45 : 25),
+          outcome: 'Success',
+          expectedAction: action,
+          actualAction: action,
+          exposureMs: 700,
+          motorComponent: 84 + (trialIndex % 5) * 4,
+        }];
+      }));
+      history.pushState({reactionTimes}, '', destination.pathname);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }, {samples: reactionSamples, selectedTestType: testType});
+
+    await expect(page.locator('#results-screen')).toBeVisible();
+    await expect(page.locator('#frequencyChart')).toBeVisible();
+    await expect(page.locator('#secondary-stats-grid > div')).toHaveCount(3);
+    await expect(page.locator('#cpi-result-value .loading')).toHaveCount(0);
+    await expect(page.locator('#cpi-result-value')).not.toBeEmpty();
+    expect(await page.locator('#cpi-result-desc').evaluate(
+      (element) => element.scrollWidth <= element.clientWidth,
+    )).toBe(true);
+    expect(await page.locator('#error-stats-group .stat-title, #primary-stats-grid .stat-desc, #secondary-stats-grid .stat-desc').evaluateAll(
+      (elements) => elements
+        .filter((element) => element.scrollWidth > element.clientWidth)
+        .map((element) => element.textContent?.trim()),
+    )).toEqual([]);
+    expect(await page.locator('#results-screen .stat-value, #results-screen .stat-desc').allTextContents())
+      .not.toEqual(expect.arrayContaining([
+        expect.stringMatching(/\d(?:ms|мс|bits|біти|arb\. u\.|ум\. од\.)/),
+      ]));
+    const languageSuffix = language === 'uk' ? '-uk' : '';
+    await expect(page).toHaveScreenshot(`results-${testType}${languageSuffix}.png`, snapshotOptions);
+  });
+}
 
 test('biological age calculator page', async ({page}) => {
   await openRoute(page, '/bio-age-calculator');
