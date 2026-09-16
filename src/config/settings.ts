@@ -1,4 +1,4 @@
-import {ExposureDelay, ExposureTime, FeedbackTuning, StimulusCount, StimulusSize, TestMode, AppContext} from "./domain.ts";
+import {ExposureDelay, ExposureTime, FeedbackTuning, StimulusCount, StimulusSize, TestMode, AppContext, Hand} from "./domain.ts";
 
 /**
  * Single source of truth for every numeric test parameter.
@@ -68,13 +68,24 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+// Extremely short/long holds are usually keyboard bounce, missed keyup events,
+// or pauses rather than the motor phase we intend to measure.
+export const MOTOR_COMPONENT_BOUNDS = {
+  minMs: 10,
+  maxMs: 150,
+} as const;
+
 deepFreeze(parameters);
 deepFreeze(parameterPairs);
+deepFreeze(MOTOR_COMPONENT_BOUNDS);
 
 export const settings = {
   default: {
     language: "uk" as "uk" | "en",
     testMode: "shapes" as TestMode,
+    // Right preserves the behavior of records and sessions created before hand
+    // selection became an explicit setting.
+    hand: "right" as Hand,
     stimulusSize: parameters.stimulusSize.defaultValue as StimulusSize,
     exposureTime: parameters.exposureTime.defaultValue as ExposureTime,
     exposureDelay: [parameters.exposureDelayMin.defaultValue, parameters.exposureDelayMax.defaultValue] as ExposureDelay,
@@ -101,6 +112,7 @@ export const defaultAppContext: AppContext = {
   testSettings: {
     protocolMode: "optimal",
     testMode: settings.default.testMode,
+    hand: settings.default.hand,
     stimulusSize: settings.default.stimulusSize,
     exposureTime: settings.default.exposureTime,
     exposureDelay: settings.default.exposureDelay,
@@ -115,6 +127,18 @@ export const defaultAppContext: AppContext = {
 };
 
 deepFreeze(defaultAppContext);
+
+export function getHandLocalizationKey(hand?: Hand): string {
+  // Undefined is accepted for legacy in-memory settings that have not passed
+  // through the IndexedDB migration or import normalizer yet.
+  switch (hand) {
+    case 'left':
+      return 'leftHand';
+    case 'right':
+    default:
+      return 'rightHand';
+  }
+}
 
 export const printConfig = {
   chart: {

@@ -45,6 +45,16 @@ export function updateLanguageUI(root: ParentNode = document): void {
     element.setAttribute('aria-label', localize(element.dataset.localizeAria!));
   });
 
+  const titleLocalizableElements = root.querySelectorAll<HTMLElement>('[data-localize-title]');
+  titleLocalizableElements.forEach((element) => {
+    element.setAttribute('title', localize(element.dataset.localizeTitle!));
+  });
+
+  const tipLocalizableElements = root.querySelectorAll<HTMLElement>('[data-localize-tip]');
+  tipLocalizableElements.forEach((element) => {
+    element.setAttribute('data-tip', localize(element.dataset.localizeTip!));
+  });
+
   const mathElements = root.querySelectorAll<HTMLElement>("[data-localize-math]");
   mathElements.forEach((element) => {
     const key = element.dataset.localizeMath!;
@@ -78,6 +88,9 @@ const localization: LocalizationKeys = {
   submodeLabel: {en: "Submode", uk: "Підрежим"},
   stimulusTypeLabel: {en: "Stimulus type", uk: "Вид подразника"},
   genderLabel: {en: "Gender", uk: "Стать"},
+  handLabel: {en: "Hand", uk: "Рука"},
+  rightHand: {en: "Right hand", uk: "Права рука"},
+  leftHand: {en: "Left hand", uk: "Ліва рука"},
   optimalProtocol: {en: "Optimal protocol", uk: "Оптимальний протокол"},
   feedbackProtocol: {en: "Feedback protocol", uk: "Протокол зворотного зв’язку"},
   feedbackInitialExposure: {en: "Initial exposure", uk: "Початкова експозиція"},
@@ -196,8 +209,8 @@ const localization: LocalizationKeys = {
   // Test Type
   selectTestType: {en: "Select Test Type", uk: "Оберіть тип тестування"},
   testTypePzmrShort: {en: "SVMR", uk: "ПЗМР"},
-  testTypeRV13Short: {en: "CRT1-3", uk: "РВ1-3"},
-  testTypeRV23Short: {en: "CRT2-3", uk: "РВ2-3"},
+  testTypeRV13Short: {en: "CRT 1-3", uk: "РВ 1-3"},
+  testTypeRV23Short: {en: "CRT 2-3", uk: "РВ 2-3"},
   testTypePzmrLong: {en: "Simple visual-motor reaction", uk: "Проста зорово-моторна реакція"},
   testTypeRV13Long: {en: "Reaction to the choice of one out of three signals", uk: "Реакція вибору одного із трьох сигналів"},
   testTypeRV23Long: {en: "Reaction to the choice of two out of three signals", uk: "Реакція вибору двох із трьох сигналів"},
@@ -363,6 +376,46 @@ const localization: LocalizationKeys = {
   statFunctionalLevel: {en: "SFL", uk: "ФРС"},
   statReactionStability: {en: "RS", uk: "СР"},
   statFunctionalCapabilities: {en: "FCL", uk: "РФМ"},
+  statMotorComponent: {en: "Motor Component", uk: "Моторний компонент"},
+  motorComponentLabel: {en: "Motor Component", uk: "Моторний компонент"},
+  statSensoryComponent: {en: "Sensory Component", uk: "Сенсорний компонент"},
+  sensoryComponentLabel: {en: "Sensory Component", uk: "Сенсорний компонент"},
+  statCpi: {en: "Central Processing (CPI)", uk: "Центральна обробка (МЦОІ)"},
+  statCpi13: {en: "CPI 1-3", uk: "МЦОІ 1-3"},
+  statCpi23: {en: "CPI 2-3", uk: "МЦОІ 2-3"},
+  cpiCardRowLabel: {en: "Central Processing (CPI)", uk: "Центральна обробка (МЦОІ)"},
+  cpiBaselineHelp: {
+    en: "Central Information Processing time according to Donders method: difference between choice reaction time and simple visual-motor reaction time (CRT mean − SVMR mean).",
+    uk: "Час центральної обробки інформації за методом Дондерса: різниця між часом реакції вибору та простої зорово-моторної реакції (середнє РВ − середнє ПЗМР)."
+  },
+  centralProcessingSummaryTitle: {en: "Central Information Processing Summary (CPI)", uk: "Зведена оцінка часу центральної обробки інформації (МЦОІ)"},
+  centralProcessingSummaryDesc: {
+    en: "Estimated cognitive processing time calculated by Donders subtraction method (CRT mean − SVMR mean)",
+    uk: "Оцінка часу центральних когнітивних процесів за методом віднімання Дондерса (середнє РВ − середнє ПЗМР)"
+  },
+  cpi13Label: {en: "CPI 1-3 (Choice 1 of 3)", uk: "МЦОІ 1-3 (Вибір 1 з 3)"},
+  cpi23Label: {en: "CPI 2-3 (Choice 2 of 3)", uk: "МЦОІ 2-3 (Вибір 2 з 3)"},
+  cpiPzmrBaseline: {en: "Baseline SVMR", uk: "Базовий ПЗМР"},
+  cpiTargetCrt13: {en: "Comparison CRT 1-3", uk: "Порівнюваний РВ 1-3"},
+  cpiTargetCrt23: {en: "Comparison CRT 2-3", uk: "Порівнюваний РВ 2-3"},
+  cpiNoBaseline: {en: "SVMR baseline test required for calculation", uk: "Потрібно пройти тест ПЗМР для розрахунку МЦОІ"},
+  cpiNoCrt13: {en: "No CRT 1-3 tests recorded", uk: "Немає збережених тестів РВ 1-3"},
+  cpiNoCrt23: {en: "No CRT 2-3 tests recorded", uk: "Немає збережених тестів РВ 2-3"},
+  cpiFormulaHint: {en: "CPI = Mean(CRT) − Mean(SVMR)", uk: "МЦОІ = Середнє(РВ) − Середнє(ПЗМР)"},
+  cpiLatestAuto: {en: "Latest (Auto)", uk: "Останній (Авто)"},
+  cpiNoValidData: {en: "No valid reaction data in tests", uk: "Немає валідних даних реакції"},
+  notRecorded: {en: "Not recorded", uk: "Не зафіксовано"},
+  noValidMotorData: {en: "No valid data (10–150 ms)", uk: "Немає валідних даних (10–150 мс)"},
+  noValidSensoryData: {en: "No valid sensory data", uk: "Немає валідних сенсорних даних"},
+  cpiLoadError: {en: "Failed to load baseline", uk: "Не вдалося завантажити базовий результат"},
+  motorComponentHelp: {
+    en: "Time between key press (keydown) and key release (keyup) during successful reactions (filtered to 10–150 ms)",
+    uk: "Час між натисканням (keydown) та відпусканням (keyup) клавіші під час успішних реакцій (фільтрація 10–150 мс)"
+  },
+  sensoryComponentHelp: {
+    en: "Sensory processing time calculated as mean reaction time minus motor component (applicable to SVMR only)",
+    uk: "Час сенсорної обробки, розрахований як середній час реакції мінус моторний компонент (тільки для ПЗМР)"
+  },
   statErrorsTotal: {en: "Errors Total", uk: "Помилок Всього"},
   statErrorsPercentage: {en: "Error Rate", uk: "Частота Помилок"},
   trialOutcomeMiss: {en: "Miss", uk: "Пропуск"},

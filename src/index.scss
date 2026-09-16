@@ -142,6 +142,7 @@
   }
 
   /* Chart container */
+  #results-chart-container,
   .flex.flex-grow.p-8 {
     padding: 0.5rem !important;
     height: var(--print-chart-height, 400px) !important;

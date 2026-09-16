@@ -2,6 +2,7 @@ import {Stimulus} from "../domain/types.ts";
 
 export type TestMode = "shapes" | "words" | "colors" | "combined";
 export type TestType = "svmr" | "crt1-3" | "crt2-3";
+export type Hand = 'right' | 'left';
 export type HandAction = 'LEFT' | 'RIGHT' | 'DEFAULT' | 'NONE';
 export type Gender = 'male' | 'female';
 export type StimulusSize = number;
@@ -35,6 +36,7 @@ interface BaseSettings {
   readonly testMode: TestMode;
   readonly stimulusSize: StimulusSize;
   readonly testType: TestType;
+  readonly hand: Hand;
   readonly usePregenerated: {
     /** Stimulus-sequence pregeneration (meaningful for all protocols). */
     readonly stimuli: boolean;
@@ -107,6 +109,11 @@ export interface TrialResult {
    * omit it (backfilled from the saved settings during the DB v4 migration).
    */
   readonly exposureMs?: number;
+  /**
+   * Motor component duration (ms): time between stimulus reaction key down and key up.
+   * Null or undefined for older persisted records or when keyup was not captured.
+   */
+  readonly motorComponent?: number | null;
 }
 
 // ---------------------------------------------------------------------------

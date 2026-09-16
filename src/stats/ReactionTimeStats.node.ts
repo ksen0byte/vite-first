@@ -1,7 +1,8 @@
 // ReactionTimeStats.node.ts - Node.js compatible version without browser dependencies
 
 import {cumulativeStdNormalProbability, mean, median, medianAbsoluteDeviation, quantile, standardDeviation} from "simple-statistics";
-import {TrialOutcome, TrialResult} from "../config/domain.ts";
+import {TestType, TrialOutcome, TrialResult} from "../config/domain.ts";
+import {MOTOR_COMPONENT_BOUNDS} from "../config/settings.ts";
 
 export interface FrequencyBin {
   binStart: number;
@@ -15,6 +16,88 @@ export type OutcomeBreakdown = ErrorOutcome | "CorrectRejection";
 export const ERROR_OUTCOMES: readonly ErrorOutcome[] = ["Miss", "FalseAlarm", "FalseStart", "MixUp"];
 export const OUTCOME_BREAKDOWN: readonly OutcomeBreakdown[] = [...ERROR_OUTCOMES, "CorrectRejection"];
 
+export type MotorComponentStats =
+  | { readonly kind: "NotRecorded" }
+  | { readonly kind: "NoValidSamples"; readonly totalRecorded: number; readonly successfulRecorded: number }
+  | { readonly kind: "Available"; readonly meanMs: number; readonly validCount: number; readonly totalRecorded: number };
+
+export type SensoryComponentStats =
+  | { readonly kind: "NotApplicable" }
+  | { readonly kind: "NotRecorded" }
+  | { readonly kind: "NoValidMotorData" }
+  | { readonly kind: "NoValidReactionData" }
+  | { readonly kind: "InvalidComponentOrder" }
+  | { readonly kind: "Available"; readonly valueMs: number };
+
+export function calculateMotorComponentStats(
+  trialResults: readonly TrialResult[],
+  minMs: number = MOTOR_COMPONENT_BOUNDS.minMs,
+  maxMs: number = MOTOR_COMPONENT_BOUNDS.maxMs,
+): MotorComponentStats {
+  // Keep recorded-but-invalid values distinguishable from legacy trials that
+  // never captured motor timing; the UI communicates those states differently.
+  const trialsWithMotor = trialResults.filter(
+    trialResult => typeof trialResult.motorComponent === "number" && !Number.isNaN(trialResult.motorComponent),
+  );
+
+  if (trialsWithMotor.length === 0) {
+    return {kind: "NotRecorded"};
+  }
+
+  // Error trials do not represent the intended stimulus-response movement and
+  // would bias the motor estimate with premature or incorrect actions.
+  const successfulTrialsWithMotor = trialsWithMotor.filter(trialResult => trialResult.outcome === "Success");
+  const validValues = successfulTrialsWithMotor
+    .map(trialResult => trialResult.motorComponent as number)
+    .filter(value => value >= minMs && value <= maxMs);
+
+  if (validValues.length === 0) {
+    return {
+      kind: "NoValidSamples",
+      totalRecorded: trialsWithMotor.length,
+      successfulRecorded: successfulTrialsWithMotor.length,
+    };
+  }
+
+  return {
+    kind: "Available",
+    meanMs: mean(validValues),
+    validCount: validValues.length,
+    totalRecorded: trialsWithMotor.length,
+  };
+}
+
+export function calculateSensoryComponentStats(
+  meanReactionTimeMs: number,
+  motorStats: MotorComponentStats,
+  testType: TestType = "svmr",
+  validReactionCount: number = 1,
+): SensoryComponentStats {
+  if (testType !== "svmr") {
+    return {kind: "NotApplicable"};
+  }
+  if (motorStats.kind === "NotRecorded") {
+    return {kind: "NotRecorded"};
+  }
+  if (motorStats.kind === "NoValidSamples") {
+    return {kind: "NoValidMotorData"};
+  }
+  // ReactionTimeStats uses zero when cleaning removes every RT sample. Without
+  // the count guard that sentinel would produce a plausible-looking negative value.
+  if (validReactionCount <= 0 || !Number.isFinite(meanReactionTimeMs) || meanReactionTimeMs <= 0) {
+    return {kind: "NoValidReactionData"};
+  }
+  // The motor interval is a subset of total reaction time. Equality or a larger
+  // motor value therefore signals inconsistent measurements, not sensory time.
+  if (!Number.isFinite(motorStats.meanMs) || motorStats.meanMs >= meanReactionTimeMs) {
+    return {kind: "InvalidComponentOrder"};
+  }
+  return {
+    kind: "Available",
+    valueMs: meanReactionTimeMs - motorStats.meanMs,
+  };
+}
+
 export class ReactionTimeStats {
   private readonly data: number[];
   private readonly bins: FrequencyBin[];
@@ -26,6 +109,11 @@ export class ReactionTimeStats {
   public readonly modeVal;
   public readonly stdevVal;
   public readonly cvVal;
+  public readonly motorComponent: MotorComponentStats;
+  public readonly hasMotorComponentData: boolean;
+  public readonly motorComponentVal: number | null;
+  public readonly sensoryComponent: SensoryComponentStats;
+  public readonly sensoryComponentVal: number | null;
 
   // For percentiles (p3, p10, p25, p50, p75, p90, p97):
   //  p50 will match medianVal above, but we'll keep it for completeness
@@ -44,12 +132,16 @@ export class ReactionTimeStats {
 
   public readonly errorCount: number;
   public readonly errorPercentage: number;
-  public readonly outcomeCountsByOutcome: Record<OutcomeBreakdown, number>;
-
   /**
    * Create a new instance with the given array of reaction times.
    */
-  constructor(trialResults: TrialResult[], upperBound: number = 500, lowerBound: number = 100, debugLabel?: string) {
+  constructor(
+    trialResults: TrialResult[],
+    upperBound: number = 500,
+    lowerBound: number = 100,
+    testType: TestType,
+    debugLabel?: string,
+  ) {
     this.debugLabel = debugLabel;
     const successfulCount = trialResults.filter(trialResult => trialResult.outcome === "Success").length;
     // Step 1: Remove hard outliers based on fixed range
@@ -97,6 +189,15 @@ export class ReactionTimeStats {
       this.entropyVal = 0;
     }
 
+    this.motorComponent = calculateMotorComponentStats(trialResults);
+    // Keep scalar aliases for existing consumers, while the tagged results retain
+    // the reason a value is unavailable for newer UI code.
+    this.hasMotorComponentData = this.motorComponent.kind !== "NotRecorded";
+    this.motorComponentVal = this.motorComponent.kind === "Available" ? this.motorComponent.meanMs : null;
+
+    this.sensoryComponent = calculateSensoryComponentStats(this.meanVal, this.motorComponent, testType, this.count);
+    this.sensoryComponentVal = this.sensoryComponent.kind === "Available" ? this.sensoryComponent.valueMs : null;
+
     this.outcomeCountsByOutcome = OUTCOME_BREAKDOWN.reduce<Record<OutcomeBreakdown, number>>((acc, outcome) => {
       acc[outcome] = trialResults.filter(t => t.outcome === outcome).length;
       return acc;
@@ -112,6 +213,8 @@ export class ReactionTimeStats {
     this.errorCount = errors.length;
     this.errorPercentage = trialResults.length > 0 ? (this.errorCount / trialResults.length) * 100 : 0;
   }
+
+  public readonly outcomeCountsByOutcome: Record<OutcomeBreakdown, number>;
 
 
   /**
