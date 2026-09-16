@@ -103,4 +103,58 @@ describe('parseImportedJson', () => {
       expect(result.error.path).toContain('testSettings.hand');
     }
   });
+
+  it('accepts current feedback-strength settings without optimal-only fields', () => {
+    const raw = structuredClone(currentExport);
+    const settings = (raw[0].tests[0] as any).testSettings;
+    settings.protocolMode = 'feedback-strength';
+    settings.usePregenerated = {stimuli: false};
+    settings.feedback = {
+      initialExposure: 900,
+      adjustmentStep: 20,
+      minExposure: 20,
+      maxExposure: 900,
+      pause: 200,
+      duration: 30,
+    };
+    delete settings.exposureDelay;
+    delete settings.exposureTime;
+    delete settings.stimulusCount;
+
+    const result = parseImportedJson(raw);
+
+    expect(result._tag).toBe('Success');
+    if (result._tag === 'Success') {
+      expect(result.value[0].tests[0].testSettings).toMatchObject({
+        protocolMode: 'feedback-strength',
+      });
+    }
+  });
+
+  it('defaults pregeneration flags for legacy settings that predate them', () => {
+    const raw = structuredClone(currentExport);
+    delete (raw[0].tests[0] as any).testSettings.usePregenerated;
+
+    const result = parseImportedJson(raw);
+
+    expect(result._tag).toBe('Success');
+    if (result._tag === 'Success') {
+      expect(result.value[0].tests[0].testSettings.usePregenerated).toEqual({
+        exposureDelay: true,
+        stimuli: true,
+      });
+    }
+  });
+
+  it('normalizes the legacy syllables stimulus mode to words', () => {
+    const raw = structuredClone(currentExport);
+    (raw[0].tests[0] as any).testSettings.testMode = 'syllables';
+
+    const result = parseImportedJson(raw);
+
+    expect(result._tag).toBe('Success');
+    if (result._tag === 'Success') {
+      expect(result.value[0].tests[0].testSettings.testMode).toBe('words');
+    }
+  });
 });
