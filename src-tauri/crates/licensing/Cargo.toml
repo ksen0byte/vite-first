@@ -1,0 +1,20 @@
+[package]
+name = "cns-licensing"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Pure offline licensing domain: installation identity, wire formats, Ed25519 signing/verification. No IO."
+
+[features]
+# Signing is only needed by the vendor tool; the desktop app compiles verification only.
+issuer = []
+
+[dependencies]
+ed25519-dalek = "2"
+sha2 = "0.10"
+base64 = "0.22"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+cns-licensing = { path = ".", features = ["issuer"] }

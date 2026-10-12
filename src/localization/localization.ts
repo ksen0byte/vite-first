@@ -119,6 +119,30 @@ const localization: LocalizationKeys = {
   languageEN: {en: "EN", uk: "АНГЛ."}, // Localized label for "EN"
   languageUA: {en: "UA", uk: "УКР."},  // Localized label for "UA"
 
+  // desktop licensing / activation
+  activationTitle: {en: "Activate CNS Test", uk: "Активація CNS Test"},
+  activationIntro: {en: "This copy of the application must be activated before use. Activation works fully offline.", uk: "Перед використанням цю копію застосунку потрібно активувати. Активація відбувається повністю офлайн."},
+  activationStep1: {en: "1. Send the activation request below to your distributor (copy it and paste it into an e-mail or message).", uk: "1. Надішліть наведений нижче запит на активацію вашому постачальнику (скопіюйте його та вставте в електронний лист або повідомлення)."},
+  activationStep2: {en: "2. You will receive a license code (CNS-LIC1:…) issued for this computer.", uk: "2. Ви отримаєте код ліцензії (CNS-LIC1:…), виданий для цього комп’ютера."},
+  activationStep3: {en: "3. Paste the license code below and press Activate.", uk: "3. Вставте код ліцензії нижче й натисніть «Активувати»."},
+  installationIdLabel: {en: "Installation ID", uk: "Ідентифікатор інсталяції"},
+  activationRequestLabel: {en: "Activation request", uk: "Запит на активацію"},
+  activationCopy: {en: "Copy", uk: "Копіювати"},
+  activationCopied: {en: "Copied", uk: "Скопійовано"},
+  licenseInputLabel: {en: "License", uk: "Ліцензія"},
+  activationActivate: {en: "Activate", uk: "Активувати"},
+  activationEmptyInput: {en: "Paste the license code first.", uk: "Спочатку вставте код ліцензії."},
+  activationStoredInvalid: {en: "The saved license is no longer valid.", uk: "Збережена ліцензія більше не дійсна."},
+  activationSaveFailed: {en: "The license is valid but could not be saved on this computer.", uk: "Ліцензія дійсна, але її не вдалося зберегти на цьому комп’ютері."},
+  licensingUnavailable: {en: "Licensing is unavailable on this computer. Please contact your distributor.", uk: "Ліцензування недоступне на цьому комп’ютері. Зверніться до вашого постачальника."},
+  rejectionMalformed: {en: "This is not a valid CNS Test license, or it was damaged while copying.", uk: "Це не дійсна ліцензія CNS Test, або її пошкоджено під час копіювання."},
+  rejectionBadSignature: {en: "The license signature is invalid: it was not issued by the distributor or has been modified.", uk: "Підпис ліцензії недійсний: її видав не постачальник або її було змінено."},
+  rejectionWrongInstallation: {en: "This license was issued for another installation. Licenses cannot be moved between computers; request a license for this installation.", uk: "Цю ліцензію видано для іншої інсталяції. Ліцензії не можна переносити між комп’ютерами; запросіть ліцензію для цієї інсталяції."},
+  rejectionExpired: {en: "This license has expired. Last valid day:", uk: "Термін дії цієї ліцензії закінчився. Останній день дії:"},
+  licensedTo: {en: "Licensed to", uk: "Ліцензовано для"},
+  licenseValidThrough: {en: "valid through", uk: "діє до"},
+  licensePerpetual: {en: "perpetual license", uk: "безстрокова ліцензія"},
+
   // keys for theme names
   theme_light: {en: "Light", uk: "Світла"},
   theme_dark: {en: "Dark", uk: "Темна"},

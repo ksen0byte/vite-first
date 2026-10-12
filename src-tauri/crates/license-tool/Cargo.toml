@@ -1,0 +1,15 @@
+[package]
+name = "cns-license-tool"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Vendor-side offline CLI: generate signing keys and issue licenses for activation requests."
+
+[[bin]]
+name = "cns-license"
+path = "src/main.rs"
+
+[dependencies]
+cns-licensing = { path = "../licensing", features = ["issuer"] }
+clap = { version = "4", features = ["derive", "env"] }
+getrandom = "0.3"

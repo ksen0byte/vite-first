@@ -1,8 +1,10 @@
 import Router from "../../routing/router.ts";
 import { setupHeader } from "../../components/header.ts";
 import { updateLanguageUI } from "../../localization/localization.ts";
+import { licenseSummaryHtml } from "../../components/license-summary.ts";
+import type { Grant } from "../../licensing/domain.ts";
 
-export function setupDashboardScreen(appContainer: HTMLElement) {
+export function setupDashboardScreen(appContainer: HTMLElement, grant: Grant) {
   appContainer.innerHTML = `
     <div class="bg-base-200 flex flex-col">
       <main id="dashboard-content" class="container mx-auto p-4 flex-grow">
@@ -50,6 +52,7 @@ export function setupDashboardScreen(appContainer: HTMLElement) {
           </div>
 
         </div>
+        ${licenseSummaryHtml(grant)}
       </main>
     </div>
   `;

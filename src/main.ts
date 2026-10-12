@@ -9,56 +9,80 @@ import {setupProfileScreen} from "./screens/user-profile-screen.ts";
 import {setupDashboardScreen} from "./features/dashboard/dashboard-screen.ts";
 import {setupBioAgeCalculatorScreen} from "./features/biological-age/screens/bio-age-calculator-screen.ts";
 import {setupSpamWarningScreen} from "./screens/spam-warning-screen.ts";
+import {setupActivationScreen} from "./screens/activation-screen.ts";
+import type {Grant} from "./licensing/domain.ts";
+import {detectPlatform, resolveStartup} from "./licensing/tauri-licensing.ts";
 
 const appContainer = document.getElementById('app')! as HTMLElement;
 
-// Register routes
-Router.registerRoute('/', () => setupDashboardScreen(appContainer));
-Router.registerRoute('/settings', () => setupSettingsScreen(appContainer));
-Router.registerRoute('/test', () => {
-  const testScreen = new TestScreen(appContainer);
-  testScreen.setupScreen();
-  return () => testScreen.destroy();
-});
-Router.registerRoute('/spam-warning', () => setupSpamWarningScreen(appContainer));
-Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(appContainer));
-Router.registerRoute('/users', async () => {
-  appContainer.innerHTML = '<p>Loading...</p>';
-  try {
-    const usersScreen = new UsersScreen(appContainer);
-    await usersScreen.setupScreen();
-    return () => usersScreen.destroy();
-  } catch (error) {
-    console.error('Failed to load User Screen:', error);
-    appContainer.innerHTML = '<p>Error loading user screen. Please try again later.</p>';
+// The app runs only once access is granted: always on the web, with a valid license on desktop.
+// While locked, no routes are registered, so nothing but the activation screen is reachable.
+function startApp(grant: Grant): void {
+  Router.registerRoute('/', () => setupDashboardScreen(appContainer, grant));
+  Router.registerRoute('/settings', () => setupSettingsScreen(appContainer));
+  Router.registerRoute('/test', () => {
+    const testScreen = new TestScreen(appContainer);
+    testScreen.setupScreen();
+    return () => testScreen.destroy();
+  });
+  Router.registerRoute('/spam-warning', () => setupSpamWarningScreen(appContainer));
+  Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(appContainer));
+  Router.registerRoute('/users', async () => {
+    appContainer.innerHTML = '<p>Loading...</p>';
+    try {
+      const usersScreen = new UsersScreen(appContainer);
+      await usersScreen.setupScreen();
+      return () => usersScreen.destroy();
+    } catch (error) {
+      console.error('Failed to load User Screen:', error);
+      appContainer.innerHTML = '<p>Error loading user screen. Please try again later.</p>';
+    }
+  });
+  Router.registerRoute('/results', () => {
+    const state = history.state;
+    const reactionTimes = state?.reactionTimes;
+    if (!reactionTimes) {
+      console.error('Reaction times missing for results.');
+      appContainer.innerHTML = '<p>Error loading results. Please try again.</p>';
+      return;
+    }
+    setupResultsScreen(appContainer, reactionTimes);
+  });
+  Router.registerRoute('/profile', () => {
+    const state = history.state;
+    const user = state?.user;
+    const tests = state?.tests;
+
+    if (!user || !tests) {
+      console.error('User or tests data missing for profile.');
+      appContainer.innerHTML = '<p>Error loading profile. Please try again.</p>';
+      return;
+    }
+
+    return setupProfileScreen(appContainer, user, tests);
+  });
+
+  // Initialize router
+  Router.initialize(appContainer);
+  Router.navigate('/'); // Default route: Dashboard
+
+  updateLanguageUI();
+}
+
+async function boot(): Promise<void> {
+  const startup = await resolveStartup(detectPlatform());
+  switch (startup._tag) {
+    case 'Run':
+      startApp(startup.grant);
+      return;
+    case 'Activate': {
+      const cleanup = setupActivationScreen(appContainer, startup.lock, startup.licensing, (grant) => {
+        cleanup();
+        startApp(grant);
+      });
+      return;
+    }
   }
-});
-Router.registerRoute('/results', () => {
-  const state = history.state;
-  const reactionTimes = state?.reactionTimes;
-  if (!reactionTimes) {
-    console.error('Reaction times missing for results.');
-    appContainer.innerHTML = '<p>Error loading results. Please try again.</p>';
-    return;
-  }
-  setupResultsScreen(appContainer, reactionTimes);
-});
-Router.registerRoute('/profile', () => {
-  const state = history.state;
-  const user = state?.user;
-  const tests = state?.tests;
+}
 
-  if (!user || !tests) {
-    console.error('User or tests data missing for profile.');
-    appContainer.innerHTML = '<p>Error loading profile. Please try again.</p>';
-    return;
-  }
-
-  return setupProfileScreen(appContainer, user, tests);
-});
-
-// Initialize router
-Router.initialize(appContainer);
-Router.navigate('/'); // Default route: Dashboard
-
-updateLanguageUI();
+void boot();

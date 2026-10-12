@@ -10,7 +10,7 @@ permissions:
 jobs:
   verify:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,6 +19,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --workspace
       - run: npx playwright install chromium
       - run: npm run test:e2e
       - name: Upload Playwright artifacts on failure

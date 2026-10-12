@@ -11,6 +11,13 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tsbuildinfo
+
+# Local environment configuration (keep example templates)
+.env
+.env.*
+!.env.example
+!.env.*.example
 
 # Data files
 *-data.json
@@ -30,3 +37,24 @@ dist-ssr
 .features/
 /test-results/
 .exp/
+
+# Generated test reports and browser caches (keep screenshot baselines)
+/coverage/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Local agent settings and generated plans
+/.claude/settings.local.json
+/.junie/plans/
+
+# Licensing: vendor SECRET signing keys and issued licenses must never be committed
+/.licensing/
+*.signing.key
+*.lic
+*.req
+
+# Tauri / Rust
+/src-tauri/target/
+/src-tauri/gen/schemas/
+/dist-desktop

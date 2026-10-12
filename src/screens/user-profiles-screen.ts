@@ -8,6 +8,7 @@ import {exportDataAsJson, readJsonFile} from "../util/export-utils";
 import {escapeHtml} from "../util/html.ts";
 import {ExportEnvelopeV1, parseImportedJson} from '../util/import-json.ts';
 import {importUsers} from '../application/import-users.ts';
+import {dialogs} from '../platform/dialogs.ts';
 
 /**
  * Exports all users and their test data as a JSON file
@@ -43,13 +44,14 @@ async function exportAllUsersData(): Promise<void> {
 
     // Export the data using the utility function
     const exportData: ExportEnvelopeV1 = {schemaVersion: 1, exportedAt: now.toISOString(), users: usersForExport};
-    const result = await exportDataAsJson(exportData, filename);
-    if (result._tag === 'Failure') {
-      alert(result.error);
+    const outcome = await exportDataAsJson(exportData, filename);
+    if (outcome._tag === 'Failed') {
+      console.error('Error saving users data:', outcome.reason);
+      await dialogs.notify(`Error exporting users data: ${outcome.reason}`, 'error');
     }
   } catch (error) {
     console.error('Error exporting users data:', error);
-    alert('Error exporting users data. Please try again.');
+    await dialogs.notify('Error exporting users data. Please try again.', 'error');
   }
 }
 
@@ -88,13 +90,14 @@ async function exportUserData(firstName: string, lastName: string): Promise<void
 
     // Export the data using the utility function
     const exportData: ExportEnvelopeV1 = {schemaVersion: 1, exportedAt: now.toISOString(), users: [userForExport]};
-    const result = await exportDataAsJson(exportData, filename);
-    if (result._tag === 'Failure') {
-      alert(result.error);
+    const outcome = await exportDataAsJson(exportData, filename);
+    if (outcome._tag === 'Failed') {
+      console.error('Error saving user data:', outcome.reason);
+      await dialogs.notify(`Error exporting user data: ${outcome.reason}`, 'error');
     }
   } catch (error) {
     console.error('Error exporting user data:', error);
-    alert('Error exporting user data. Please try again.');
+    await dialogs.notify('Error exporting user data. Please try again.', 'error');
   }
 }
 
@@ -283,7 +286,7 @@ export class UsersScreen {
    */
   private async deleteUser(firstName: string, lastName: string) {
     // Ask for confirmation before proceeding
-    const confirmation = confirm(localize('deleteConfirmation').replace('%s', `${firstName} ${lastName}`));
+    const confirmation = await dialogs.confirm(localize('deleteConfirmation').replace('%s', `${firstName} ${lastName}`));
     if (!confirmation) {
       return; // Exit if the user cancels
     }
@@ -298,7 +301,7 @@ export class UsersScreen {
       updateLanguageUI();
     } catch (error) {
       console.error('Error deleting user or associated tests:', error);
-      alert(localize('deleteError'));
+      await dialogs.notify(localize('deleteError'), 'error');
     }
   }
 
@@ -362,13 +365,13 @@ export class UsersScreen {
         const readResult = await readJsonFile(file);
         if (readResult._tag === 'Failure') {
           console.error('Error reading file:', readResult.error);
-          alert(localize('importError'));
+          await dialogs.notify(localize('importError'), 'error');
           return;
         }
         const parsed = parseImportedJson(readResult.value);
         if (parsed._tag === 'Failure') {
           console.error('Invalid import:', parsed.error);
-          alert(localize('importError'));
+          await dialogs.notify(localize('importError'), 'error');
           return;
         }
         const importResult = await importUsers(parsed.value);
@@ -382,12 +385,12 @@ export class UsersScreen {
         this.renderUsers();
         updateLanguageUI();
 
-        alert(localize('importSuccess')
+        await dialogs.notify(localize('importSuccess')
           .replace('%u', String(importResult.value.importedUsers))
-          .replace('%t', String(importResult.value.importedTests)));
+          .replace('%t', String(importResult.value.importedTests)), 'info');
       } catch (e) {
         console.error('Error importing data:', e);
-        alert(localize('importError'));
+        await dialogs.notify(localize('importError'), 'error');
       }
     };
 
