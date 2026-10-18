@@ -5,14 +5,16 @@ import { licenseSummaryHtml } from "../../components/license-summary.ts";
 import type { Grant } from "../../licensing/domain.ts";
 
 export function setupDashboardScreen(appContainer: HTMLElement, grant: Grant) {
+  const bioAgeEnabled = false;
+
   appContainer.innerHTML = `
     <div class="bg-base-200 flex flex-col">
       <main id="dashboard-content" class="container mx-auto p-4 flex-grow">
         <h1 class="text-3xl font-bold mb-6 text-center" data-localize="dashboardHeaderTitle">Tools and Services</h1>
         
-        <div class="dashboard-services grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           
-          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-primary" id="service-reaction" role="button" tabindex="0">
+          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-primary lg:col-span-2 ${bioAgeEnabled ? '' : 'lg:col-start-2'}" id="service-reaction" role="button" tabindex="0">
             <figure class="px-10 pt-10">
               <span class="text-6xl">⏱️</span>
             </figure>
@@ -25,7 +27,7 @@ export function setupDashboardScreen(appContainer: HTMLElement, grant: Grant) {
             </div>
           </div>
 
-          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-secondary hidden" id="service-bio-age" role="button" tabindex="0">
+          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-secondary lg:col-span-2 ${bioAgeEnabled ? '' : 'hidden'}" id="service-bio-age" role="button" tabindex="0">
             <figure class="px-10 pt-10">
               <span class="text-6xl">🧬</span>
             </figure>
@@ -38,7 +40,7 @@ export function setupDashboardScreen(appContainer: HTMLElement, grant: Grant) {
             </div>
           </div>
 
-          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-accent" id="service-profiles" role="button" tabindex="0">
+          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-accent lg:col-span-2" id="service-profiles" role="button" tabindex="0">
             <figure class="px-10 pt-10">
               <span class="text-6xl">📂</span>
             </figure>

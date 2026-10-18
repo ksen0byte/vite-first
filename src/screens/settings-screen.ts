@@ -94,7 +94,9 @@ const renderPregeneratedOptions = (settings: AppContext["testSettings"], showDel
 function settingsScreenFooterHTML() {
   return `
     <footer id="footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
-      <div class="flex-1"></div>
+      <div class="flex-1">
+        <button id="back-btn" class="btn btn-outline" data-localize="back"></button>
+      </div>
       <div class="flex space-x-2">
         <button id="reset-settings-btn" class="btn btn-outline btn-error" data-localize="resetSettings"></button>
         <button id="start-test-btn" class="btn btn-success" data-localize="startTest"></button>
@@ -116,6 +118,7 @@ export function setupSettingsScreen(appContainer: HTMLElement): void {
     appContainer,
     settingsScreenFooterHTML(),
     [
+      {buttonFn: () => document.getElementById("back-btn")! as HTMLButtonElement, callback: () => Router.navigate("/")},
       {buttonFn: () => document.getElementById("start-test-btn")! as HTMLButtonElement, callback: () => compactStartButtonCallback()},
       {buttonFn: () => document.getElementById("reset-settings-btn")! as HTMLButtonElement, callback: () => resetSettingsButtonCallback()},
     ]

@@ -116,7 +116,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
   cpiSummaryContainer.addEventListener('change', handleCpiSelectionChange);
 
   setupFooter(appContainer, userProfileFooterHTML(), [
-    {buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/")},
+    {buttonFn: () => document.getElementById("users-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/users")},
     {buttonFn: () => document.getElementById("print-btn")! as HTMLButtonElement, callback: () => handlePrint(user)},
   ]);
   chartInstances = renderHistograms(sortedTests);
@@ -719,7 +719,7 @@ function userProfileFooterHTML(): string {
     <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
       <div class="flex-1"></div>
       <button id="print-btn" class="btn btn-outline btn-primary" data-localize="printButton"></button>
-      <button id="main-page-btn" class="btn btn-outline btn-success ml-2" data-localize="backToMainPage"></button>
+      <button id="users-page-btn" class="btn btn-outline btn-success ml-2" data-localize="back"></button>
     </footer>
   `;
 }

@@ -89,6 +89,11 @@ async function fillPersonalData(page: Page): Promise<void> {
 test('dashboard page', async ({page}) => {
   await expect(page.locator('#dashboard-content')).toBeVisible();
   await expect(page).toHaveScreenshot('dashboard.png', snapshotOptions);
+
+  await page.locator('#service-reaction').click();
+  await expect(page.locator('#back-btn')).toBeVisible();
+  await page.locator('#back-btn').click();
+  await expect(page.locator('#dashboard-content')).toBeVisible();
 });
 
 const activeStimulusCases = [
@@ -143,6 +148,8 @@ for (const language of ['en', 'uk'] as const) {
       language === 'en' ? 'user-profile.png' : 'user-profile-uk.png',
       snapshotOptions,
     );
+    await page.locator('#users-page-btn').click();
+    await expect(page.locator('#users-screen')).toBeVisible();
   });
 }
 
@@ -173,6 +180,18 @@ test('results page with completed trials', async ({page}) => {
   await expect(page.locator('#frequencyChart')).toBeVisible();
   await expect(page.locator('#secondary-stats-grid > div')).toHaveCount(3);
   await expect(page).toHaveScreenshot('results.png', snapshotOptions);
+});
+
+test('results page without route state shows its error state', async ({page}) => {
+  await openRoute(page, '/results');
+  await expect(page.getByText('Error loading results. Please try again.')).toBeVisible();
+  await expect(page).toHaveScreenshot('results-error.png', snapshotOptions);
+});
+
+test('profile page without route state shows its error state', async ({page}) => {
+  await openRoute(page, '/profile');
+  await expect(page.getByText('Error loading profile. Please try again.')).toBeVisible();
+  await expect(page).toHaveScreenshot('profile-error.png', snapshotOptions);
 });
 
 const crtResultCases = [
