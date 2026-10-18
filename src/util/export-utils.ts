@@ -1,4 +1,5 @@
 import { Result, success, failure } from "./result.ts";
+import { dialogs, SaveOutcome } from "../platform/dialogs.ts";
 
 /**
  * Utility functions for exporting data
@@ -10,38 +11,17 @@ export type FileError =
   | { readonly _tag: 'NotAJsonFileError' };
 
 /**
- * Exports data as a JSON file for download
+ * Exports data as a JSON file: a download in the browser, a "Save as" dialog on desktop.
  * @param data - The data to export
- * @param filename - The name of the file to download
+ * @param filename - The file name proposed to the user
  */
-export async function exportDataAsJson<T>(data: T, filename: string): Promise<Result<void, string>> {
-  try {
-    // Convert the data to a JSON string
-    const jsonData = JSON.stringify(data, null, 2);
-
-    // Create a blob from the JSON string
-    const blob = new Blob([jsonData], { type: 'application/json' });
-
-    // Create a URL for the blob
-    const url = URL.createObjectURL(blob);
-
-    // Create a temporary link element
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-
-    // Append the link to the document, click it, and remove it
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    // Release the URL object
-    URL.revokeObjectURL(url);
-    return success(undefined);
-  } catch (error) {
-    console.error('Error exporting data:', error);
-    return failure('Error exporting data. Please try again.');
-  }
+export function exportDataAsJson<T>(data: T, filename: string): Promise<SaveOutcome> {
+  return dialogs.saveTextFile({
+    suggestedName: filename,
+    extension: 'json',
+    contents: JSON.stringify(data, null, 2),
+    mimeType: 'application/json',
+  });
 }
 
 /**
