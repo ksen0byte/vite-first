@@ -201,6 +201,39 @@ test('results page with completed trials', async ({page}) => {
   await expect(page).toHaveScreenshot('results.png', snapshotOptions);
 });
 
+for (const feedbackMode of ['mobility', 'strength'] as const) {
+  test(`results page for feedback ${feedbackMode}`, async ({page}) => {
+    await page.locator('#service-reaction').click();
+    await fillPersonalData(page);
+    await page.locator('#protocol-select').selectOption('feedback');
+    await page.locator('#mode-select').selectOption(feedbackMode);
+    await page.locator('#test-type-select').selectOption('svmr');
+    await page.locator('#start-test-btn').click();
+    await expect(page.locator('#test-screen')).toBeVisible();
+
+    await page.evaluate((samples) => {
+      const destination = new URL('./results', new URL('.', window.location.href));
+      const exposureSteps = [340, 320, 300, 280, 260, 260];
+      const reactionTimes = new Map(samples.map((reactionTime, trialIndex) => [trialIndex, {
+        trialIndex,
+        stimulus: 'circle',
+        reactionTime,
+        outcome: 'Success',
+        expectedAction: 'DEFAULT',
+        actualAction: 'DEFAULT',
+        exposureMs: exposureSteps[Math.min(trialIndex, exposureSteps.length - 1)],
+        motorComponent: 80 + (trialIndex % 5) * 5,
+      }]));
+      history.pushState({reactionTimes}, '', destination.pathname);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }, reactionSamples);
+
+    await expect(page.locator('#results-screen')).toBeVisible();
+    await expect(page.locator('[data-localize="statMinExposure"]')).toBeVisible();
+    await expect(page).toHaveScreenshot(`results-feedback-${feedbackMode}.png`, snapshotOptions);
+  });
+}
+
 test('results page without route state shows its error state', async ({page}) => {
   await openRoute(page, '/results');
   await expect(page.getByText('Error loading results. Please try again.')).toBeVisible();

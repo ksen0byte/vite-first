@@ -298,14 +298,14 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                     ${handBreakdownValueHtml(statsLeft?.count, statsRight?.count)}
                   </td>
                 </tr>
-                <tr class="text-center">
+                <tr class="text-center bg-primary/10 font-semibold">
                   <td><strong data-localize="meanLabel"></strong></td>
                   <td>
                     ${stats.meanVal.toFixed(2)} <span data-localize="ms"></span>
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.meanVal.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
-                <tr class="text-center">
+                <tr class="text-center bg-primary/10 font-semibold">
                   <td>
                     <div class="inline-flex items-center justify-center gap-1">
                       <strong data-localize="motorComponentLabel"></strong>
@@ -318,7 +318,7 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                   </td>
                 </tr>
                 ${testType === "svmr" ? `
-                <tr class="text-center">
+                <tr class="text-center bg-primary/10 font-semibold">
                   <td>
                     <div class="inline-flex items-center justify-center gap-1">
                       <strong data-localize="sensoryComponentLabel"></strong>
@@ -329,7 +329,7 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                     ${formatSensoryComponent(stats)}
                   </td>
                 </tr>` : `
-                <tr class="text-center">
+                <tr class="text-center bg-primary/10 font-semibold">
                   <td>
                     <div class="inline-flex items-center justify-center gap-1">
                       <strong data-localize="cpiCardRowLabel"></strong>
@@ -466,15 +466,15 @@ function feedbackStatsRowsHtml(trials: TestRecord["trials"]): string {
   if (!summary) return "";
 
   return `
-    <tr class="text-center">
+    <tr class="text-center bg-primary/10 font-semibold">
       <td><strong data-localize="statMinExposure"></strong></td>
       <td>${summary.minExposureMs} <span data-localize="ms"></span></td>
     </tr>
-    <tr class="text-center">
+    <tr class="text-center bg-primary/10 font-semibold">
       <td><strong data-localize="statMinExposureTrial"></strong></td>
       <td>#${summary.reachedAfterTrial}</td>
     </tr>
-    <tr class="text-center">
+    <tr class="text-center bg-primary/10 font-semibold">
       <td><strong data-localize="statStimuliProcessed"></strong></td>
       <td>${summary.processedCount}</td>
     </tr>`;

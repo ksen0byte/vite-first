@@ -63,7 +63,7 @@ export function setupResultsScreen(
         </div>` : ""}
       </div>
 
-      <!-- Primary Statistics Grid (Count, Mean, Mode, Std Dev, CV, Entropy, Motor, CPI/Sensory) -->
+      <!-- Primary Statistics Grid (Count, Mean, Motor, CPI/Sensory, Mode, Std Dev, CV, Entropy) -->
       <div id="primary-stats-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
 
         <!-- Count -->
@@ -74,11 +74,49 @@ export function setupResultsScreen(
         </div>
 
         <!-- Mean -->
-        <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium" data-localize="statMean">Mean</div>
           <div class="stat-value text-base sm:text-lg font-bold">${(reactionTimeStats.meanVal === null ? "N/A" : `${reactionTimeStats.meanVal.toFixed(2)} ${localize("ms")}`)}</div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.meanVal.toFixed(2)} ${localize("ms")}`)}
         </div>
+
+        <!-- Motor Component -->
+        <div class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+          <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
+            <span data-localize="motorComponentLabel">Motor Component</span>
+            <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="motorComponentHelp" data-tip="${localize('motorComponentHelp')}">(?)</span>
+          </div>
+          <div class="stat-value text-base sm:text-lg font-bold">
+            ${formatMotorComponentHtml(reactionTimeStats)}
+          </div>
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) =>
+            formatMotorComponentText(stats)
+          )}
+        </div>
+
+        <!-- Sensory Component (SVMR only) / CPI (CRT tests) -->
+        ${testType === "svmr" ? `
+        <div class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+          <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
+            <span data-localize="sensoryComponentLabel">Sensory Component</span>
+            <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="sensoryComponentHelp" data-tip="${localize('sensoryComponentHelp')}">(?)</span>
+          </div>
+          <div class="stat-value text-base sm:text-lg font-bold">
+            ${formatSensoryComponentHtml(reactionTimeStats)}
+          </div>
+        </div>
+        ` : `
+        <div id="cpi-result-stat" class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+          <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
+            <span data-localize="${testType === 'crt1-3' ? 'statCpi13' : 'statCpi23'}"></span>
+            <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="cpiBaselineHelp" data-tip="${localize('cpiBaselineHelp')}">(?)</span>
+          </div>
+          <div id="cpi-result-value" class="stat-value text-base sm:text-lg font-bold">
+            <span class="loading loading-spinner loading-xs"></span>
+          </div>
+          <div id="cpi-result-desc" class="stat-desc w-full max-w-full whitespace-normal break-words text-[10px] leading-tight sm:text-xs"></div>
+        </div>
+        `}
 
         <!-- Mode -->
         <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
@@ -107,44 +145,6 @@ export function setupResultsScreen(
           <div class="stat-value text-base sm:text-lg font-bold">${reactionTimeStats.entropyVal.toFixed(3)} <span data-localize="bits"></span></div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.entropyVal.toFixed(3)} ${localize("bits")}`)}
         </div>
-
-        <!-- Motor Component -->
-        <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
-          <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
-            <span data-localize="motorComponentLabel">Motor Component</span>
-            <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="motorComponentHelp" data-tip="${localize('motorComponentHelp')}">(?)</span>
-          </div>
-          <div class="stat-value text-base sm:text-lg font-bold">
-            ${formatMotorComponentHtml(reactionTimeStats)}
-          </div>
-          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) =>
-            formatMotorComponentText(stats)
-          )}
-        </div>
-
-        <!-- Sensory Component (SVMR only) / CPI (CRT tests) -->
-        ${testType === "svmr" ? `
-        <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
-          <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
-            <span data-localize="sensoryComponentLabel">Sensory Component</span>
-            <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="sensoryComponentHelp" data-tip="${localize('sensoryComponentHelp')}">(?)</span>
-          </div>
-          <div class="stat-value text-base sm:text-lg font-bold">
-            ${formatSensoryComponentHtml(reactionTimeStats)}
-          </div>
-        </div>
-        ` : `
-        <div id="cpi-result-stat" class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
-          <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
-            <span data-localize="${testType === 'crt1-3' ? 'statCpi13' : 'statCpi23'}"></span>
-            <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="cpiBaselineHelp" data-tip="${localize('cpiBaselineHelp')}">(?)</span>
-          </div>
-          <div id="cpi-result-value" class="stat-value text-base sm:text-lg font-bold">
-            <span class="loading loading-spinner loading-xs"></span>
-          </div>
-          <div id="cpi-result-desc" class="stat-desc w-full max-w-full whitespace-normal break-words text-[10px] leading-tight sm:text-xs"></div>
-        </div>
-        `}
 
       </div>
 
@@ -362,7 +362,7 @@ function feedbackExposureStatsHtml(trialResults: readonly TrialResult[]): string
   if (!summary) return "";
 
   return `
-    <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-4">
+    <div class="stats stats-vertical lg:stats-horizontal bg-primary/10 ring-2 ring-primary ring-inset shadow w-full mb-4">
       <div class="stat place-items-center">
         <div class="stat-title text-base" data-localize="statMinExposure"></div>
         <div class="stat-value text-lg">${summary.minExposureMs} ${localize("ms")}</div>
