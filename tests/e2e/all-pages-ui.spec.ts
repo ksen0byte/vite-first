@@ -86,6 +86,16 @@ async function fillPersonalData(page: Page): Promise<void> {
   await page.locator('#gender-select').selectOption('female');
 }
 
+async function expectStandardBackButton(page: Page, selector: string): Promise<void> {
+  const button = page.locator(selector);
+  await expect(button).toHaveClass(/btn-outline/);
+  await expect(button).toHaveClass(/btn-success/);
+  const box = await button.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.x).toBeLessThanOrEqual(20);
+  expect(box!.y).toBeGreaterThan(page.viewportSize()!.height / 2);
+}
+
 test('dashboard page', async ({page}) => {
   await expect(page.locator('#dashboard-content')).toBeVisible();
   await expect(page).toHaveScreenshot('dashboard.png', snapshotOptions);
@@ -94,6 +104,12 @@ test('dashboard page', async ({page}) => {
   await expect(page.locator('#back-btn')).toBeVisible();
   await page.locator('#back-btn').click();
   await expect(page.locator('#dashboard-content')).toBeVisible();
+});
+
+test('settings page', async ({page}) => {
+  await page.locator('#service-reaction').click();
+  await expectStandardBackButton(page, '#back-btn');
+  await expect(page).toHaveScreenshot('settings.png', snapshotOptions);
 });
 
 const activeStimulusCases = [
@@ -126,11 +142,13 @@ for (const {mode, stimulusSelector} of activeStimulusCases) {
 test('spam warning page', async ({page}) => {
   await openRoute(page, '/spam-warning');
   await expect(page.locator('#spam-warning-screen')).toBeVisible();
+  await expectStandardBackButton(page, '#spam-warning-home-btn');
   await expect(page).toHaveScreenshot('spam-warning.png', snapshotOptions);
 });
 
 test('users page with saved data', async ({page}) => {
   await importExampleUser(page);
+  await expectStandardBackButton(page, '#main-page-btn');
   await expect(page).toHaveScreenshot('users.png', snapshotOptions);
 });
 
@@ -144,6 +162,7 @@ for (const language of ['en', 'uk'] as const) {
     await page.locator('.view-profile-btn').click();
     await expect(page.locator('#user-profile-screen')).toBeVisible();
     await expect(page.locator('#user-profile-screen canvas')).toHaveCount(3);
+    await expectStandardBackButton(page, '#users-page-btn');
     await expect(page).toHaveScreenshot(
       language === 'en' ? 'user-profile.png' : 'user-profile-uk.png',
       snapshotOptions,
@@ -268,5 +287,6 @@ test('biological age calculator page', async ({page}) => {
   await page.locator('#ba-time').fill('250');
   await page.locator('#ba-calculate-btn').click();
   await expect(page.locator('#ba-result')).toBeVisible();
+  await expectStandardBackButton(page, '#ba-back-btn');
   await expect(page).toHaveScreenshot('biological-age-calculator.png', snapshotOptions);
 });

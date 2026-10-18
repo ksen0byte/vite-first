@@ -1,6 +1,6 @@
 // src/screens/user-profile-screen.ts
 import {setupHeader} from '../components/header';
-import {setupFooter} from '../components/footer';
+import {backButtonHtml, setupFooter} from '../components/footer';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
@@ -717,9 +717,10 @@ function getTrialOutcomeLocalizationKey(outcome: keyof ReactionTimeStats["outcom
 function userProfileFooterHTML(): string {
   return `
     <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
-      <div class="flex-1"></div>
+      <div class="flex-1">
+        ${backButtonHtml("users-page-btn")}
+      </div>
       <button id="print-btn" class="btn btn-outline btn-primary" data-localize="printButton"></button>
-      <button id="users-page-btn" class="btn btn-outline btn-success ml-2" data-localize="back"></button>
     </footer>
   `;
 }

@@ -1,5 +1,5 @@
 import {setupHeader} from "../components/header.ts";
-import {setupFooter} from "../components/footer.ts";
+import {backButtonHtml, setupFooter} from "../components/footer.ts";
 import {updateLanguageUI} from "../localization/localization.ts";
 import Router from "../routing/router.ts";
 
@@ -42,9 +42,10 @@ function spamWarningScreenHTML(): string {
 function footerHtml(): string {
   return `
     <footer id="spam-warning-screen-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
-      <div class="flex-1"></div>
+      <div class="flex-1">
+        ${backButtonHtml("spam-warning-home-btn", "backToMainPage")}
+      </div>
       <div class="flex space-x-2">
-        <button id="spam-warning-home-btn" class="btn btn-outline btn-warning" data-localize="backToMainPage"></button>
         <button id="spam-warning-retry-btn" class="btn btn-success" data-localize="spamWarningStartAgainButton"></button>
       </div>
     </footer>

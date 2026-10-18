@@ -15,3 +15,7 @@ export function setupFooter(appContainer: HTMLElement, footerHtml: string, butto
     buttonCallback.buttonFn().addEventListener("click", buttonCallback.callback);
   })
 }
+
+export function backButtonHtml(id: string, localizationKey = "back"): string {
+  return `<button id="${id}" class="btn btn-outline btn-success" data-localize="${localizationKey}"></button>`;
+}

@@ -1,5 +1,6 @@
 import { BiologicalAgeCalculator } from "../logic/BiologicalAge.ts";
 import { setupHeader } from "../../../components/header.ts";
+import { backButtonHtml, setupFooter } from "../../../components/footer.ts";
 import { updateLanguageUI } from "../../../localization/localization.ts";
 import Router from "../../../routing/router.ts";
 
@@ -126,16 +127,20 @@ export function setupBioAgeCalculatorScreen(appContainer: HTMLElement) {
         </div>
       </div>
 
-      <button id="ba-back-btn" class="btn btn-ghost mt-4 w-full" data-localize="backToMainPage"></button>
     </div>
   `;
 
   setupHeader(appContainer);
+  setupFooter(appContainer, `
+    <footer id="footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
+      <div class="flex-1">${backButtonHtml("ba-back-btn", "backToMainPage")}</div>
+    </footer>
+  `, [
+    {buttonFn: () => document.getElementById('ba-back-btn')! as HTMLButtonElement, callback: () => Router.navigate('/')},
+  ]);
   updateLanguageUI();
 
   // Logic
-  document.getElementById('ba-back-btn')?.addEventListener('click', () => Router.navigate('/'));
-  
   document.getElementById('ba-calculate-btn')?.addEventListener('click', () => {
     const age = Number((document.getElementById('ba-age') as HTMLInputElement).value);
     const time = Number((document.getElementById('ba-time') as HTMLInputElement).value);
