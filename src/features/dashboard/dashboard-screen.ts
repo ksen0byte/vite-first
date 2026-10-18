@@ -10,7 +10,7 @@ export function setupDashboardScreen(appContainer: HTMLElement, grant: Grant) {
       <main id="dashboard-content" class="container mx-auto p-4 flex-grow">
         <h1 class="text-3xl font-bold mb-6 text-center" data-localize="dashboardHeaderTitle">Tools and Services</h1>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="dashboard-services grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-auto">
           
           <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-primary" id="service-reaction" role="button" tabindex="0">
             <figure class="px-10 pt-10">

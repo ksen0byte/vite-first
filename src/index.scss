@@ -177,3 +177,10 @@
     margin-top: 0.25rem !important;
   }
 }
+@media (min-width: 64rem) {
+  .dashboard-services:not(:has(#service-bio-age:not(.hidden))) {
+    /* Keep the same card width as the three-column layout while centering two cards. */
+    width: calc((100% - 3rem) * 2 / 3 + 1.5rem);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
