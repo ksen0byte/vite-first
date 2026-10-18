@@ -1,6 +1,6 @@
 import { BiologicalAgeCalculator } from "../logic/BiologicalAge.ts";
 import { setupHeader } from "../../../components/header.ts";
-import { backButtonHtml, setupFooter } from "../../../components/footer.ts";
+import { setupFooter } from "../../../components/footer.ts";
 import { updateLanguageUI } from "../../../localization/localization.ts";
 import Router from "../../../routing/router.ts";
 
@@ -133,7 +133,7 @@ export function setupBioAgeCalculatorScreen(appContainer: HTMLElement) {
   setupHeader(appContainer);
   setupFooter(appContainer, `
     <footer id="footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
-      <div class="flex-1">${backButtonHtml("ba-back-btn", "backToMainPage")}</div>
+      <div class="flex-1"><button id="ba-back-btn" class="btn btn-outline btn-success" data-localize="backToMainPage"></button></div>
     </footer>
   `, [
     {buttonFn: () => document.getElementById('ba-back-btn')! as HTMLButtonElement, callback: () => Router.navigate('/')},

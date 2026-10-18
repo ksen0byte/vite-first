@@ -1,6 +1,6 @@
 // src/screens/user-profile-screen.ts
 import {setupHeader} from '../components/header';
-import {backButtonHtml, setupFooter} from '../components/footer';
+import {setupFooter} from '../components/footer';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
@@ -718,7 +718,7 @@ function userProfileFooterHTML(): string {
   return `
     <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
       <div class="flex-1">
-        ${backButtonHtml("users-page-btn")}
+        <button id="users-page-btn" class="btn btn-outline btn-success" data-localize="back"></button>
       </div>
       <button id="print-btn" class="btn btn-outline btn-primary" data-localize="printButton"></button>
     </footer>

@@ -13,7 +13,7 @@ import {
 } from "../config/domain.ts";
 import {defaultAppContext, parameterPairs, parameters, ParameterDefinition} from "../config/settings.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
-import {backButtonHtml, setupFooter} from "../components/footer.ts";
+import {setupFooter} from "../components/footer.ts";
 import {setupHeader} from "../components/header.ts";
 import {getShapeSvgWithStroke} from "../components/Shapes.ts";
 import AppContextManager from "../config/AppContextManager.ts";
@@ -95,7 +95,7 @@ function settingsScreenFooterHTML() {
   return `
     <footer id="footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
       <div class="flex-1">
-        ${backButtonHtml("back-btn")}
+        <button id="back-btn" class="btn btn-outline btn-success" data-localize="back"></button>
       </div>
       <div class="flex space-x-2">
         <button id="reset-settings-btn" class="btn btn-outline btn-error" data-localize="resetSettings"></button>

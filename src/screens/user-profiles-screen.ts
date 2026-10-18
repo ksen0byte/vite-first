@@ -1,5 +1,5 @@
 import {setupHeader} from '../components/header';
-import {backButtonHtml, setupFooter} from '../components/footer';
+import {setupFooter} from '../components/footer';
 import {localize, updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db";
 import {deleteUserAndTests, getAllUsers, getTestsForUser} from "../db/operations";
@@ -312,7 +312,7 @@ export class UsersScreen {
     return `
       <footer id="user-profile-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
         <div class="flex-1">
-          ${backButtonHtml("main-page-btn", "backToMainPage")}
+          <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="backToMainPage"></button>
         </div>
         <button id="import-data-btn" class="btn btn-outline btn-secondary mr-2" data-localize="importAllData"></button>
         <button id="export-data-btn" class="btn btn-outline btn-primary mr-2" data-localize="exportAllData"></button>
