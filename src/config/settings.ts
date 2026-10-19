@@ -7,8 +7,9 @@ import {ExposureDelay, ExposureTime, FeedbackTuning, StimulusCount, StimulusSize
  *
  * Shared-parameter limits mirror the pre-rework slider configuration:
  * stimulus size 10-70 mm, exposure 500-1500 ms, delay 250-2500 ms, count 30-480.
- * Feedback-protocol limits come from the removed feedback sliders
- * (exposure 20-900 ms, step 1-100 ms, pause 0-2500 ms, duration 30-1800 s).
+ * Feedback-protocol limits come from the removed feedback sliders, except the
+ * maximum-exposure field now extends to 1500 ms (other exposure fields retain
+ * their 900 ms ceiling).
  */
 export interface ParameterDefinition {
   /** HTML input id used on the settings screen. */
@@ -33,7 +34,7 @@ export const parameters = {
   feedbackInitialExposure: {id: "compact-initial-exposure", labelKey: "feedbackInitialExposure", unitKey: "ms", min: 20, max: 900, step: 10, defaultValue: 900},
   feedbackAdjustmentStep: {id: "compact-adjustment-step", labelKey: "feedbackAdjustmentStep", unitKey: "ms", min: 1, max: 100, step: 1, defaultValue: 20},
   feedbackMinExposure: {id: "compact-exposure-min", labelKey: "feedbackMinExposure", unitKey: "ms", min: 20, max: 900, step: 10, defaultValue: 20},
-  feedbackMaxExposure: {id: "compact-exposure-max", labelKey: "feedbackMaxExposure", unitKey: "ms", min: 20, max: 900, step: 10, defaultValue: 900},
+  feedbackMaxExposure: {id: "compact-exposure-max", labelKey: "feedbackMaxExposure", unitKey: "ms", min: 20, max: 1500, step: 10, defaultValue: 900},
   feedbackPause: {id: "compact-pause", labelKey: "feedbackPause", unitKey: "ms", min: 0, max: 2500, step: 10, defaultValue: 200},
   feedbackDuration: {id: "compact-duration", labelKey: "feedbackDuration", unitKey: "s", min: 30, max: 1800, step: 30, defaultValue: 300},
   /**
