@@ -38,7 +38,7 @@ describe('Motor Component Calculation and Stats', () => {
     expect(result).toEqual({kind: 'NotRecorded'});
   });
 
-  it('calculates mean for successful trials within [10, 150]ms', () => {
+  it('calculates mean for successful trials within [10, 500]ms', () => {
     const trials = [
       createTrial(0, 200, 'Success', 'DEFAULT', 'DEFAULT', 50),
       createTrial(1, 250, 'Success', 'DEFAULT', 'DEFAULT', 70),
@@ -48,21 +48,21 @@ describe('Motor Component Calculation and Stats', () => {
     expect(result).toMatchObject({kind: 'Available', meanMs: 70, validCount: 3, totalRecorded: 3});
   });
 
-  it('filters out values strictly less than 10ms or greater than 150ms', () => {
+  it('filters out values strictly less than 10ms or greater than 500ms', () => {
     const trials = [
       createTrial(0, 200, 'Success', 'DEFAULT', 'DEFAULT', 9),   // excluded (< 10)
       createTrial(1, 250, 'Success', 'DEFAULT', 'DEFAULT', 10),  // included (boundary min)
-      createTrial(2, 300, 'Success', 'DEFAULT', 'DEFAULT', 150), // included (boundary max)
-      createTrial(3, 350, 'Success', 'DEFAULT', 'DEFAULT', 151), // excluded (> 150)
+      createTrial(2, 600, 'Success', 'DEFAULT', 'DEFAULT', 500), // included (boundary max)
+      createTrial(3, 650, 'Success', 'DEFAULT', 'DEFAULT', 501), // excluded (> 500)
     ];
     const result = calculateMotorComponentStats(trials);
-    expect(result).toMatchObject({kind: 'Available', meanMs: 80, validCount: 2, totalRecorded: 4});
+    expect(result).toMatchObject({kind: 'Available', meanMs: 255, validCount: 2, totalRecorded: 4});
   });
 
-  it('returns NoValidSamples if all motorComponent values are outside [10, 150]ms', () => {
+  it('returns NoValidSamples if all motorComponent values are outside [10, 500]ms', () => {
     const trials = [
       createTrial(0, 200, 'Success', 'DEFAULT', 'DEFAULT', 5),
-      createTrial(1, 250, 'Success', 'DEFAULT', 'DEFAULT', 200),
+      createTrial(1, 600, 'Success', 'DEFAULT', 'DEFAULT', 501),
     ];
     const result = calculateMotorComponentStats(trials);
     expect(result).toEqual({kind: 'NoValidSamples', totalRecorded: 2, successfulRecorded: 2});
@@ -295,7 +295,7 @@ describe('User Profile and Results Screen Rendering', () => {
       testSettings,
       trials: [
         createTrial(0, 250, 'Success', 'DEFAULT', 'DEFAULT', 5), // < 10
-        createTrial(1, 300, 'Success', 'DEFAULT', 'DEFAULT', 200), // > 150
+        createTrial(1, 600, 'Success', 'DEFAULT', 'DEFAULT', 501), // > 500
       ],
       date: new Date().toISOString(),
     };

@@ -110,7 +110,7 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
     expect(stats.motorComponent).toEqual({kind: 'NotRecorded'});
   });
 
-  it('calculates average motor component for successful trials within 10-150ms filter', () => {
+  it('calculates average motor component for successful trials within 10-500ms filter', () => {
     const stats = new Stats([
       trial(250, 'Success', 'DEFAULT', 50),
       trial(300, 'Success', 'DEFAULT', 70),
@@ -120,16 +120,16 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
     expect(stats.motorComponent).toMatchObject({kind: 'Available', meanMs: 60, validCount: 2});
   });
 
-  it('filters out motor component values strictly outside 10-150ms and includes boundary values', () => {
+  it('filters out motor component values strictly outside 10-500ms and includes boundary values', () => {
     const stats = new Stats([
       trial(200, 'Success', 'DEFAULT', 9),    // below 10 -> excluded
       trial(220, 'Success', 'DEFAULT', 10),   // exact min -> included
-      trial(240, 'Success', 'DEFAULT', 150),  // exact max -> included
-      trial(260, 'Success', 'DEFAULT', 151),  // above 150 -> excluded
+      trial(600, 'Success', 'DEFAULT', 500),  // exact max -> included
+      trial(650, 'Success', 'DEFAULT', 501),  // above 500 -> excluded
     ]);
     expect(stats.hasMotorComponentData).toBe(true);
-    expect(stats.motorComponentVal).toBe(80); // (10 + 150) / 2
-    expect(stats.motorComponent).toMatchObject({kind: 'Available', meanMs: 80, validCount: 2});
+    expect(stats.motorComponentVal).toBe(255); // (10 + 500) / 2
+    expect(stats.motorComponent).toMatchObject({kind: 'Available', meanMs: 255, validCount: 2});
   });
 
   it('ignores motor component on non-successful trials', () => {
@@ -147,7 +147,7 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
   it('returns NoValidSamples if all motor values are filtered out', () => {
     const stats = new Stats([
       trial(250, 'Success', 'DEFAULT', 5),
-      trial(300, 'Success', 'DEFAULT', 200),
+      trial(600, 'Success', 'DEFAULT', 501),
     ]);
     expect(stats.hasMotorComponentData).toBe(true);
     expect(stats.motorComponentVal).toBeNull();
@@ -175,7 +175,7 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
   it('marks sensory component as NoValidMotorData when motor component is NoValidSamples', () => {
     const stats = new Stats([
       trial(250, 'Success', 'DEFAULT', 5),
-      trial(350, 'Success', 'DEFAULT', 200),
+      trial(600, 'Success', 'DEFAULT', 501),
     ]);
     expect(stats.sensoryComponentVal).toBeNull();
     expect(stats.sensoryComponent).toEqual({kind: 'NoValidMotorData'});
