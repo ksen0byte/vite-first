@@ -298,7 +298,6 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => formatMotorComponent(handStats))}
                   </td>
                 </tr>
-                ${testType === "svmr" ? `
                 <tr class="text-center bg-primary/10 font-semibold">
                   <td>
                     <div class="inline-flex items-center justify-center gap-1">
@@ -308,8 +307,10 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                   </td>
                   <td>
                     ${formatSensoryComponent(stats)}
+                    ${handBreakdownStatsValueHtml(statsLeft, statsRight, formatSensoryComponent)}
                   </td>
-                </tr>` : testType === "crt2-3" ? `
+                </tr>
+                ${testType === "crt2-3" ? `
                 <tr class="text-center bg-primary/10 font-semibold">
                   <td>
                     <div class="inline-flex items-center justify-center gap-1">
@@ -487,9 +488,6 @@ function formatSensoryComponent(stats: ReactionTimeStats): string {
   }
   if (stats.sensoryComponent.kind === "NoValidReactionData" || stats.sensoryComponent.kind === "InvalidComponentOrder") {
     return `<span data-localize="noValidSensoryData"></span>`;
-  }
-  if (stats.sensoryComponent.kind === "NotApplicable") {
-    return `N/A`;
   }
   return `${stats.sensoryComponent.valueMs.toFixed(2)} <span data-localize="ms"></span>`;
 }

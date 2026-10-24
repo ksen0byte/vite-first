@@ -82,25 +82,24 @@ describe('Motor Component Calculation and Stats', () => {
 });
 
 describe('Sensory Component Calculation', () => {
-  it('returns NotApplicable for non-svmr tests', () => {
+  it('calculates mean reaction time minus motor component', () => {
     const motorStats = {kind: 'Available' as const, meanMs: 50, validCount: 2, totalRecorded: 2};
-    expect(calculateSensoryComponentStats(250, motorStats, 'crt1-3')).toEqual({kind: 'NotApplicable'});
-    expect(calculateSensoryComponentStats(250, motorStats, 'crt2-3')).toEqual({kind: 'NotApplicable'});
+    expect(calculateSensoryComponentStats(250, motorStats)).toEqual({kind: 'Available', valueMs: 200});
   });
 
   it('returns NotRecorded when motor stats are NotRecorded', () => {
-    expect(calculateSensoryComponentStats(250, {kind: 'NotRecorded'}, 'svmr')).toEqual({kind: 'NotRecorded'});
+    expect(calculateSensoryComponentStats(250, {kind: 'NotRecorded'})).toEqual({kind: 'NotRecorded'});
   });
 
   it('returns NoValidMotorData when motor stats are NoValidSamples', () => {
-    expect(calculateSensoryComponentStats(250, {kind: 'NoValidSamples', totalRecorded: 2, successfulRecorded: 2}, 'svmr')).toEqual({
+    expect(calculateSensoryComponentStats(250, {kind: 'NoValidSamples', totalRecorded: 2, successfulRecorded: 2})).toEqual({
       kind: 'NoValidMotorData',
     });
   });
 
   it('calculates mean reaction time minus motor component for svmr', () => {
     const motorStats = {kind: 'Available' as const, meanMs: 60, validCount: 3, totalRecorded: 3};
-    expect(calculateSensoryComponentStats(260, motorStats, 'svmr')).toEqual({
+    expect(calculateSensoryComponentStats(260, motorStats)).toEqual({
       kind: 'Available',
       valueMs: 200,
     });
@@ -108,14 +107,14 @@ describe('Sensory Component Calculation', () => {
 
   it('rejects sensory calculation when no valid reaction samples remain', () => {
     const motorStats = {kind: 'Available' as const, meanMs: 60, validCount: 1, totalRecorded: 1};
-    expect(calculateSensoryComponentStats(0, motorStats, 'svmr', 0)).toEqual({
+    expect(calculateSensoryComponentStats(0, motorStats, 0)).toEqual({
       kind: 'NoValidReactionData',
     });
   });
 
   it('rejects sensory calculation when the motor component is not below total reaction time', () => {
     const motorStats = {kind: 'Available' as const, meanMs: 260, validCount: 1, totalRecorded: 1};
-    expect(calculateSensoryComponentStats(260, motorStats, 'svmr', 1)).toEqual({
+    expect(calculateSensoryComponentStats(260, motorStats, 1)).toEqual({
       kind: 'InvalidComponentOrder',
     });
   });
@@ -306,7 +305,35 @@ describe('User Profile and Results Screen Rendering', () => {
     expect(noValidSpans.length).toBeGreaterThan(0);
   });
 
-  it('renders sensory component in user profile for SVMR tests, and hides it for non-SVMR', () => {
+  it('renders distinct left and right sensory values in CRT2-3 results and history', () => {
+    const testSettings: TestSettings = {...defaultAppContext.testSettings, testType: 'crt2-3'};
+    const trials = [
+      createTrial(0, 240, 'Success', 'LEFT', 'LEFT', 60),
+      createTrial(1, 320, 'Success', 'RIGHT', 'RIGHT', 80),
+    ];
+    AppContextManager.setContext({...defaultAppContext, testSettings});
+    setupResultsScreen(container, new Map(trials.map(trial => [trial.trialIndex, trial])));
+
+    const sensoryStat = container.querySelector('[data-localize="sensoryComponentLabel"]')?.closest('.stat');
+    expect(sensoryStat?.querySelector('.stat-value')?.textContent).toContain('210.00');
+    expect(sensoryStat?.querySelector('.stat-desc')?.textContent).toContain('180.00');
+    expect(sensoryStat?.querySelector('.stat-desc')?.textContent).toContain('240.00');
+
+    container.innerHTML = '';
+    setupProfileScreen(container, dummyUser, [{
+      id: 8,
+      userKey: 'Jane|Doe',
+      testSettings,
+      trials,
+      date: new Date().toISOString(),
+    }]);
+    const sensoryRow = container.querySelector('[data-localize="sensoryComponentLabel"]')?.closest('tr');
+    expect(sensoryRow?.textContent).toContain('210.00');
+    expect(sensoryRow?.querySelector('td:last-child .text-xs')?.textContent).toContain('180.00');
+    expect(sensoryRow?.querySelector('td:last-child .text-xs')?.textContent).toContain('240.00');
+  });
+
+  it.each(['crt1-3', 'crt2-3'] as const)('renders sensory component in user profile for SVMR and %s', (testType) => {
     const svmrSettings: TestSettings = {
       protocolMode: 'optimal',
       testMode: 'shapes',
@@ -347,7 +374,7 @@ describe('User Profile and Results Screen Rendering', () => {
     // Test non-SVMR: crt1-3
     const crtSettings: TestSettings = {
       ...svmrSettings,
-      testType: 'crt1-3',
+      testType,
     };
     const crtTest = {
       id: 7,
@@ -359,10 +386,11 @@ describe('User Profile and Results Screen Rendering', () => {
 
     container.innerHTML = '';
     setupProfileScreen(container, dummyUser, [crtTest]);
-    expect(container.querySelector('[data-localize-tip="sensoryComponentHelp"]')).toBeNull();
+    expect(container.querySelector('[data-localize-tip="sensoryComponentHelp"]')).not.toBeNull();
+    expect(container.textContent).toContain('200.00');
   });
 
-  it('renders sensory component on Results screen for SVMR and hides for CRT', () => {
+  it.each(['crt1-3', 'crt2-3'] as const)('renders sensory component on Results screen for SVMR and %s', (testType) => {
     AppContextManager.setContext({
       ...defaultAppContext,
       testSettings: {
@@ -392,13 +420,14 @@ describe('User Profile and Results Screen Rendering', () => {
       ...defaultAppContext,
       testSettings: {
         ...defaultAppContext.testSettings,
-        testType: 'crt1-3',
+        testType,
       },
     });
 
     container.innerHTML = '';
     setupResultsScreen(container, svmrResults);
-    expect(container.querySelector('[data-localize="sensoryComponentLabel"]')).toBeNull();
+    expect(container.querySelector('[data-localize="sensoryComponentLabel"]')).not.toBeNull();
+    expect(container.textContent).toContain('230.00');
   });
 });
 

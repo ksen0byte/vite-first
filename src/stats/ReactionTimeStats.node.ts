@@ -1,7 +1,7 @@
 // ReactionTimeStats.node.ts - Node.js compatible version without browser dependencies
 
 import {cumulativeStdNormalProbability, mean, median, medianAbsoluteDeviation, quantile, standardDeviation} from "simple-statistics";
-import {TestType, TrialOutcome, TrialResult} from "../config/domain.ts";
+import {TrialOutcome, TrialResult} from "../config/domain.ts";
 import {MOTOR_COMPONENT_BOUNDS} from "../config/settings.ts";
 
 export interface FrequencyBin {
@@ -22,7 +22,6 @@ export type MotorComponentStats =
   | { readonly kind: "Available"; readonly meanMs: number; readonly validCount: number; readonly totalRecorded: number };
 
 export type SensoryComponentStats =
-  | { readonly kind: "NotApplicable" }
   | { readonly kind: "NotRecorded" }
   | { readonly kind: "NoValidMotorData" }
   | { readonly kind: "NoValidReactionData" }
@@ -70,12 +69,8 @@ export function calculateMotorComponentStats(
 export function calculateSensoryComponentStats(
   meanReactionTimeMs: number,
   motorStats: MotorComponentStats,
-  testType: TestType = "svmr",
   validReactionCount: number = 1,
 ): SensoryComponentStats {
-  if (testType !== "svmr") {
-    return {kind: "NotApplicable"};
-  }
   if (motorStats.kind === "NotRecorded") {
     return {kind: "NotRecorded"};
   }
@@ -139,7 +134,6 @@ export class ReactionTimeStats {
     trialResults: TrialResult[],
     upperBound: number = 500,
     lowerBound: number = 100,
-    testType: TestType,
     debugLabel?: string,
   ) {
     this.debugLabel = debugLabel;
@@ -195,7 +189,7 @@ export class ReactionTimeStats {
     this.hasMotorComponentData = this.motorComponent.kind !== "NotRecorded";
     this.motorComponentVal = this.motorComponent.kind === "Available" ? this.motorComponent.meanMs : null;
 
-    this.sensoryComponent = calculateSensoryComponentStats(this.meanVal, this.motorComponent, testType, this.count);
+    this.sensoryComponent = calculateSensoryComponentStats(this.meanVal, this.motorComponent, this.count);
     this.sensoryComponentVal = this.sensoryComponent.kind === "Available" ? this.sensoryComponent.valueMs : null;
 
     this.outcomeCountsByOutcome = OUTCOME_BREAKDOWN.reduce<Record<OutcomeBreakdown, number>>((acc, outcome) => {

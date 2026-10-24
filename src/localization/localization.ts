@@ -446,8 +446,8 @@ const localization: LocalizationKeys = {
     uk: "Час між натисканням (keydown) та відпусканням (keyup) клавіші під час успішних реакцій (фільтрація 10–500 мс)"
   },
   sensoryComponentHelp: {
-    en: "Sensory processing time calculated as mean reaction time minus motor component (applicable to SVMR only)",
-    uk: "Час сенсорної обробки, розрахований як середній час реакції мінус моторний компонент (тільки для ПЗМР)"
+    en: "Sensory processing time calculated as mean reaction time minus motor component",
+    uk: "Час сенсорної обробки, розрахований як середній час реакції мінус моторний компонент"
   },
   statErrorsTotal: {en: "Errors Total", uk: "Помилок Всього"},
   statErrorsPercentage: {en: "Error Rate", uk: "Частота Помилок"},

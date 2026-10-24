@@ -181,20 +181,20 @@ describe.each(implementations)('%s ReactionTimeStats characterization', (_name, 
     expect(stats.sensoryComponent).toEqual({kind: 'NoValidMotorData'});
   });
 
-  it('marks sensory component as NotApplicable when testType is not svmr', () => {
+  it('calculates sensory component for both CRT test types', () => {
     const statsCrt1 = new Stats([
       trial(250, 'Success', 'DEFAULT', 50),
       trial(350, 'Success', 'DEFAULT', 70),
     ], 700, 100, 'crt1-3', undefined);
-    expect(statsCrt1.sensoryComponentVal).toBeNull();
-    expect(statsCrt1.sensoryComponent).toEqual({kind: 'NotApplicable'});
+    expect(statsCrt1.sensoryComponentVal).toBe(240);
+    expect(statsCrt1.sensoryComponent).toEqual({kind: 'Available', valueMs: 240});
 
     const statsCrt2 = new Stats([
       trial(250, 'Success', 'DEFAULT', 50),
       trial(350, 'Success', 'DEFAULT', 70),
     ], 700, 100, 'crt2-3', undefined);
-    expect(statsCrt2.sensoryComponentVal).toBeNull();
-    expect(statsCrt2.sensoryComponent).toEqual({kind: 'NotApplicable'});
+    expect(statsCrt2.sensoryComponentVal).toBe(240);
+    expect(statsCrt2.sensoryComponent).toEqual({kind: 'Available', valueMs: 240});
   });
 });
 
@@ -207,12 +207,12 @@ describe('multi-hand CRT2-3 characterization', () => {
     ]);
     expect(stats.total.count).toBe(3);
     expect(stats.total.motorComponentVal).toBe(60); // (40 + 60 + 80) / 3
-    expect(stats.total.sensoryComponent).toEqual({kind: 'NotApplicable'});
-    expect(stats.total.sensoryComponentVal).toBeNull();
+    expect(stats.total.sensoryComponent).toEqual({kind: 'Available', valueMs: 180});
+    expect(stats.total.sensoryComponentVal).toBe(180);
     expect(stats.left).toMatchObject({count: 1, meanVal: 220, motorComponentVal: 40});
-    expect(stats.left.sensoryComponent).toEqual({kind: 'NotApplicable'});
+    expect(stats.left.sensoryComponent).toEqual({kind: 'Available', valueMs: 180});
     expect(stats.right).toMatchObject({count: 1, meanVal: 240, motorComponentVal: 60});
-    expect(stats.right.sensoryComponent).toEqual({kind: 'NotApplicable'});
+    expect(stats.right.sensoryComponent).toEqual({kind: 'Available', valueMs: 180});
   });
 });
 

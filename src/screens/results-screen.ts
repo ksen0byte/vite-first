@@ -116,8 +116,7 @@ export function setupResultsScreen(
           )}
         </div>
 
-        <!-- Sensory Component (SVMR only) / CPI (CRT tests) -->
-        ${testType === "svmr" ? `
+        <!-- Sensory Component for every test type -->
         <div class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
             <span data-localize="sensoryComponentLabel">Sensory Component</span>
@@ -126,8 +125,9 @@ export function setupResultsScreen(
           <div class="stat-value text-base sm:text-lg font-bold">
             ${formatSensoryComponentHtml(reactionTimeStats)}
           </div>
+          ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, formatSensoryComponentHtml)}
         </div>
-        ` : testType === "crt2-3" ? `
+        ${testType === "crt2-3" ? `
         <div id="cpi-result-stat" class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
             <span data-localize="statCpi23"></span>
@@ -375,9 +375,6 @@ function formatSensoryComponentHtml(stats: ReactionTimeStats): string {
   }
   if (stats.sensoryComponent.kind === "NoValidReactionData" || stats.sensoryComponent.kind === "InvalidComponentOrder") {
     return `<span data-localize="noValidSensoryData"></span>`;
-  }
-  if (stats.sensoryComponent.kind === "NotApplicable") {
-    return `N/A`;
   }
   return `${stats.sensoryComponent.valueMs.toFixed(2)} <span data-localize="ms"></span>`;
 }

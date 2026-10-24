@@ -24,7 +24,6 @@ export type MotorComponentStats =
   | { readonly kind: "Available"; readonly meanMs: number; readonly validCount: number; readonly totalRecorded: number };
 
 export type SensoryComponentStats =
-  | { readonly kind: "NotApplicable" }
   | { readonly kind: "NotRecorded" }
   | { readonly kind: "NoValidMotorData" }
   | { readonly kind: "NoValidReactionData" }
@@ -72,12 +71,8 @@ export function calculateMotorComponentStats(
 export function calculateSensoryComponentStats(
   meanReactionTimeMs: number,
   motorStats: MotorComponentStats,
-  testType: TestType = "svmr",
   validReactionCount: number = 1,
 ): SensoryComponentStats {
-  if (testType !== "svmr") {
-    return {kind: "NotApplicable"};
-  }
   if (motorStats.kind === "NotRecorded") {
     return {kind: "NotRecorded"};
   }
@@ -198,7 +193,7 @@ export class ReactionTimeStats {
     this.hasMotorComponentData = this.motorComponent.kind !== "NotRecorded";
     this.motorComponentVal = this.motorComponent.kind === "Available" ? this.motorComponent.meanMs : null;
 
-    this.sensoryComponent = calculateSensoryComponentStats(this.meanVal, this.motorComponent, testType, this.count);
+    this.sensoryComponent = calculateSensoryComponentStats(this.meanVal, this.motorComponent, this.count);
     this.sensoryComponentVal = this.sensoryComponent.kind === "Available" ? this.sensoryComponent.valueMs : null;
 
     this.outcomeCountsByOutcome = OUTCOME_BREAKDOWN.reduce<Record<OutcomeBreakdown, number>>((acc, outcome) => {
@@ -636,8 +631,6 @@ export class ReactionTimeStats {
       sensoryStr = localize("noValidMotorData");
     } else if (this.sensoryComponent.kind === "NoValidReactionData" || this.sensoryComponent.kind === "InvalidComponentOrder") {
       sensoryStr = localize("noValidSensoryData");
-    } else if (this.sensoryComponent.kind === "NotApplicable") {
-      sensoryStr = "N/A";
     } else {
       sensoryStr = `${this.sensoryComponent.valueMs.toFixed(2)} ${localize("ms")}`;
     }
