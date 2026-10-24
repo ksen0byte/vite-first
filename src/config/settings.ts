@@ -73,7 +73,7 @@ function deepFreeze<T>(value: T): T {
 // or pauses rather than the motor phase we intend to measure.
 export const MOTOR_COMPONENT_BOUNDS = {
   minMs: 10,
-  maxMs: 150,
+  maxMs: 500,
 } as const;
 
 deepFreeze(parameters);
