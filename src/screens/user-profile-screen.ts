@@ -370,7 +370,7 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.p97Val.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
-                ${isFeedback(test.testSettings) ? feedbackStatsRowsHtml(trials, feedbackTuning(test.testSettings).pause) : ""}
+                ${isFeedback(test.testSettings) ? feedbackStatsRowsHtml(trials, test.testSettings) : ""}
               </tbody>
             </table>
           </div>
@@ -444,8 +444,8 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
  * Feedback-only per-test rows: minimum exposure reached, when it was reached,
  * and how many stimuli carried an exposure stamp. Hidden for optimal sessions.
  */
-function feedbackStatsRowsHtml(trials: TestRecord["trials"], pauseMs: number): string {
-  const summary = summarizeExposure(trials, pauseMs);
+function feedbackStatsRowsHtml(trials: TestRecord["trials"], settings: FeedbackMobilitySettings | FeedbackStrengthSettings): string {
+  const summary = summarizeExposure(trials, settings.feedback.pause);
   if (!summary) return "";
 
   return `
@@ -462,8 +462,12 @@ function feedbackStatsRowsHtml(trials: TestRecord["trials"], pauseMs: number): s
       <td>${summary.timeToMinimum.kind === "Unavailable" ? `<span class="text-warning text-sm" data-localize="exposureTimingUnavailable"></span>` : `${(summary.timeToMinimum.valueMs / 1000).toFixed(2)} <span data-localize="secondsUnit"></span>`}</td>
     </tr>
     <tr class="text-center bg-primary/10 font-semibold">
-      <td><strong data-localize="statStimuliProcessed"></strong></td>
-      <td>${summary.processedCount}</td>
+      <td><strong data-localize="${settings.protocolMode === 'feedback-strength' ? 'statStimuliProcessed' : 'statTotalTestTime'}"></strong></td>
+      <td>${settings.protocolMode === 'feedback-strength'
+        ? summary.processedCount
+        : summary.totalTime.kind === 'Available'
+          ? `${(summary.totalTime.valueMs / 1000).toFixed(2)} <span data-localize="secondsUnit"></span>`
+          : `<span class="text-warning text-sm" data-localize="exposureTimingUnavailable"></span>`}</td>
     </tr>`;
 }
 

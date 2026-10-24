@@ -13,6 +13,7 @@ export interface ExposureSummary {
   readonly minExposureMs: number;
   readonly reachedAfterTrial: number;
   readonly timeToMinimum: ExposureTiming;
+  readonly totalTime: ExposureTiming;
   readonly processedCount: number;
 }
 
@@ -55,7 +56,22 @@ export function summarizeExposure(trials: readonly TrialResult[], pauseMs?: numb
       : {kind: "Unavailable", reason: "InvalidExposureDuration"};
   }
 
-  return {minExposureMs, reachedAfterTrial, timeToMinimum, processedCount: points.length};
+  const totalTime = calculateExposureTime(points, pauseMs);
+  return {minExposureMs, reachedAfterTrial, timeToMinimum, totalTime, processedCount: points.length};
+}
+
+/** Scheduled time from test start through the final feedback window. */
+function calculateExposureTime(points: readonly ExposurePoint[], pauseMs?: number): ExposureTiming {
+  if (pauseMs === undefined || !Number.isFinite(pauseMs) || pauseMs < 0) {
+    return {kind: "Unavailable", reason: "InvalidPause"};
+  }
+  if (!points.every((point, index) => point.index === index)) {
+    return {kind: "Unavailable", reason: "IncompleteExposureHistory"};
+  }
+  const valueMs = pauseMs + points.reduce((total, point) => total + point.exposureMs + pauseMs, 0);
+  return Number.isFinite(valueMs)
+    ? {kind: "Available", valueMs}
+    : {kind: "Unavailable", reason: "InvalidExposureDuration"};
 }
 
 const isNumberSeries = (input: readonly unknown[]): input is readonly number[] =>

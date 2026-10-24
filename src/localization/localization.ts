@@ -119,6 +119,7 @@ const localization: LocalizationKeys = {
   statStimuliProcessed: {en: "Stimuli processed", uk: "Опрацьовано подразників"},
   statTimeToMinExposure: {en: "Time to reach minimum exposure", uk: "Час досягнення мінімальної експозиції"},
   secondsUnit: {en: "s", uk: "с"},
+  statTotalTestTime: {en: "Total test time", uk: "Загальний час тесту"},
   exposureTimingUnavailable: {en: "Cannot calculate: incomplete or invalid timing data", uk: "Неможливо обчислити: неповні або некоректні дані часу"},
   exposureCurveTitle: {en: "Exposure dynamics", uk: "Динаміка експозиції"},
   units: {en: "pcs", uk: "од."},

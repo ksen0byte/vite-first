@@ -333,6 +333,30 @@ describe('User Profile and Results Screen Rendering', () => {
     expect(sensoryRow?.querySelector('td:last-child .text-xs')?.textContent).toContain('240.00');
   });
 
+  it.each(['feedback-mobility', 'feedback-strength'] as const)('shows the appropriate outcome for %s in results and history', (protocolMode) => {
+    const feedback = {initialExposure: 900, adjustmentStep: 100, minExposure: 100, maxExposure: 1000, pause: 100};
+    const testSettings: TestSettings = protocolMode === 'feedback-strength'
+      ? {...defaultAppContext.testSettings, protocolMode, feedback: {...feedback, duration: 10}}
+      : {...defaultAppContext.testSettings, protocolMode, stimulusCount: 2, feedback};
+    const trials = [900, 800].map((exposureMs, index) => ({
+      ...createTrial(index, 250, 'Success', 'LEFT', 'LEFT', 50), exposureMs,
+    }));
+    const outcomeKey = protocolMode === 'feedback-strength' ? 'statStimuliProcessed' : 'statTotalTestTime';
+    const otherKey = protocolMode === 'feedback-strength' ? 'statTotalTestTime' : 'statStimuliProcessed';
+    const expectedValue = protocolMode === 'feedback-strength' ? '2' : '2.00';
+    AppContextManager.setContext({...defaultAppContext, testSettings});
+    setupResultsScreen(container, new Map(trials.map(trial => [trial.trialIndex, trial])));
+    const feedbackRow = container.querySelector('#feedback-stats-row');
+    expect(feedbackRow?.querySelector(`[data-localize="${outcomeKey}"]`)?.closest('.stat')?.querySelector('.stat-value')?.textContent?.trim()).toMatch(new RegExp(`^${expectedValue.replace('.', '\\.')}($|\\s)`));
+    expect(feedbackRow?.querySelector(`[data-localize="${otherKey}"]`)).toBeNull();
+
+    container.innerHTML = '';
+    setupProfileScreen(container, dummyUser, [{id: 9, userKey: 'Jane|Doe', testSettings, trials, date: new Date().toISOString()}]);
+    const outcome = container.querySelector(`[data-localize="${outcomeKey}"]`)?.closest('tr');
+    expect(outcome?.querySelector('td:last-child')?.textContent?.trim()).toMatch(new RegExp(`^${expectedValue.replace('.', '\\.')}($|\\s)`));
+    expect(container.querySelector(`[data-localize="${otherKey}"]`)).toBeNull();
+  });
+
   it.each(['crt1-3', 'crt2-3'] as const)('renders sensory component in user profile for SVMR and %s', (testType) => {
     const svmrSettings: TestSettings = {
       protocolMode: 'optimal',

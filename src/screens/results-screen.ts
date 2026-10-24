@@ -8,7 +8,7 @@ import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import {TestRecord} from "../db/db.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
-import {TrialResult, TestMode, TestSettings, OptimalSettings, isFeedback, feedbackTuning} from "../config/domain.ts";
+import {TrialResult, TestMode, TestSettings, OptimalSettings, FeedbackMobilitySettings, FeedbackStrengthSettings, isFeedback, feedbackTuning} from "../config/domain.ts";
 import {summarizeExposure} from "../stats/exposure-curve.ts";
 import {getHandLocalizationKey} from "../config/settings.ts";
 import {calculateCpiFromStats, getTestStats, CrtTestType} from "../stats/central-processing.ts";
@@ -66,7 +66,7 @@ export function setupResultsScreen(
   const reactionTimeStats = multiHandStats.total;
   const showHandBreakdown = testType === "crt2-3";
   const errorBreakdownStats = errorBreakdownStatsHtml(multiHandStats, showHandBreakdown);
-  const exposureSummary = isFeedbackSession ? feedbackExposureStatsHtml(trialResults, feedbackTuning(testSettings).pause) : "";
+  const exposureSummary = isFeedback(testSettings) ? feedbackExposureStatsHtml(trialResults, testSettings) : "";
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();
@@ -389,8 +389,8 @@ function formatSensoryComponentHtml(stats: ReactionTimeStats): string {
  * (trial number), and the exposure-dynamics curve (doc §2.1/§2.2 "дод.
  * результати"). Hidden entirely for optimal-protocol sessions.
  */
-function feedbackExposureStatsHtml(trialResults: readonly TrialResult[], pauseMs: number): string {
-  const summary = summarizeExposure(trialResults, pauseMs);
+function feedbackExposureStatsHtml(trialResults: readonly TrialResult[], settings: FeedbackMobilitySettings | FeedbackStrengthSettings): string {
+  const summary = summarizeExposure(trialResults, settings.feedback.pause);
   if (!summary) return "";
 
   return `
@@ -408,8 +408,12 @@ function feedbackExposureStatsHtml(trialResults: readonly TrialResult[], pauseMs
         <div class="stat-value whitespace-normal text-base sm:text-lg font-bold">${summary.timeToMinimum.kind === "Unavailable" ? `<span class="text-warning text-sm" data-localize="exposureTimingUnavailable"></span>` : `${(summary.timeToMinimum.valueMs / 1000).toFixed(2)} <span data-localize="secondsUnit"></span>`}</div>
       </div>
       <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
-        <div class="stat-title whitespace-normal text-xs font-medium" data-localize="statStimuliProcessed"></div>
-        <div class="stat-value text-base sm:text-lg font-bold">${summary.processedCount}</div>
+        <div class="stat-title whitespace-normal text-xs font-medium" data-localize="${settings.protocolMode === 'feedback-strength' ? 'statStimuliProcessed' : 'statTotalTestTime'}"></div>
+        <div class="stat-value whitespace-normal text-base sm:text-lg font-bold">${settings.protocolMode === 'feedback-strength'
+          ? summary.processedCount
+          : summary.totalTime.kind === 'Available'
+            ? `${(summary.totalTime.valueMs / 1000).toFixed(2)} <span data-localize="secondsUnit"></span>`
+            : `<span class="text-warning text-sm" data-localize="exposureTimingUnavailable"></span>`}</div>
       </div>
     </div>`;
 }

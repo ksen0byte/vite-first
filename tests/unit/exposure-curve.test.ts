@@ -37,6 +37,7 @@ describe('summarizeExposure', () => {
       minExposureMs: 840,
       reachedAfterTrial: 3,
       timeToMinimum: {kind: 'Unavailable', reason: 'InvalidPause'},
+      totalTime: {kind: 'Unavailable', reason: 'InvalidPause'},
       processedCount: 4,
     });
   });
@@ -57,6 +58,7 @@ describe('summarizeExposure', () => {
       expectedAction: 'DEFAULT', actualAction: 'DEFAULT', exposureMs,
     })) as never[];
     expect(summarizeExposure(trials, 100)?.timeToMinimum).toEqual({kind: 'Available', valueMs: 2000});
+    expect(summarizeExposure(trials, 100)?.totalTime).toEqual({kind: 'Available', valueMs: 4600});
   });
 
   it('does not fabricate elapsed time when preceding exposures are missing', () => {
