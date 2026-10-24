@@ -5,21 +5,27 @@ export interface ExposurePoint {
   readonly exposureMs: number;
 }
 
+export type ExposureTiming =
+  | {readonly kind: "Available"; readonly valueMs: number}
+  | {readonly kind: "Unavailable"; readonly reason: "InvalidPause" | "IncompleteExposureHistory" | "InvalidExposureDuration"};
+
 export interface ExposureSummary {
   readonly minExposureMs: number;
   readonly reachedAfterTrial: number;
+  readonly timeToMinimum: ExposureTiming;
   readonly processedCount: number;
 }
 
 /** Trials that carry an exposure stamp, in presentation order. */
 export function extractExposureSeries(trials: readonly TrialResult[]): ExposurePoint[] {
   return trials
-    .filter((trial): trial is TrialResult & {exposureMs: number} => typeof trial.exposureMs === "number")
+    .filter((trial): trial is TrialResult & {exposureMs: number} =>
+      typeof trial.exposureMs === "number" && Number.isFinite(trial.exposureMs) && trial.exposureMs >= 0)
     .map((trial) => ({index: trial.trialIndex, exposureMs: trial.exposureMs}));
 }
 
 /** Summarize adaptation using human-facing, one-based trial numbers. */
-export function summarizeExposure(trials: readonly TrialResult[]): ExposureSummary | null {
+export function summarizeExposure(trials: readonly TrialResult[], pauseMs?: number): ExposureSummary | null {
   const points = extractExposureSeries(trials);
   if (points.length === 0) return null;
 
@@ -31,7 +37,25 @@ export function summarizeExposure(trials: readonly TrialResult[]): ExposureSumma
     ? points[0].index + 1
     : points[firstMinPosition - 1].index + 1;
 
-  return {minExposureMs, reachedAfterTrial, processedCount: points.length};
+  // Feedback cadence: an initial pause, then exposure + pause for each trial.
+  // The minimum is selected at the boundary before its first presentation.
+  // An initially minimal exposure is already selected at test start.
+  const precedingPoints = points.slice(0, firstMinPosition);
+  const completeTiming = points.slice(0, firstMinPosition + 1).every((point, index) => point.index === index);
+  let timeToMinimum: ExposureTiming;
+  if (pauseMs === undefined || !Number.isFinite(pauseMs) || pauseMs < 0) {
+    timeToMinimum = {kind: "Unavailable", reason: "InvalidPause"};
+  } else if (!completeTiming) {
+    timeToMinimum = {kind: "Unavailable", reason: "IncompleteExposureHistory"};
+  } else {
+    const valueMs = firstMinPosition === 0 ? 0
+      : pauseMs + precedingPoints.reduce((total, point) => total + point.exposureMs + pauseMs, 0);
+    timeToMinimum = Number.isFinite(valueMs)
+      ? {kind: "Available", valueMs}
+      : {kind: "Unavailable", reason: "InvalidExposureDuration"};
+  }
+
+  return {minExposureMs, reachedAfterTrial, timeToMinimum, processedCount: points.length};
 }
 
 const isNumberSeries = (input: readonly unknown[]): input is readonly number[] =>

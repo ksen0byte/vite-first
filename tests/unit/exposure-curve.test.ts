@@ -36,6 +36,7 @@ describe('summarizeExposure', () => {
     expect(summarizeExposure(trials)).toEqual({
       minExposureMs: 840,
       reachedAfterTrial: 3,
+      timeToMinimum: {kind: 'Unavailable', reason: 'InvalidPause'},
       processedCount: 4,
     });
   });
@@ -47,6 +48,23 @@ describe('summarizeExposure', () => {
     }] as never[];
 
     expect(summarizeExposure(trials)?.reachedAfterTrial).toBe(1);
+    expect(summarizeExposure(trials, 200)?.timeToMinimum).toEqual({kind: 'Available', valueMs: 0});
+  });
+
+  it('includes the initial pause and every preceding exposure and pause, stopping at the first minimum', () => {
+    const trials = [900, 800, 700, 700, 900].map((exposureMs, trialIndex) => ({
+      trialIndex, stimulus: 'square', reactionTime: 200, outcome: 'Success',
+      expectedAction: 'DEFAULT', actualAction: 'DEFAULT', exposureMs,
+    })) as never[];
+    expect(summarizeExposure(trials, 100)?.timeToMinimum).toEqual({kind: 'Available', valueMs: 2000});
+  });
+
+  it('does not fabricate elapsed time when preceding exposures are missing', () => {
+    const trials = [{
+      trialIndex: 1, stimulus: 'square', reactionTime: 200, outcome: 'Success',
+      expectedAction: 'DEFAULT', actualAction: 'DEFAULT', exposureMs: 700,
+    }] as never[];
+    expect(summarizeExposure(trials, 100)?.timeToMinimum).toEqual({kind: 'Unavailable', reason: 'IncompleteExposureHistory'});
   });
 });
 

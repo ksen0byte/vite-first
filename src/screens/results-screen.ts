@@ -66,7 +66,7 @@ export function setupResultsScreen(
   const reactionTimeStats = multiHandStats.total;
   const showHandBreakdown = testType === "crt2-3";
   const errorBreakdownStats = errorBreakdownStatsHtml(multiHandStats, showHandBreakdown);
-  const exposureSummary = isFeedbackSession ? feedbackExposureStatsHtml(trialResults) : "";
+  const exposureSummary = isFeedbackSession ? feedbackExposureStatsHtml(trialResults, feedbackTuning(testSettings).pause) : "";
 
   const functionalLevelVal = reactionTimeStats.calculateFunctionalLevel();
   const reactionStability = reactionTimeStats.calculateReactionStability();
@@ -85,25 +85,19 @@ export function setupResultsScreen(
         </div>` : ""}
       </div>
 
-      <!-- Primary Statistics Grid (Count, Mean, Motor, CPI/Sensory, Mode, Std Dev, CV, Entropy) -->
-      <div id="primary-stats-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
-
-        <!-- Count -->
-        <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
-          <div class="stat-title text-xs font-medium" data-localize="statCount">Count</div>
-          <div class="stat-value text-base sm:text-lg font-bold">${reactionTimeStats.count}${filteredCountHtml(reactionTimeStats.filteredCount)}</div>
-          ${handBreakdownDescHtml(multiHandStats.left.count, multiHandStats.right.count, showHandBreakdown)}
-        </div>
+      <!-- Important measures share one highlighted panel. -->
+      <div id="important-stats-group" class="bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow w-full shrink-0">
+      <div id="primary-stats-grid" class="grid grid-cols-1 ${testType === 'crt2-3' ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'} divide-y sm:divide-y-0 sm:divide-x divide-primary/20 w-full">
 
         <!-- Mean -->
-        <div class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium" data-localize="statMean">Mean</div>
           <div class="stat-value text-base sm:text-lg font-bold">${(reactionTimeStats.meanVal === null ? "N/A" : `${reactionTimeStats.meanVal.toFixed(2)} ${localize("ms")}`)}</div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.meanVal.toFixed(2)} ${localize("ms")}`)}
         </div>
 
         <!-- Motor Component -->
-        <div class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
             <span data-localize="motorComponentLabel">Motor Component</span>
             <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="motorComponentHelp" data-tip="${localize('motorComponentHelp')}">(?)</span>
@@ -117,7 +111,7 @@ export function setupResultsScreen(
         </div>
 
         <!-- Sensory Component for every test type -->
-        <div class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
             <span data-localize="sensoryComponentLabel">Sensory Component</span>
             <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="sensoryComponentHelp" data-tip="${localize('sensoryComponentHelp')}">(?)</span>
@@ -128,7 +122,7 @@ export function setupResultsScreen(
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, formatSensoryComponentHtml)}
         </div>
         ${testType === "crt2-3" ? `
-        <div id="cpi-result-stat" class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div id="cpi-result-stat" class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
             <span data-localize="statCpi23"></span>
             <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="cpiBaselineHelp" data-tip="${localize('cpiBaselineHelp')}">(?)</span>
@@ -140,29 +134,42 @@ export function setupResultsScreen(
         </div>
         ` : ""}
 
+      </div>
+      ${exposureSummary}
+      </div>
+
+      <!-- Supporting measures share one divided strip. -->
+      <div id="supporting-stats-group" class="grid grid-cols-1 sm:grid-cols-5 bg-base-100 rounded-box border border-base-300 shadow divide-y sm:divide-y-0 sm:divide-x divide-base-300 w-full shrink-0">
+        <!-- Count -->
+        <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
+          <div class="stat-title text-xs font-medium" data-localize="statCount">Count</div>
+          <div class="stat-value text-base sm:text-lg font-bold">${reactionTimeStats.count}${filteredCountHtml(reactionTimeStats.filteredCount)}</div>
+          ${handBreakdownDescHtml(multiHandStats.left.count, multiHandStats.right.count, showHandBreakdown)}
+        </div>
+
         <!-- Mode -->
-        <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium" data-localize="statMode">Median</div>
           <div class="stat-value text-base sm:text-lg font-bold">${(reactionTimeStats.modeVal === null ? "N/A" : `${reactionTimeStats.modeVal.toFixed(2)} ${localize("ms")}`)}</div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => stats.modeVal === null ? "N/A" : `${stats.modeVal.toFixed(2)} ${localize("ms")}`)}
         </div>
 
         <!-- Std Dev -->
-        <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium" data-localize="statStdDev">Std Dev</div>
           <div class="stat-value text-base sm:text-lg font-bold">${reactionTimeStats.stdevVal.toFixed(2)} <span data-localize="ms"></span></div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.stdevVal.toFixed(2)} ${localize("ms")}`)}
         </div>
         
         <!-- Coefficient of Variation -->
-        <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium" data-localize="statCV">CV</div>
           <div class="stat-value text-base sm:text-lg font-bold">${reactionTimeStats.cvVal.toFixed(2)}%</div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.cvVal.toFixed(2)}%`)}
         </div>
 
         <!-- Discretized Shannon Entropy -->
-        <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
+        <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium" data-localize="statEntropy">Shannon Entropy</div>
           <div class="stat-value text-base sm:text-lg font-bold">${reactionTimeStats.entropyVal.toFixed(3)} <span data-localize="bits"></span></div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => `${stats.entropyVal.toFixed(3)} ${localize("bits")}`)}
@@ -234,8 +241,6 @@ export function setupResultsScreen(
         </div>
         ` : ''}
       </div>
-
-      ${exposureSummary}
 
       <!-- Frequency Distribution Table -->
       <div id="results-chart-container" class="flex-1 relative min-h-[220px] w-full p-2 sm:p-3 bg-base-100 rounded-box shadow flex items-center justify-center overflow-hidden">
@@ -384,23 +389,27 @@ function formatSensoryComponentHtml(stats: ReactionTimeStats): string {
  * (trial number), and the exposure-dynamics curve (doc §2.1/§2.2 "дод.
  * результати"). Hidden entirely for optimal-protocol sessions.
  */
-function feedbackExposureStatsHtml(trialResults: readonly TrialResult[]): string {
-  const summary = summarizeExposure(trialResults);
+function feedbackExposureStatsHtml(trialResults: readonly TrialResult[], pauseMs: number): string {
+  const summary = summarizeExposure(trialResults, pauseMs);
   if (!summary) return "";
 
   return `
-    <div class="stats stats-vertical lg:stats-horizontal bg-primary/10 ring-2 ring-primary ring-inset shadow w-full mb-4">
-      <div class="stat place-items-center">
-        <div class="stat-title text-base" data-localize="statMinExposure"></div>
-        <div class="stat-value text-lg">${summary.minExposureMs} ${localize("ms")}</div>
+    <div id="feedback-stats-row" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-primary/20 divide-y sm:divide-y-0 sm:divide-x divide-primary/20 w-full">
+      <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
+        <div class="stat-title whitespace-normal text-xs font-medium" data-localize="statMinExposure"></div>
+        <div class="stat-value text-base sm:text-lg font-bold">${summary.minExposureMs} ${localize("ms")}</div>
       </div>
-      <div class="stat place-items-center">
-        <div class="stat-title text-base" data-localize="statMinExposureTrial"></div>
-        <div class="stat-value text-lg">#${summary.reachedAfterTrial}</div>
+      <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
+        <div class="stat-title whitespace-normal text-xs font-medium" data-localize="statMinExposureTrial"></div>
+        <div class="stat-value text-base sm:text-lg font-bold">#${summary.reachedAfterTrial}</div>
       </div>
-      <div class="stat place-items-center">
-        <div class="stat-title text-base" data-localize="statStimuliProcessed"></div>
-        <div class="stat-value text-lg">${summary.processedCount}</div>
+      <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
+        <div class="stat-title whitespace-normal text-xs font-medium" data-localize="statTimeToMinExposure"></div>
+        <div class="stat-value whitespace-normal text-base sm:text-lg font-bold">${summary.timeToMinimum.kind === "Unavailable" ? `<span class="text-warning text-sm" data-localize="exposureTimingUnavailable"></span>` : `${(summary.timeToMinimum.valueMs / 1000).toFixed(2)} <span data-localize="secondsUnit"></span>`}</div>
+      </div>
+      <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
+        <div class="stat-title whitespace-normal text-xs font-medium" data-localize="statStimuliProcessed"></div>
+        <div class="stat-value text-base sm:text-lg font-bold">${summary.processedCount}</div>
       </div>
     </div>`;
 }
