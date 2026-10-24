@@ -40,6 +40,15 @@ export function updateLanguageUI(root: ParentNode = document): void {
     element.textContent = getRepresentativeWord(getLocalizedVar("randomWords"), category);
   });
 
+  // Native options cannot contain localized child spans. Rebuild their date
+  // and optional suffix together whenever the language changes.
+  root.querySelectorAll<HTMLElement>('[data-localize-date]').forEach((element) => {
+    const date = new Date(element.dataset.localizeDate!);
+    const suffix = element.dataset.localizeDateSuffix;
+    element.textContent = date.toLocaleString(currentLanguage === 'uk' ? 'uk-UA' : 'en-US')
+      + (suffix ? ` · ${localize(suffix)}` : '');
+  });
+
   const ariaLocalizableElements = root.querySelectorAll<HTMLElement>('[data-localize-aria]');
   ariaLocalizableElements.forEach((element) => {
     element.setAttribute('aria-label', localize(element.dataset.localizeAria!));
@@ -405,27 +414,27 @@ const localization: LocalizationKeys = {
   statSensoryComponent: {en: "Sensory Component", uk: "Сенсорний компонент"},
   sensoryComponentLabel: {en: "Sensory Component", uk: "Сенсорний компонент"},
   statCpi: {en: "Central Processing (CPI)", uk: "Центральна обробка (МЦОІ)"},
-  statCpi13: {en: "CPI 1-3", uk: "МЦОІ 1-3"},
   statCpi23: {en: "CPI 2-3", uk: "МЦОІ 2-3"},
   cpiCardRowLabel: {en: "Central Processing (CPI)", uk: "Центральна обробка (МЦОІ)"},
   cpiBaselineHelp: {
-    en: "Central Information Processing time according to Donders method: difference between choice reaction time and simple visual-motor reaction time (CRT mean − SVMR mean).",
-    uk: "Час центральної обробки інформації за методом Дондерса: різниця між часом реакції вибору та простої зорово-моторної реакції (середнє РВ − середнє ПЗМР)."
+    en: "Central Information Processing time according to Donders method: difference between CRT 2-3 and SVMR mean reaction times for the same test mode.",
+    uk: "Час центральної обробки інформації за методом Дондерса: різниця середнього часу РВ 2-3 і ПЗМР із тим самим видом подразника."
   },
   centralProcessingSummaryTitle: {en: "Central Information Processing Summary (CPI)", uk: "Зведена оцінка часу центральної обробки інформації (МЦОІ)"},
   centralProcessingSummaryDesc: {
-    en: "Estimated cognitive processing time calculated by Donders subtraction method (CRT mean − SVMR mean)",
-    uk: "Оцінка часу центральних когнітивних процесів за методом віднімання Дондерса (середнє РВ − середнє ПЗМР)"
+    en: "Estimated cognitive processing time calculated by Donders subtraction method (CRT 2-3 mean − SVMR mean). Tests are paired by stimulus mode.",
+    uk: "Оцінка часу центральних когнітивних процесів за методом віднімання Дондерса (середнє РВ 2-3 − середнє ПЗМР). Тести зіставляються за видом подразника."
   },
-  cpi13Label: {en: "CPI 1-3 (Choice 1 of 3)", uk: "МЦОІ 1-3 (Вибір 1 з 3)"},
+  profileModeShapes: {en: "Geometrical Shapes", uk: "Геометричні Фігури"},
+  profileModeWords: {en: "Words", uk: "Слова"},
+  profileModeColors: {en: "Colors", uk: "Кольори"},
+  profileModeCombined: {en: "Combined Stimuli", uk: "Комбіновані Стимули"},
   cpi23Label: {en: "CPI 2-3 (Choice 2 of 3)", uk: "МЦОІ 2-3 (Вибір 2 з 3)"},
   cpiPzmrBaseline: {en: "Baseline SVMR", uk: "Базовий ПЗМР"},
-  cpiTargetCrt13: {en: "Comparison CRT 1-3", uk: "Порівнюваний РВ 1-3"},
   cpiTargetCrt23: {en: "Comparison CRT 2-3", uk: "Порівнюваний РВ 2-3"},
-  cpiNoBaseline: {en: "SVMR baseline test required for calculation", uk: "Потрібно пройти тест ПЗМР для розрахунку МЦОІ"},
-  cpiNoCrt13: {en: "No CRT 1-3 tests recorded", uk: "Немає збережених тестів РВ 1-3"},
+  cpiNoBaseline: {en: "SVMR baseline of the same test mode required", uk: "Потрібен тест ПЗМР із тим самим видом подразника"},
   cpiNoCrt23: {en: "No CRT 2-3 tests recorded", uk: "Немає збережених тестів РВ 2-3"},
-  cpiFormulaHint: {en: "CPI = Mean(CRT) − Mean(SVMR)", uk: "МЦОІ = Середнє(РВ) − Середнє(ПЗМР)"},
+  cpiFormulaHint: {en: "CPI = Mean(CRT 2-3) − Mean(SVMR)", uk: "МЦОІ = Середнє(РВ 2-3) − Середнє(ПЗМР)"},
   cpiLatestAuto: {en: "Latest (Auto)", uk: "Останній (Авто)"},
   cpiNoValidData: {en: "No valid reaction data in tests", uk: "Немає валідних даних реакції"},
   notRecorded: {en: "Not recorded", uk: "Не зафіксовано"},

@@ -25,7 +25,7 @@ async function openRoute(page: Page, route: string): Promise<void> {
   }, route);
 }
 
-async function importExampleUser(page: Page): Promise<void> {
+async function importExampleUser(page: Page, mixedProfile = false): Promise<void> {
   page.on('dialog', (dialog) => dialog.accept());
   await page.locator('#service-profiles').click();
   await expect(page.locator('#users-screen')).toBeVisible();
@@ -33,11 +33,18 @@ async function importExampleUser(page: Page): Promise<void> {
   const chooserPromise = page.waitForEvent('filechooser');
   await page.locator('#import-data-btn').click();
   const chooser = await chooserPromise;
-  const tests = [
+  const definitions = [
     {id: 101, testMode: 'shapes', testType: 'svmr', stimulus: 'circle', expectedAction: 'DEFAULT'},
     {id: 102, testMode: 'colors', testType: 'crt1-3', stimulus: 'red', expectedAction: 'DEFAULT'},
     {id: 103, testMode: 'words', testType: 'crt2-3', stimulus: 'cat', expectedAction: 'RIGHT'},
-  ].map((definition, testIndex) => ({
+  ];
+  if (mixedProfile) definitions.push(
+    {id: 104, testMode: 'shapes', testType: 'crt2-3', stimulus: 'circle', expectedAction: 'RIGHT'},
+    {id: 105, testMode: 'shapes', testType: 'svmr', stimulus: 'circle', expectedAction: 'DEFAULT'},
+    {id: 106, testMode: 'shapes', testType: 'crt2-3', stimulus: 'circle', expectedAction: 'RIGHT'},
+    {id: 107, testMode: 'colors', testType: 'svmr', stimulus: 'red', expectedAction: 'DEFAULT'},
+  );
+  const tests = definitions.map((definition, testIndex) => ({
     id: definition.id,
     userKey: 'Ada|Example',
     testSettings: {
@@ -154,14 +161,25 @@ test('users page with saved data', async ({page}) => {
 
 for (const language of ['en', 'uk'] as const) {
   test(`user profile page with saved test history in ${language}`, async ({page}) => {
-    await importExampleUser(page);
+    await importExampleUser(page, true);
     if (language === 'uk') {
       await page.locator('#language-toggle').uncheck();
       await expect(page.locator('html')).toHaveAttribute('lang', 'uk');
     }
     await page.locator('.view-profile-btn').click();
     await expect(page.locator('#user-profile-screen')).toBeVisible();
-    await expect(page.locator('#user-profile-screen canvas')).toHaveCount(3);
+    await expect(page.locator('#user-profile-screen canvas')).toHaveCount(7);
+    await expect(page.locator('[data-cpi-mode="shapes"] td').last()).toContainText('18.00');
+    await expect(page.locator('.cpi-card-value .font-mono').filter({hasText: /^18\.00$/})).toHaveCount(1);
+    await expect(page.locator('#cpi-shapes-pzmr-select option')).toHaveCount(2);
+    await expect(page.locator('#cpi-shapes-crt23-select option')).toHaveCount(2);
+    await expect(page.locator('[data-cpi-mode="words"] td').last().locator('[data-localize="cpiNoBaseline"]')).toBeVisible();
+    await expect(page.locator('[data-cpi-mode="colors"] td').last().locator('[data-localize="cpiNoCrt23"]')).toBeVisible();
+    await expect(page.locator('[data-cpi-mode="combined"] [data-localize="cpiNoBaseline"]')).toBeVisible();
+    await expect(page.locator('#user-profile-screen')).not.toContainText(/🔴|🔤|🎨|🔀/);
+    await expect(page.locator('#user-profile-screen [data-localize-tip="cpiBaselineHelp"]')).toHaveCount(0);
+    await expect(page.locator('#cpi-summary-card [data-localize="cpiFormulaHint"]')).toHaveCount(0);
+    await expect(page.locator('#cpi-summary-card')).toHaveScreenshot(`cpi-summary-mixed-${language}.png`, {animations: 'disabled'});
     await expectStandardBackButton(page, '#users-page-btn');
     await expect(page).toHaveScreenshot(
       language === 'en' ? 'user-profile.png' : 'user-profile-uk.png',
@@ -171,6 +189,70 @@ for (const language of ['en', 'uk'] as const) {
     await expect(page.locator('#users-screen')).toBeVisible();
   });
 }
+
+test('CPI table matches baselines and selections independently for all four modes', async ({page}) => {
+  await importExampleUser(page);
+  await page.locator('.view-profile-btn').click();
+  await expect(page.locator('#user-profile-screen')).toBeVisible();
+  await page.evaluate(() => {
+    const {user, tests} = history.state;
+    const baseline = tests.find((record: {testSettings: {testType: string}}) => record.testSettings.testType === 'svmr');
+    const records = ['shapes', 'words', 'colors', 'combined'].flatMap((testMode, index) =>
+      ['svmr', 'crt2-3'].map((testType, offset) => ({
+        ...baseline,
+        id: index * 10 + offset + 1,
+        testSettings: {...baseline.testSettings, testMode, testType},
+        trials: baseline.trials.map((trial: {reactionTime: number}) => ({
+          ...trial,
+          reactionTime: 200 + index * 10 + offset * (100 + index * 20),
+        })),
+      })),
+    );
+    records.push({
+      ...records[0], id: 99, date: '2025-01-01T10:00:00.000Z',
+      trials: records[0].trials.map((trial: {reactionTime: number}) => ({...trial, reactionTime: 250})),
+    });
+    history.replaceState({user, tests: records}, '', location.href);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  const table = page.locator('#cpi-summary-table');
+  await expect(table.locator('tbody tr')).toHaveCount(4);
+  for (const [index, mode] of ['shapes', 'words', 'colors', 'combined'].entries()) {
+    await expect(table.locator(`[data-cpi-mode="${mode}"] td`).last()).toContainText(`${100 + index * 20}.00`);
+    await expect(page.locator(`#cpi-${mode}-crt23-select option`)).toHaveCount(1);
+  }
+  await expect(page.locator('.cpi-card-value')).toHaveCount(4);
+  await page.locator('#cpi-shapes-pzmr-select').selectOption('99');
+  await expect(table.locator('[data-cpi-mode="shapes"] td').last()).toContainText('50.00');
+  await expect(table.locator('[data-cpi-mode="words"] td').last()).toContainText('120.00');
+  await expect(page.locator('.cpi-card-value[data-test-id="2"]')).toContainText('50.00');
+  await page.locator('#cpi-shapes-pzmr-select').selectOption('1');
+  await expect(table.locator('[data-cpi-mode="shapes"] td').last()).toContainText('100.00');
+  await expect(page.locator('#cpi-summary-card')).toHaveScreenshot('cpi-summary-modes.png', {animations: 'disabled'});
+  const dimensions = () => table.locator('tbody tr:first-child > *').evaluateAll(
+    (cells) => cells.map((cell) => ({width: cell.getBoundingClientRect().width, height: cell.getBoundingClientRect().height})),
+  );
+  const before = await dimensions();
+  for (const cell of before) expect(cell.width).toBeCloseTo(before[0].width, 0);
+  await page.locator('#cpi-shapes-pzmr-select').selectOption('99');
+  await page.locator('#language-toggle').uncheck();
+  await expect(page.locator('#cpi-shapes-pzmr-select')).toHaveValue('99');
+  for (const mode of ['shapes', 'words', 'colors', 'combined']) {
+    for (const type of ['pzmr', 'crt23']) {
+      const option = page.locator(`#cpi-${mode}-${type}-select option`).first();
+      await expect(option).toContainText('Останній (Авто)');
+      await expect(option).toContainText('15.01.2026');
+      await expect(option).not.toContainText('Latest');
+    }
+  }
+  expect(await dimensions()).toEqual(before);
+  await expect(table.locator('[data-cpi-mode="shapes"] td').last()).toContainText('50.00');
+  await expect(page.locator('#cpi-summary-card')).toHaveScreenshot('cpi-summary-modes-uk.png', {animations: 'disabled'});
+  await page.locator('#language-toggle').check();
+  await expect(page.locator('#cpi-shapes-pzmr-select option').first()).toContainText('Latest (Auto)');
+  await expect(page.locator('#cpi-shapes-pzmr-select')).toHaveValue('99');
+  expect(await dimensions()).toEqual(before);
+});
 
 test('results page with completed trials', async ({page}) => {
   await page.locator('#service-reaction').click();
@@ -253,7 +335,7 @@ const crtResultCases = [
 ] as const;
 
 for (const {testType, language} of crtResultCases) {
-  test(`results page for ${testType} with CPI in ${language}`, async ({page}) => {
+  test(`results page for ${testType} in ${language}`, async ({page}) => {
     // Importing the example user supplies the SVMR baseline used to calculate CPI.
     await importExampleUser(page);
     if (language === 'uk') {
@@ -263,14 +345,13 @@ for (const {testType, language} of crtResultCases) {
     await openRoute(page, '/settings');
     await fillPersonalData(page);
     await page.locator('#test-type-select').selectOption(testType);
+    await page.locator('#stimulus-select').selectOption('shapes');
     await page.locator('#start-test-btn').click();
     await expect(page.locator('#test-screen')).toBeVisible();
 
     await page.evaluate(({samples, selectedTestType}) => {
       const destination = new URL('./results', new URL('.', window.location.href));
-      const stimuli = selectedTestType === 'crt1-3'
-        ? ['red', 'green', 'yellow']
-        : ['cat', 'dog', 'bird'];
+      const stimuli = ['circle', 'square', 'triangle'];
       const reactionTimes = new Map(samples.map((reactionTime, trialIndex) => {
         const action = selectedTestType === 'crt2-3'
           ? (trialIndex % 2 === 0 ? 'LEFT' : 'RIGHT')
@@ -293,11 +374,16 @@ for (const {testType, language} of crtResultCases) {
     await expect(page.locator('#results-screen')).toBeVisible();
     await expect(page.locator('#frequencyChart')).toBeVisible();
     await expect(page.locator('#secondary-stats-grid > div')).toHaveCount(2);
-    await expect(page.locator('#cpi-result-value .loading')).toHaveCount(0);
-    await expect(page.locator('#cpi-result-value')).not.toBeEmpty();
-    expect(await page.locator('#cpi-result-desc').evaluate(
-      (element) => element.scrollWidth <= element.clientWidth,
-    )).toBe(true);
+    if (testType === 'crt2-3') {
+      await expect(page.locator('#cpi-result-value .loading')).toHaveCount(0);
+      await expect(page.locator('#cpi-result-value')).toContainText('45.00');
+      await expect(page.locator('#cpi-result-value [data-localize="cpiNoBaseline"]')).toHaveCount(0);
+      expect(await page.locator('#cpi-result-desc').evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      )).toBe(true);
+    } else {
+      await expect(page.locator('#cpi-result-stat')).toHaveCount(0);
+    }
     expect(await page.locator('#error-stats-group .stat-title, #primary-stats-grid .stat-desc, #secondary-stats-grid .stat-desc').evaluateAll(
       (elements) => elements
         .filter((element) => element.scrollWidth > element.clientWidth)

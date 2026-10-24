@@ -1,9 +1,11 @@
 // src/stats/central-processing.ts
 import { TestRecord } from "../db/db.ts";
 import { ReactionTimeStats } from "./ReactionTimeStats.ts";
-import { feedbackTuning, isFeedback, OptimalSettings } from "../config/domain.ts";
+import { feedbackTuning, isFeedback, OptimalSettings, TestMode } from "../config/domain.ts";
 
-export type CrtTestType = "crt1-3" | "crt2-3";
+export type CrtTestType = "crt2-3";
+
+export const CPI_TEST_MODES: readonly TestMode[] = ["shapes", "words", "colors", "combined"];
 
 export type CentralProcessingResult =
   | {
@@ -31,16 +33,16 @@ export type CentralProcessingResult =
       readonly reason: string;
     };
 
-export interface CentralProcessingSummary {
-  readonly cpi13: CentralProcessingResult;
-  readonly cpi23: CentralProcessingResult;
+export interface CentralProcessingModeSummary {
+  readonly testMode: TestMode;
+  readonly cpi: CentralProcessingResult;
   readonly selectedPzmrTest: TestRecord | null;
-  readonly selectedCrt13Test: TestRecord | null;
   readonly selectedCrt23Test: TestRecord | null;
   readonly availablePzmrTests: readonly TestRecord[];
-  readonly availableCrt13Tests: readonly TestRecord[];
   readonly availableCrt23Tests: readonly TestRecord[];
 }
+
+export type CentralProcessingSummary = Record<TestMode, CentralProcessingModeSummary>;
 
 /**
  * Creates ReactionTimeStats for a TestRecord using the proper cleaning upper bounds.
@@ -106,10 +108,10 @@ export function calculateCpiFromRecords(
   pzmrTest: TestRecord | null | undefined,
   crtType: CrtTestType
 ): CentralProcessingResult {
-  if (!crtTest) {
+  if (!crtTest || crtTest.testSettings.testType !== "crt2-3") {
     return { kind: "NoCrtTest", crtType };
   }
-  if (!pzmrTest) {
+  if (!pzmrTest || pzmrTest.testSettings.testType !== "svmr" || pzmrTest.testSettings.testMode !== crtTest.testSettings.testMode) {
     return { kind: "NoBaselinePzmr", crtType };
   }
 
@@ -127,69 +129,39 @@ export function calculateCpiFromRecords(
   });
 }
 
-export interface ComputeCpiSummaryOptions {
+export interface CpiModeSelection {
   readonly selectedPzmrId?: number;
-  readonly selectedCrt13Id?: number;
   readonly selectedCrt23Id?: number;
 }
 
-/**
- * Aggregates all user tests and computes CPI summary with optional custom selection.
- */
+export type ComputeCpiSummaryOptions = Partial<Record<TestMode, CpiModeSelection>>;
+
+/** Selects the newest tests independently for each stimulus mode. */
 export function computeUserProfileCpiSummary(
   tests: readonly TestRecord[],
-  options?: ComputeCpiSummaryOptions
+  options: ComputeCpiSummaryOptions = {}
 ): CentralProcessingSummary {
-  // Work on a copy because callers also use their ordering to number/render the
-  // test cards; CPI selection must not mutate that external presentation state.
   const sortedTests = [...tests].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
-
-  const availablePzmrTests = sortedTests.filter(
-    (t) => t.testSettings.testType === "svmr"
-  );
-  const availableCrt13Tests = sortedTests.filter(
-    (t) => t.testSettings.testType === "crt1-3"
-  );
-  const availableCrt23Tests = sortedTests.filter(
-    (t) => t.testSettings.testType === "crt2-3"
-  );
-
-  // A stale selection (for example after deleting a record) falls back to the
-  // newest compatible test so the summary remains usable without a reset step.
-  const selectedPzmrTest =
-    (options?.selectedPzmrId !== undefined
-      ? availablePzmrTests.find((t) => t.id === options.selectedPzmrId)
-      : undefined) ??
-    availablePzmrTests[0] ??
-    null;
-
-  const selectedCrt13Test =
-    (options?.selectedCrt13Id !== undefined
-      ? availableCrt13Tests.find((t) => t.id === options.selectedCrt13Id)
-      : undefined) ??
-    availableCrt13Tests[0] ??
-    null;
-
-  const selectedCrt23Test =
-    (options?.selectedCrt23Id !== undefined
-      ? availableCrt23Tests.find((t) => t.id === options.selectedCrt23Id)
-      : undefined) ??
-    availableCrt23Tests[0] ??
-    null;
-
-  const cpi13 = calculateCpiFromRecords(selectedCrt13Test, selectedPzmrTest, "crt1-3");
-  const cpi23 = calculateCpiFromRecords(selectedCrt23Test, selectedPzmrTest, "crt2-3");
-
-  return {
-    cpi13,
-    cpi23,
-    selectedPzmrTest,
-    selectedCrt13Test,
-    selectedCrt23Test,
-    availablePzmrTests,
-    availableCrt13Tests,
-    availableCrt23Tests,
+  const forMode = (testMode: TestMode): CentralProcessingModeSummary => {
+    const modeTests = sortedTests.filter((test) => test.testSettings.testMode === testMode);
+    const availablePzmrTests = modeTests.filter((test) => test.testSettings.testType === "svmr");
+    const availableCrt23Tests = modeTests.filter((test) => test.testSettings.testType === "crt2-3");
+    const selection = options[testMode];
+    // Stale or cross-mode selections fall back to the newest eligible test.
+    const selectedPzmrTest = availablePzmrTests.find((test) => test.id === selection?.selectedPzmrId)
+      ?? availablePzmrTests[0] ?? null;
+    const selectedCrt23Test = availableCrt23Tests.find((test) => test.id === selection?.selectedCrt23Id)
+      ?? availableCrt23Tests[0] ?? null;
+    return {
+      testMode,
+      cpi: calculateCpiFromRecords(selectedCrt23Test, selectedPzmrTest, "crt2-3"),
+      selectedPzmrTest,
+      selectedCrt23Test,
+      availablePzmrTests,
+      availableCrt23Tests,
+    };
   };
+  return {shapes: forMode("shapes"), words: forMode("words"), colors: forMode("colors"), combined: forMode("combined")};
 }

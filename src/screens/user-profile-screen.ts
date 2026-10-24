@@ -16,7 +16,8 @@ import {
   computeUserProfileCpiSummary,
   CentralProcessingSummary,
   CentralProcessingResult,
-  CrtTestType,
+  CPI_TEST_MODES,
+  ComputeCpiSummaryOptions,
 } from "../stats/central-processing.ts";
 
 let chartInstances: Chart[] = [];
@@ -24,15 +25,8 @@ let chartInstances: Chart[] = [];
 export function setupProfileScreen(appContainer: HTMLElement, user: User, tests: TestRecord[]): Cleanup {
   const sortedTests = [...tests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  let selectedPzmrId: number | undefined;
-  let selectedCrt13Id: number | undefined;
-  let selectedCrt23Id: number | undefined;
-
-  let cpiSummary = computeUserProfileCpiSummary(sortedTests, {
-    selectedPzmrId,
-    selectedCrt13Id,
-    selectedCrt23Id,
-  });
+  const selections: ComputeCpiSummaryOptions = {};
+  let cpiSummary = computeUserProfileCpiSummary(sortedTests, selections);
 
   // Set CSS variables for print configuration
   document.documentElement.style.setProperty('--print-chart-width', `${printConfig.chart.width}px`);
@@ -51,7 +45,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
             ${centralProcessingSummaryCardHtml(cpiSummary)}
           </div>
           <!-- Test Cards -->
-          ${sortedTests.map((test, index) => testCardHTML((sortedTests.length - index), test, cpiSummary.selectedPzmrTest)).join("")}
+          ${sortedTests.map((test, index) => testCardHTML((sortedTests.length - index), test, cpiSummary[test.testSettings.testMode].selectedPzmrTest)).join("")}
       </div>
     </div>
   `;
@@ -61,17 +55,12 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
   if (!cpiSummaryContainer) throw new Error('Required element #cpi-summary-container is missing from the profile screen');
 
   const updateCpi = (): void => {
-    cpiSummary = computeUserProfileCpiSummary(sortedTests, {
-      selectedPzmrId,
-      selectedCrt13Id,
-      selectedCrt23Id,
-    });
+    cpiSummary = computeUserProfileCpiSummary(sortedTests, selections);
 
     cpiSummaryContainer.innerHTML = centralProcessingSummaryCardHtml(cpiSummary);
     updateLanguageUI(cpiSummaryContainer);
 
-    // Every historical CRT card uses the same selected SVMR baseline, so a
-    // baseline change must refresh the cards as well as the summary widget.
+    // Refresh historical CR2-3 cards using the selected baseline for their mode.
     appContainer.querySelectorAll<HTMLElement>('.cpi-card-value').forEach((cell) => {
       const testIdValue = cell.dataset.testId;
       if (!testIdValue) throw new Error('A CPI test card is missing its required data-test-id');
@@ -82,7 +71,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
       const testRecord = sortedTests.find((test) => test.id === testId);
       if (!testRecord) throw new Error(`No test record exists for CPI test card ID ${testId}`);
 
-      cell.innerHTML = formatCpiForTestCard(testRecord, cpiSummary.selectedPzmrTest);
+      cell.innerHTML = formatCpiForTestCard(testRecord, cpiSummary[testRecord.testSettings.testMode].selectedPzmrTest);
       updateLanguageUI(cell);
     });
   };
@@ -97,19 +86,11 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
       throw new Error(`Invalid CPI selection value: ${event.target.value}`);
     }
 
-    switch (event.target.id) {
-      case 'cpi-pzmr-select':
-        selectedPzmrId = selectedId;
-        break;
-      case 'cpi-crt13-select':
-        selectedCrt13Id = selectedId;
-        break;
-      case 'cpi-crt23-select':
-        selectedCrt23Id = selectedId;
-        break;
-      default:
-        return;
-    }
+    const mode = event.target.dataset.mode as TestMode;
+    if (!CPI_TEST_MODES.includes(mode)) return;
+    const field = event.target.dataset.selection;
+    if (field !== 'selectedPzmrId' && field !== 'selectedCrt23Id') return;
+    selections[mode] = {...selections[mode], [field]: selectedId};
 
     updateCpi();
   };
@@ -328,18 +309,17 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                   <td>
                     ${formatSensoryComponent(stats)}
                   </td>
-                </tr>` : `
+                </tr>` : testType === "crt2-3" ? `
                 <tr class="text-center bg-primary/10 font-semibold">
                   <td>
                     <div class="inline-flex items-center justify-center gap-1">
                       <strong data-localize="cpiCardRowLabel"></strong>
-                      <span class="tooltip tooltip-right cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="cpiBaselineHelp" data-tip="${localize('cpiBaselineHelp')}">(?)</span>
                     </div>
                   </td>
                   <td class="cpi-card-value" data-test-id="${test.id ?? ''}">
                     ${formatCpiForTestCard(test, baselinePzmr)}
                   </td>
-                </tr>`}
+                </tr>` : ""}
                 <tr class="text-center">
                   <td><strong data-localize="statisticalModeLabel"></strong></td>
                   <td>
@@ -518,7 +498,7 @@ function formatCpiForTestCard(test: TestRecord, baselinePzmr: TestRecord | null)
   if (!baselinePzmr) {
     return `<span class="text-xs opacity-60" data-localize="cpiNoBaseline"></span>`;
   }
-  const result = calculateCpiFromRecords(test, baselinePzmr, test.testSettings.testType as CrtTestType);
+  const result = calculateCpiFromRecords(test, baselinePzmr, "crt2-3");
   if (result.kind === "Available") {
     return `<span class="font-mono font-medium">${result.valueMs.toFixed(2)}</span> <span data-localize="ms"></span>`;
   }
@@ -529,134 +509,50 @@ function formatCpiForTestCard(test: TestRecord, baselinePzmr: TestRecord | null)
 }
 
 function centralProcessingSummaryCardHtml(summary: CentralProcessingSummary): string {
-  const {
-    cpi13,
-    cpi23,
-    selectedPzmrTest,
-    selectedCrt13Test,
-    selectedCrt23Test,
-    availablePzmrTests,
-    availableCrt13Tests,
-    availableCrt23Tests,
-  } = summary;
-
-  const renderSelect = (
-    id: string,
-    labelKey: string,
-    tests: readonly TestRecord[],
-    selectedTest: TestRecord | null,
-    emptyKey: string
-  ) => {
-    if (tests.length === 0) {
-      return `
-        <div class="form-control w-full">
-          <label class="label py-0.5"><span class="label-text text-xs font-semibold" data-localize="${labelKey}"></span></label>
-          <div class="text-xs text-base-content/60 italic p-1.5 bg-base-200 rounded border border-base-300" data-localize="${emptyKey}"></div>
-        </div>
-      `;
-    }
-    return `
-      <div class="form-control w-full">
-        <label class="label py-0.5" for="${id}">
-          <span class="label-text text-xs font-semibold" data-localize="${labelKey}"></span>
-        </label>
-        <select id="${id}" class="select select-bordered select-xs sm:select-sm w-full">
-          ${tests
-            .map((t, idx) => {
-              const isSelected = selectedTest?.id === t.id;
-              const dateStr = new Date(t.date).toLocaleString();
-              const badge = idx === 0 ? ` · ${localize("cpiLatestAuto")}` : "";
-              return `<option value="${t.id}" ${isSelected ? "selected" : ""}>${dateStr}${badge}</option>`;
-            })
-            .join("")}
-        </select>
-      </div>
-    `;
+  const renderSelect = (mode: TestMode, field: 'selectedPzmrId' | 'selectedCrt23Id',
+    tests: readonly TestRecord[], selected: TestRecord | null, labelKey: string, emptyKey: string): string => {
+    if (!tests.length) return `<span class="text-xs opacity-60" data-localize="${emptyKey}"></span>`;
+    const id = `cpi-${mode}-${field === 'selectedPzmrId' ? 'pzmr' : 'crt23'}-select`;
+    return `<label class="sr-only" for="${id}"><span data-localize="${getTestModeLocalizationKey(mode)}"></span>: <span data-localize="${labelKey}"></span></label>
+      <select id="${id}" data-mode="${mode}" data-selection="${field}" class="select select-bordered select-sm w-full min-w-0 print:hidden">
+        ${tests.map((test, index) => `<option value="${test.id}" data-localize-date="${escapeHtml(test.date)}" ${index === 0 ? 'data-localize-date-suffix="cpiLatestAuto"' : ''} ${selected?.id === test.id ? 'selected' : ''}></option>`).join('')}
+      </select>
+      <span class="hidden print:inline" data-localize-date="${escapeHtml(selected!.date)}"></span>`;
   };
 
-  const renderCpiValueCard = (
-    titleKey: string,
-    result: CentralProcessingResult,
-  ) => {
-    let contentHtml: string;
-
-    if (result.kind === "Available") {
-      const crtShortKey = result.crtType === "crt1-3" ? "testTypeRV13Short" : "testTypeRV23Short";
-      contentHtml = `
-        <div class="font-mono text-xl sm:text-2xl font-semibold text-base-content tracking-tight">
-          ${result.valueMs.toFixed(2)} <span class="text-xs sm:text-sm font-normal font-sans" data-localize="ms"></span>
-        </div>
-        <div class="font-mono text-xs opacity-80 mt-1.5 flex flex-wrap items-center gap-1">
-          <span>μ(<span data-localize="${crtShortKey}"></span>) ${result.crtMeanMs.toFixed(2)} <span data-localize="ms"></span></span>
-          <span>−</span>
-          <span>μ(<span data-localize="testTypePzmrShort"></span>) ${result.pzmrMeanMs.toFixed(2)} <span data-localize="ms"></span></span>
-        </div>
-      `;
-    } else if (result.kind === "NoBaselinePzmr") {
-      contentHtml = `
-        <div class="badge badge-warning badge-outline gap-1 py-3 text-xs">
-          <span data-localize="cpiNoBaseline"></span>
-        </div>
-      `;
-    } else if (result.kind === "NoCrtTest") {
-      const key = result.crtType === "crt1-3" ? "cpiNoCrt13" : "cpiNoCrt23";
-      contentHtml = `
-        <div class="badge badge-ghost gap-1 py-3 text-xs opacity-70">
-          <span data-localize="${key}"></span>
-        </div>
-      `;
-    } else {
-      contentHtml = `
-        <div class="badge badge-error badge-outline gap-1 py-3 text-xs">
-          <span data-localize="cpiNoValidData"></span>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="card bg-base-200/60 p-4 border border-base-300 rounded-box flex flex-col justify-between h-full">
-        <div>
-          <div class="font-bold text-sm mb-2" data-localize="${titleKey}"></div>
-          <div class="my-2">${contentHtml}</div>
-        </div>
-        <div class="text-[11px] opacity-60 mt-2 italic" data-localize="cpiFormulaHint"></div>
-      </div>
-    `;
+  const renderValue = (result: CentralProcessingResult): string => {
+    if (result.kind === 'Available') return `<div class="font-mono font-semibold text-lg">${result.valueMs.toFixed(2)} <span data-localize="ms"></span></div>
+      <div class="font-mono text-xs opacity-70">μ(<span data-localize="testTypeRV23Short"></span>) ${result.crtMeanMs.toFixed(2)} − μ(<span data-localize="testTypePzmrShort"></span>) ${result.pzmrMeanMs.toFixed(2)} <span data-localize="ms"></span></div>`;
+    const key = result.kind === 'NoCrtTest' ? 'cpiNoCrt23'
+      : result.kind === 'NoBaselinePzmr' ? 'cpiNoBaseline' : 'cpiNoValidData';
+    return `<span class="text-xs opacity-70" data-localize="${key}"></span>`;
   };
 
-  return `
-    <div id="cpi-summary-card" class="card shadow-md bg-base-100">
-      <div class="card-body">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-base-200 pb-3">
-          <div>
-            <h2 class="card-title text-lg flex items-center gap-2">
-              <span data-localize="centralProcessingSummaryTitle"></span>
-              <span class="tooltip tooltip-right cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="cpiBaselineHelp" data-tip="${localize('cpiBaselineHelp')}">(?)</span>
-            </h2>
-            <p class="text-xs opacity-70 mt-0.5" data-localize="centralProcessingSummaryDesc"></p>
-          </div>
-        </div>
-
-        <!-- 3-Column Layout (Selectors on Left, Result Cards in Middle and Right) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 print:grid-cols-2 gap-4 mt-3">
-          <!-- Col 1: Selectors Panel (Hidden in print) -->
-          <div class="card bg-base-200/40 p-3 border border-base-300 rounded-box flex flex-col justify-between gap-2 print:hidden">
-            <div class="flex flex-col gap-2">
-              ${renderSelect("cpi-pzmr-select", "cpiPzmrBaseline", availablePzmrTests, selectedPzmrTest, "cpiNoBaseline")}
-              ${renderSelect("cpi-crt13-select", "cpiTargetCrt13", availableCrt13Tests, selectedCrt13Test, "cpiNoCrt13")}
-              ${renderSelect("cpi-crt23-select", "cpiTargetCrt23", availableCrt23Tests, selectedCrt23Test, "cpiNoCrt23")}
-            </div>
-          </div>
-
-          <!-- Col 2: CPI 1-3 Card -->
-          ${renderCpiValueCard("cpi13Label", cpi13)}
-
-          <!-- Col 3: CPI 2-3 Card -->
-          ${renderCpiValueCard("cpi23Label", cpi23)}
-        </div>
+  return `<div id="cpi-summary-card" class="card shadow-md bg-base-100">
+    <div class="card-body">
+      <h2 class="card-title text-lg" data-localize="centralProcessingSummaryTitle"></h2>
+      <p class="text-xs opacity-70" data-localize="centralProcessingSummaryDesc"></p>
+      <div class="overflow-x-auto">
+        <table class="table table-sm table-fixed w-full" id="cpi-summary-table">
+          <thead><tr>
+            <th data-localize="testModeLabel"></th>
+            <th data-localize="cpiPzmrBaseline"></th>
+            <th data-localize="cpiTargetCrt23"></th>
+            <th data-localize="statCpi"></th>
+          </tr></thead>
+          <tbody>${CPI_TEST_MODES.map((mode) => {
+            const row = summary[mode];
+            return `<tr data-cpi-mode="${mode}">
+              <th scope="row" data-localize="${getTestModeLocalizationKey(mode)}"></th>
+              <td>${renderSelect(mode, 'selectedPzmrId', row.availablePzmrTests, row.selectedPzmrTest, 'cpiPzmrBaseline', 'cpiNoBaseline')}</td>
+              <td>${renderSelect(mode, 'selectedCrt23Id', row.availableCrt23Tests, row.selectedCrt23Test, 'cpiTargetCrt23', 'cpiNoCrt23')}</td>
+              <td>${renderValue(row.cpi)}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
       </div>
     </div>
-  `;
+  </div>`;
 }
 
 function errorBreakdownRowsHtml(stats: ReactionTimeStats, multiHandStats: MultiHandReactionTimeStats | null): string {
@@ -732,13 +628,13 @@ function userProfileFooterHTML(): string {
 function getTestModeLocalizationKey(testMode: TestMode): string {
   switch (testMode) {
     case "shapes":
-      return "shapesOption";
+      return "profileModeShapes";
     case "words":
-      return "wordsOption";
+      return "profileModeWords";
     case "colors":
-      return "colorsOption";
+      return "profileModeColors";
     case "combined":
-      return "combinedOption";
+      return "profileModeCombined";
     default:
       throw new Error("Invalid test mode");
   }

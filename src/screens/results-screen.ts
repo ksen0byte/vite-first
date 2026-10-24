@@ -8,7 +8,7 @@ import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import {TestRecord} from "../db/db.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
-import {TrialResult, TestSettings, OptimalSettings, isFeedback, feedbackTuning} from "../config/domain.ts";
+import {TrialResult, TestMode, TestSettings, OptimalSettings, isFeedback, feedbackTuning} from "../config/domain.ts";
 import {summarizeExposure} from "../stats/exposure-curve.ts";
 import {getHandLocalizationKey} from "../config/settings.ts";
 import {calculateCpiFromStats, getTestStats, CrtTestType} from "../stats/central-processing.ts";
@@ -127,10 +127,10 @@ export function setupResultsScreen(
             ${formatSensoryComponentHtml(reactionTimeStats)}
           </div>
         </div>
-        ` : `
+        ` : testType === "crt2-3" ? `
         <div id="cpi-result-stat" class="stat bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
-            <span data-localize="${testType === 'crt1-3' ? 'statCpi13' : 'statCpi23'}"></span>
+            <span data-localize="statCpi23"></span>
             <span class="tooltip tooltip-bottom cursor-help text-xs opacity-70 hover:opacity-100" data-localize-tip="cpiBaselineHelp" data-tip="${localize('cpiBaselineHelp')}">(?)</span>
           </div>
           <div id="cpi-result-value" class="stat-value text-base sm:text-lg font-bold">
@@ -138,7 +138,7 @@ export function setupResultsScreen(
           </div>
           <div id="cpi-result-desc" class="stat-desc w-full max-w-full whitespace-normal break-words text-[10px] leading-tight sm:text-xs"></div>
         </div>
-        `}
+        ` : ""}
 
         <!-- Mode -->
         <div class="stat bg-base-100 rounded-box shadow p-2 sm:p-3 place-items-center text-center">
@@ -260,17 +260,18 @@ export function setupResultsScreen(
   reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
   updateLanguageUI();
 
-  if (testType !== "svmr") {
+  if (testType === "crt2-3") {
     // Rendering the rest of the results must not wait on IndexedDB; the CPI card
     // owns its loading and failure states while the baseline query completes.
-    void loadAndDisplayCpi(appContainer, reactionTimeStats, testType as CrtTestType);
+    void loadAndDisplayCpi(appContainer, reactionTimeStats, testType, testSettings.testMode);
   }
 }
 
 async function loadAndDisplayCpi(
   appContainer: HTMLElement,
   crtStats: ReactionTimeStats,
-  crtType: CrtTestType
+  crtType: CrtTestType,
+  testMode: TestMode
 ): Promise<void> {
   const valueEl = appContainer.querySelector<HTMLElement>('#cpi-result-value');
   const descEl = appContainer.querySelector<HTMLElement>('#cpi-result-desc');
@@ -280,7 +281,7 @@ async function loadAndDisplayCpi(
   try {
     const appContext = AppContextManager.getContext();
     const { firstName, lastName } = appContext.personalData;
-    const getTestsResult = await getTestsForUser(firstName, lastName);
+    const getTestsResult = await getTestsForUser(firstName, lastName, testMode);
     if (getTestsResult._tag === 'Failure') {
       // A storage failure is operationally different from a user who has never
       // completed SVMR, so do not let it fall through to the "no baseline" UI.
@@ -292,7 +293,7 @@ async function loadAndDisplayCpi(
 
     // get latest pzmr result
     const pzmrTests = getTestsResult.value
-      .filter((t) => t.testSettings.testType === 'svmr')
+      .filter((t) => t.testSettings.testType === 'svmr' && t.testSettings.testMode === testMode)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const baselinePzmr: TestRecord | null = pzmrTests[0] ?? null;
 
@@ -313,7 +314,7 @@ async function loadAndDisplayCpi(
     });
 
     if (result.kind === 'Available') {
-      const crtShortKey = crtType === 'crt1-3' ? 'testTypeRV13Short' : 'testTypeRV23Short';
+      const crtShortKey = 'testTypeRV23Short';
       valueEl.innerHTML = `<span class="font-mono font-semibold">${result.valueMs.toFixed(2)}</span> <span class="text-xs font-normal font-sans" data-localize="ms"></span>`;
       descEl.innerHTML = `<span class="font-mono whitespace-normal">μ(<span data-localize="${crtShortKey}"></span>) ${result.crtMeanMs.toFixed(2)} <span data-localize="ms"></span> − μ(<span data-localize="testTypePzmrShort"></span>) ${result.pzmrMeanMs.toFixed(2)} <span data-localize="ms"></span></span>`;
     } else if (result.kind === 'NoValidSamples') {

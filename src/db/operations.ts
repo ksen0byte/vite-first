@@ -1,6 +1,6 @@
 // src/db/operations.ts
 import {db, User, TestRecord} from './db';
-import {TestSettings, TrialResult} from "../config/domain.ts";
+import {TestMode, TestSettings, TrialResult} from "../config/domain.ts";
 import { Result, success, failure } from "../util/result.ts";
 
 export type DbError = 
@@ -45,10 +45,11 @@ export async function saveTestRecord(
   }
 }
 
-export async function getTestsForUser(firstName: string, lastName: string): Promise<Result<TestRecord[], DbError>> {
+export async function getTestsForUser(firstName: string, lastName: string, testMode?: TestMode): Promise<Result<TestRecord[], DbError>> {
   try {
     const userKey = `${firstName}|${lastName}`;
-    const tests = await db.tests.where('userKey').equals(userKey).toArray();
+    const query = db.tests.where('userKey').equals(userKey);
+    const tests = await (testMode === undefined ? query : query.filter((test) => test.testSettings.testMode === testMode)).toArray();
     return success(tests);
   } catch (error) {
     return failure({ _tag: 'DatabaseReadError', error });
