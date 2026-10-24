@@ -487,6 +487,7 @@ const localization: LocalizationKeys = {
   p90Label: {en: "P90", uk: "П90"},
   p97Label: {en: "P97", uk: "П97"},
   backToMainPage: {en: "Back to Main Page", uk: "На головну"},
+  saveAndNextTest: {en: "Save & next test", uk: "Зберегти та наступний тест"},
   printButton: {en: "Print", uk: "Друк"},
   printReportTitle: {en: "Test Results Report", uk: "Звіт про результати тестування"},
   printReportDate: {en: "Report Date", uk: "Дата звіту"},

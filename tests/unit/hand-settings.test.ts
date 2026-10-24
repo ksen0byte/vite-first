@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import 'fake-indexeddb/auto';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import Router from '../../src/routing/router.ts';
 import {setupSettingsScreen} from '../../src/screens/settings-screen.ts';
 import {setupResultsScreen} from '../../src/screens/results-screen.ts';
 import {setupProfileScreen} from '../../src/screens/user-profile-screen.ts';
@@ -22,12 +23,31 @@ describe('Hand choice feature', () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     container.remove();
     db.close();
     await db.delete();
   });
 
   describe('Settings Screen Hand Selection', () => {
+    it('restricts feedback to CRT2-3 while keeping single-option dropdowns enabled', () => {
+      setupSettingsScreen(container);
+      const protocol = container.querySelector('#protocol-select') as HTMLSelectElement;
+      const mode = container.querySelector('#mode-select') as HTMLSelectElement;
+      const testType = container.querySelector('#test-type-select') as HTMLSelectElement;
+      expect(mode.disabled).toBe(false);
+      protocol.value = 'feedback';
+      protocol.dispatchEvent(new Event('change'));
+      expect(mode.disabled).toBe(false);
+      expect(testType.value).toBe('crt2-3');
+      expect(testType.options.length).toBe(1);
+      expect(testType.disabled).toBe(false);
+      protocol.value = 'optimal';
+      protocol.dispatchEvent(new Event('change'));
+      expect(testType.disabled).toBe(false);
+      expect(testType.options.length).toBe(3);
+    });
+
     it('defaults to right hand on initial render', () => {
       setupSettingsScreen(container);
       const handSelect = container.querySelector('#hand-select') as HTMLSelectElement;
@@ -56,10 +76,7 @@ describe('Hand choice feature', () => {
       testTypeSelect.value = 'crt2-3';
       testTypeSelect.dispatchEvent(new Event('change'));
       expect(handSelect.disabled).toBe(true);
-      expect(handSelect.classList.contains('cursor-not-allowed')).toBe(true);
-      expect(handSelect.classList.contains('opacity-60')).toBe(true);
-      expect(handLabel.classList.contains('opacity-40')).toBe(true);
-      expect(handLabel.classList.contains('cursor-not-allowed')).toBe(true);
+      expect(handSelect.classList.contains('hidden')).toBe(false);
       expect(handLabel.classList.contains('pointer-events-none')).toBe(false);
 
       // Switch back to svmr -> enabled again
@@ -174,6 +191,29 @@ describe('Hand choice feature', () => {
   });
 
   describe('Results and Profile Display', () => {
+    it.each(['svmr', 'crt1-3', 'crt2-3'] as const)('saves %s before opening settings for the next test', async (testType) => {
+      const navigate = vi.spyOn(Router, 'navigate').mockImplementation(() => {});
+      const savedSettings = {...defaultAppContext.testSettings, testType};
+      AppContextManager.setContext({...defaultAppContext, testSettings: savedSettings});
+      const trial: TrialResult = {trialIndex: 0, stimulus: 'circle', reactionTime: 320, outcome: 'Success', expectedAction: 'DEFAULT', actualAction: 'DEFAULT'};
+      setupResultsScreen(container, new Map([[0, trial]]));
+      const next = container.querySelector<HTMLButtonElement>('#save-and-next-test-btn');
+      if (testType === 'crt2-3') {
+        expect(next).toBeNull();
+      } else {
+        expect(next).not.toBeNull();
+        next!.click();
+        await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/settings'));
+        expect(AppContextManager.getContext().testSettings).toEqual({
+          ...savedSettings, testType: testType === 'svmr' ? 'crt1-3' : 'crt2-3',
+        });
+        const records = await db.tests.toArray();
+        expect(records).toHaveLength(1);
+        expect(records[0].testSettings.testType).toBe(testType);
+        expect(records[0].trials).toEqual([trial]);
+      }
+    });
+
     it('displays the tested hand badge on Results screen for SVMR and CRT1-3', () => {
       AppContextManager.setContext({
         ...defaultAppContext,
@@ -198,6 +238,7 @@ describe('Hand choice feature', () => {
 
       const handBadge = container.querySelector('#results-hand-badge');
       expect(handBadge).not.toBeNull();
+      expect(container.querySelector('#functional-stats-group')).not.toBeNull();
       expect(handBadge?.innerHTML).toContain('data-localize="leftHand"');
     });
 
@@ -225,6 +266,7 @@ describe('Hand choice feature', () => {
 
       const handBadge = container.querySelector('#results-hand-badge');
       expect(handBadge).toBeNull();
+      expect(container.querySelector('#functional-stats-group')).toBeNull();
     });
 
     it('displays the tested hand row in the Test Settings table on Profile screen for SVMR and CRT1-3', () => {

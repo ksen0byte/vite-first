@@ -8,10 +8,31 @@ import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
 import {TestRecord} from "../db/db.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
-import {TrialResult, isFeedback, feedbackTuning} from "../config/domain.ts";
+import {TrialResult, TestSettings, OptimalSettings, isFeedback, feedbackTuning} from "../config/domain.ts";
 import {summarizeExposure} from "../stats/exposure-curve.ts";
 import {getHandLocalizationKey} from "../config/settings.ts";
 import {calculateCpiFromStats, getTestStats, CrtTestType} from "../stats/central-processing.ts";
+
+type NextTestRecommendation =
+  | {kind: 'feedback-protocol'}
+  | {kind: 'sequence-complete'}
+  | {kind: 'next-test'; settings: OptimalSettings};
+
+type SaveDestination =
+  | {kind: 'profile'}
+  | {kind: 'next-test-settings'; settings: OptimalSettings};
+
+function recommendNextTest(completedSettings: TestSettings): NextTestRecommendation {
+  if (completedSettings.protocolMode !== 'optimal') return {kind: 'feedback-protocol'};
+  switch (completedSettings.testType) {
+    case 'svmr':
+      return {kind: 'next-test', settings: {...completedSettings, testType: 'crt1-3'}};
+    case 'crt1-3':
+      return {kind: 'next-test', settings: {...completedSettings, testType: 'crt2-3'}};
+    case 'crt2-3':
+      return {kind: 'sequence-complete'};
+  }
+}
 
 export function setupResultsScreen(
   appContainer: HTMLElement,
@@ -26,13 +47,14 @@ export function setupResultsScreen(
       </div>
     `;
     setupHeader(appContainer);
-    setupFooter(appContainer, footerHtml(), []);
+    setupFooter(appContainer, footerHtml({kind: 'sequence-complete'}), []);
     updateLanguageUI();
     return;
   }
 
   // Frequency distribution
   const testSettings = AppContextManager.getContext().testSettings;
+  const nextTestRecommendation = recommendNextTest(testSettings);
   const isFeedbackSession = isFeedback(testSettings);
   const testType = testSettings.testType;
   // Late answers legitimately exceed the fixed exposure, so feedback sessions
@@ -151,7 +173,7 @@ export function setupResultsScreen(
       <!-- Secondary Stats Row (Errors + Percentiles + Loskutova functional-state metrics) -->
       <div id="secondary-stats-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-2 w-full">
         <!-- Errors block -->
-        <div id="error-stats-group" class="grid grid-cols-3 sm:grid-cols-7 lg:col-span-7 bg-base-100 rounded-box border border-base-300 shadow divide-x divide-base-300 w-full overflow-hidden">
+        <div id="error-stats-group" class="grid grid-cols-3 sm:grid-cols-7 ${testType === 'svmr' ? 'lg:col-span-7' : 'lg:col-span-9'} bg-base-100 rounded-box border border-base-300 shadow divide-x divide-base-300 w-full overflow-hidden">
           <!-- Errors Total -->
           <div class="stat p-1 sm:p-2 place-items-center text-center">
             <div class="stat-title whitespace-normal text-xs leading-tight font-medium" data-localize="statErrorsTotal">Errors Total</div>
@@ -170,7 +192,7 @@ export function setupResultsScreen(
         </div>
 
         <!-- Reaction-time percentiles block -->
-        <div id="percentile-stats-group" class="grid grid-cols-2 lg:col-span-2 bg-base-100 rounded-box border border-base-300 shadow divide-x divide-base-300 w-full overflow-hidden">
+        <div id="percentile-stats-group" class="grid grid-cols-2 ${testType === 'svmr' ? 'lg:col-span-2' : 'lg:col-span-3'} bg-base-100 rounded-box border border-base-300 shadow divide-x divide-base-300 w-full overflow-hidden">
           <!-- p50 -->
           <div class="stat p-1 sm:p-2 place-items-center text-center">
             <div class="stat-title text-xs font-medium" data-localize="statP50">p50</div>
@@ -187,6 +209,7 @@ export function setupResultsScreen(
         </div>
 
         <!-- Loskutova functional-state metrics block -->
+        ${testType === 'svmr' ? `
         <div id="functional-stats-group" class="grid grid-cols-3 lg:col-span-3 bg-base-100 rounded-box border border-base-300 shadow divide-x divide-base-300 w-full overflow-hidden">
           <!-- Functional Level -->
           <div class="stat p-1 sm:p-2 place-items-center text-center">
@@ -209,6 +232,7 @@ export function setupResultsScreen(
             ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, (stats) => formatNullableStatistic(stats.calculateFunctionalCapabilities()))}
           </div>
         </div>
+        ` : ''}
       </div>
 
       ${exposureSummary}
@@ -221,13 +245,18 @@ export function setupResultsScreen(
   `;
 
   setupHeader(appContainer);
-  setupFooter(appContainer, footerHtml(), [
+  setupFooter(appContainer, footerHtml(nextTestRecommendation), [
     {buttonFn: () => document.getElementById("dont-save-and-quit-btn")! as HTMLButtonElement, callback: () => Router.navigate("/settings")},
     {
       buttonFn: () => document.getElementById("save-results-btn")! as HTMLButtonElement,
-      callback: async () => await saveResultsAndSetupNextScreen(reactionTimes)
+      callback: async () => await saveResultsAndSetupNextScreen(reactionTimes, {kind: 'profile'})
     }
   ]);
+  if (nextTestRecommendation.kind === 'next-test') {
+    appContainer.querySelector<HTMLButtonElement>('#save-and-next-test-btn')!.addEventListener('click', () => {
+      void saveResultsAndSetupNextScreen(reactionTimes, {kind: 'next-test-settings', settings: nextTestRecommendation.settings});
+    });
+  }
   reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
   updateLanguageUI();
 
@@ -436,7 +465,8 @@ function getTrialOutcomeLocalizationKey(outcome: keyof ReactionTimeStats["outcom
 }
 
 async function saveResultsAndSetupNextScreen(
-  reactionTimes: Map<number, TrialResult>
+  reactionTimes: Map<number, TrialResult>,
+  destination: SaveDestination
 ) {
   const appContext = AppContextManager.getContext();
   const trialResults = Array.from(reactionTimes.values());
@@ -467,6 +497,12 @@ async function saveResultsAndSetupNextScreen(
     const testId = saveResult.value;
     console.log(`Test saved with ID: ${testId}`);
 
+    if (destination.kind === 'next-test-settings') {
+      AppContextManager.setContext({...appContext, testSettings: destination.settings});
+      Router.navigate('/settings');
+      return;
+    }
+
     const getTestsResult = await getTestsForUser(user.firstName, user.lastName);
     if (getTestsResult._tag === 'Failure') {
       console.error("Error retrieving tests", getTestsResult.error);
@@ -476,20 +512,21 @@ async function saveResultsAndSetupNextScreen(
     const tests = getTestsResult.value;
 
     // Navigate to the user profile screen
-    Router.navigate('/profile', {user, tests}); // Pass user and tests to profile route
+    Router.navigate('/profile', {user, tests});
   } catch (err) {
     console.error("Error in saveResultsAndSetupNextScreen", err);
   }
 }
 
 
-function footerHtml(): string {
+function footerHtml(recommendation: NextTestRecommendation): string {
   return `
     <footer id="results-screen-footer" class="navbar bg-base-100 px-4 py-2 border-t border-base-300">
       <div class="flex-1"></div>
       <div class="flex space-x-2">
         <button id="dont-save-and-quit-btn" class="btn btn-outline btn-error" data-localize="dontSaveAndQuit"></button>
         <button id="save-results-btn" class="btn btn-success" data-localize="saveResults"></button>
+        ${recommendation.kind === 'next-test' ? `<button id="save-and-next-test-btn" class="btn btn-success"><span data-localize="saveAndNextTest"></span>: <span data-localize="${recommendation.settings.testType === 'crt1-3' ? 'testTypeRV13Short' : 'testTypeRV23Short'}"></span></button>` : ''}
       </div>
     </footer>
   `;

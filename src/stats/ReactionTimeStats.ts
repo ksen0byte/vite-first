@@ -142,7 +142,7 @@ export class ReactionTimeStats {
     trialResults: TrialResult[],
     upperBound: number = 700,
     lowerBound: number = 100,
-    testType: TestType,
+    private readonly testType: TestType,
     debugLabel?: string,
   ) {
     this.debugLabel = debugLabel;
@@ -651,9 +651,11 @@ export class ReactionTimeStats {
       `${localize("entropyLabel")}: ${this.entropyVal.toFixed(3)} ${localize("bits")}`,
       `${localize("motorComponentLabel")}: ${motorStr}`,
       `${localize("sensoryComponentLabel")}: ${sensoryStr}`,
-      `${localize("statFunctionalLevel")}: ${formatUnavailable(this.calculateFunctionalLevel())}`,
-      `${localize("statReactionStability")}: ${formatUnavailable(this.calculateReactionStability())}`,
-      `${localize("statFunctionalCapabilities")}: ${formatUnavailable(this.calculateFunctionalCapabilities())}`,
+      ...(this.testType === "svmr" ? [
+        `${localize("statFunctionalLevel")}: ${formatUnavailable(this.calculateFunctionalLevel())}`,
+        `${localize("statReactionStability")}: ${formatUnavailable(this.calculateReactionStability())}`,
+        `${localize("statFunctionalCapabilities")}: ${formatUnavailable(this.calculateFunctionalCapabilities())}`,
+      ] : []),
     ].join(" | ");
   }
 }

@@ -31,9 +31,9 @@ test('settings matrix: every protocol, regime, submode and stimulus combination 
     await page.locator('#protocol-select').selectOption(protocol);
     const regimes = protocol === 'feedback' ? ['mobility', 'strength'] : ['standard'];
     for (const regime of regimes) {
-      await page.locator('#mode-select').selectOption(regime);
-      for (const testType of testTypes) {
-        await page.locator('#test-type-select').selectOption(testType);
+      if (protocol === 'feedback') await page.locator('#mode-select').selectOption(regime);
+      for (const testType of protocol === 'feedback' ? ['crt2-3'] : testTypes) {
+        if (protocol === 'optimal') await page.locator('#test-type-select').selectOption(testType);
         for (const stimulus of stimuli) {
           await page.locator('#stimulus-select').selectOption(stimulus);
           await expect(page.locator('#compact-preview')).toBeVisible();

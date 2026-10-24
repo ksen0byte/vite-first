@@ -421,6 +421,7 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                   </td>
                 </tr>
                 ${errorBreakdownRowsHtml(stats, multiHandStats)}
+                ${testSettings.testType === 'svmr' ? `
                 <tr class="text-center">
                   <td><strong data-localize="statFunctionalLevel"></strong></td>
                   <td>
@@ -442,6 +443,7 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${formatStatistic(handStats.calculateFunctionalCapabilities())} <span data-localize="au"></span>`)}
                   </td>
                 </tr>
+                ` : ''}
               </tbody>
             </table>
           </div>
@@ -720,7 +722,9 @@ function userProfileFooterHTML(): string {
       <div class="flex-1">
         <button id="users-page-btn" class="btn btn-outline btn-success" data-localize="back"></button>
       </div>
-      <button id="print-btn" class="btn btn-outline btn-primary" data-localize="printButton"></button>
+      <div class="flex flex-wrap gap-2">
+        <button id="print-btn" class="btn btn-outline btn-primary" data-localize="printButton"></button>
+      </div>
     </footer>
   `;
 }

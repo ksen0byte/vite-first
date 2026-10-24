@@ -34,7 +34,7 @@ test('selected settings start the test directly', async ({page}) => {
   await page.locator('#age-input').fill('34');
   await page.locator('#protocol-select').selectOption('feedback');
   await page.locator('#mode-select').selectOption('strength');
-  await page.locator('#test-type-select').selectOption('crt2-3');
+  await expect(page.locator('#test-type-select')).toHaveValue('crt2-3');
   await page.locator('#stimulus-select').selectOption('words');
   await page.locator('#start-test-btn').click();
   await expect(page.locator('#test-screen')).toBeVisible();

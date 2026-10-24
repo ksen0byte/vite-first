@@ -207,7 +207,7 @@ for (const feedbackMode of ['mobility', 'strength'] as const) {
     await fillPersonalData(page);
     await page.locator('#protocol-select').selectOption('feedback');
     await page.locator('#mode-select').selectOption(feedbackMode);
-    await page.locator('#test-type-select').selectOption('svmr');
+    await expect(page.locator('#test-type-select')).toHaveValue('crt2-3');
     await page.locator('#start-test-btn').click();
     await expect(page.locator('#test-screen')).toBeVisible();
 
@@ -292,7 +292,7 @@ for (const {testType, language} of crtResultCases) {
 
     await expect(page.locator('#results-screen')).toBeVisible();
     await expect(page.locator('#frequencyChart')).toBeVisible();
-    await expect(page.locator('#secondary-stats-grid > div')).toHaveCount(3);
+    await expect(page.locator('#secondary-stats-grid > div')).toHaveCount(2);
     await expect(page.locator('#cpi-result-value .loading')).toHaveCount(0);
     await expect(page.locator('#cpi-result-value')).not.toBeEmpty();
     expect(await page.locator('#cpi-result-desc').evaluate(

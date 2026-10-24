@@ -168,7 +168,7 @@ function setupCompactSettings(appContext: AppContext): void {
   let state: CompactSettingsState = {
     protocol: initialProtocol,
     feedbackMode: initialFeedbackMode,
-    testType: appContext.testSettings.testType,
+    testType: initialProtocol === "feedback" ? "crt2-3" : appContext.testSettings.testType,
     stimulus: appContext.testSettings.testMode,
     hand: initialHand,
   };
@@ -192,7 +192,9 @@ function setupCompactSettings(appContext: AppContext): void {
     // no effect and would misleadingly imply that only one hand is tested.
     const isCrt23 = currentState.testType === "crt2-3";
     fill(mode, modeOptions(currentState), currentMode);
-    fill(testType, [
+    fill(testType, currentState.protocol === "feedback" ? [
+      {value: "crt2-3", key: "testTypeRV23Short"},
+    ] : [
       {value: "svmr", key: "testTypePzmrShort"},
       {value: "crt1-3", key: "testTypeRV13Short"},
       {value: "crt2-3", key: "testTypeRV23Short"},
@@ -228,7 +230,7 @@ function setupCompactSettings(appContext: AppContext): void {
     const nextProtocol = protocol.value as CompactProtocolValue;
     state = nextProtocol === "optimal"
       ? {...state, protocol: "optimal"}
-      : {...state, protocol: "feedback"};
+      : {...state, protocol: "feedback", testType: "crt2-3"};
     refresh(state);
   });
   mode.addEventListener("change", () => {
