@@ -295,12 +295,12 @@ for (const feedbackMode of ['mobility', 'strength'] as const) {
 
     await page.evaluate((samples) => {
       const destination = new URL('./results', new URL('.', window.location.href));
-      const exposureSteps = [340, 320, 300, 280, 260, 260];
+      const exposureSteps = [340, 320, 340, 320, 300, 320, 300, 280, 300, 280, 260, 280];
       const reactionTimes = new Map(samples.map((reactionTime, trialIndex) => [trialIndex, {
         trialIndex,
         stimulus: 'circle',
         reactionTime,
-        outcome: 'Success',
+        outcome: exposureSteps[trialIndex + 1] > exposureSteps[trialIndex] ? 'MixUp' : 'Success',
         expectedAction: 'DEFAULT',
         actualAction: 'DEFAULT',
         exposureMs: exposureSteps[Math.min(trialIndex, exposureSteps.length - 1)],
@@ -312,7 +312,32 @@ for (const feedbackMode of ['mobility', 'strength'] as const) {
 
     await expect(page.locator('#results-screen')).toBeVisible();
     await expect(page.locator('[data-localize="statMinExposure"]')).toBeVisible();
+    await expect(page.locator('#frequencyChart')).toHaveCount(0);
+    await expect(page.locator('#exposureTimeChart')).toBeVisible();
     await expect(page).toHaveScreenshot(`results-feedback-${feedbackMode}.png`, snapshotOptions);
+    await page.clock.setFixedTime(new Date('2026-01-20T10:00:00.000Z'));
+    await page.locator('#save-results-btn').click();
+    await expect(page.locator('#user-profile-screen')).toBeVisible();
+    await expect(page.locator('#user-profile-screen canvas[id^="histogram-"]')).toHaveCount(0);
+    await expect(page.locator('#user-profile-screen canvas[id^="exposure-"]')).toBeVisible();
+    await expect(page).toHaveScreenshot(`user-profile-feedback-${feedbackMode}.png`, snapshotOptions);
+    await page.locator('#language-toggle').uncheck();
+    await expect(page.locator('#user-profile-screen canvas[id^="exposure-"]'))
+      .toHaveAttribute('aria-label', 'Час експозиції за спробами');
+    await expect(page).toHaveScreenshot(`user-profile-feedback-${feedbackMode}-uk.png`, snapshotOptions);
+    await page.evaluate(() => {
+      const {user, tests} = history.state;
+      const record = tests[0];
+      record.trials = Array.from({length: 120}, (_, trialIndex) => ({
+        ...record.trials[trialIndex % record.trials.length], trialIndex,
+        exposureMs: 900 - Math.min(trialIndex, 68) * 10 + (trialIndex % 5) * 20,
+      }));
+      history.replaceState({user, tests}, '', location.href);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await expect(page.locator('#user-profile-screen canvas[id^="exposure-"]')).toBeVisible();
+    await expect(page.locator('#user-profile-screen canvas[id^="exposure-"]').locator('..'))
+      .toHaveScreenshot(`exposure-long-${feedbackMode}.png`, {animations: 'disabled'});
   });
 }
 

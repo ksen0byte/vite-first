@@ -1,6 +1,7 @@
 // src/screens/user-profile-screen.ts
 import {setupHeader} from '../components/header';
 import {setupFooter} from '../components/footer';
+import {drawExposureTimeChart} from '../components/exposure-time-chart.ts';
 import {updateLanguageUI} from '../localization/localization';
 import {User, TestRecord} from "../db/db.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, OutcomeBreakdown, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
@@ -101,10 +102,17 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
     {buttonFn: () => document.getElementById("print-btn")! as HTMLButtonElement, callback: () => handlePrint(user)},
   ]);
   chartInstances = renderHistograms(sortedTests);
+  const languageToggle = appContainer.querySelector('#language-toggle')!;
+  const redrawCharts = () => {
+    chartInstances.forEach(chart => chart.destroy());
+    chartInstances = renderHistograms(sortedTests);
+  };
+  languageToggle.addEventListener('change', redrawCharts);
   const cleanupPrintHandlers = setupPrintHandlers();
   updateLanguageUI();
 
   return () => {
+    languageToggle.removeEventListener('change', redrawCharts);
     cpiSummaryContainer.removeEventListener('change', handleCpiSelectionChange);
     cleanupPrintHandlers();
     chartInstances.forEach((chart) => chart.destroy());
@@ -430,9 +438,13 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
           </div>
         </div>
 
-        <!-- Histogram -->
-        <div class="flex flex-grow p-8 min-h-96">
-          <canvas id="histogram-${test.id!}"></canvas>
+        <!-- Chart -->
+        <div class="grid grid-cols-1 gap-4">
+        <div class="relative min-w-0 h-96 p-4">
+          ${isFeedbackSession
+            ? `<canvas id="exposure-${test.id!}" role="img" data-localize-aria="exposureTimeChartTitle"></canvas>`
+            : `<canvas id="histogram-${test.id!}"></canvas>`}
+        </div>
         </div>
 
       </div>
@@ -662,15 +674,13 @@ function getTestTypeLocalizationKey(testType: string): string {
 function renderHistograms(tests: TestRecord[]): Chart[] {
   const charts: Chart[] = [];
   tests.forEach((test) => {
-    // Match the stats table's cleaning bound (feedback late answers exceed the
-    // fixed exposure legitimately).
-    const upperBound = isFeedback(test.testSettings)
-      ? feedbackTuning(test.testSettings).maxExposure + feedbackTuning(test.testSettings).pause
-      : test.testSettings.exposureTime;
-    const stats = new ReactionTimeStats(test.trials, upperBound, 100, test.testSettings.testType, undefined);
-    const canvasId = `histogram-${test.id!}`;
-    const chart = stats.drawHistogram(document.getElementById(canvasId)! as HTMLCanvasElement);
-    charts.push(chart);
+    if (isFeedback(test.testSettings)) {
+      charts.push(drawExposureTimeChart(document.getElementById(`exposure-${test.id!}`)! as HTMLCanvasElement,
+        test.trials, feedbackTuning(test.testSettings).adjustmentStep));
+    } else {
+      const stats = new ReactionTimeStats(test.trials, test.testSettings.exposureTime, 100, test.testSettings.testType);
+      charts.push(stats.drawHistogram(document.getElementById(`histogram-${test.id!}`)! as HTMLCanvasElement, false));
+    }
   });
   return charts;
 }

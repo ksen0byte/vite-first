@@ -2,6 +2,7 @@
 
 import {setupHeader} from "../components/header.ts";
 import {setupFooter} from "../components/footer.ts";
+import {drawExposureTimeChart} from "../components/exposure-time-chart.ts";
 import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {MultiHandReactionTimeStats, OUTCOME_BREAKDOWN, ReactionTimeStats} from "../stats/ReactionTimeStats.ts";
 import {getTestsForUser, saveTestRecord, upsertUser} from "../db/operations.ts";
@@ -242,9 +243,13 @@ export function setupResultsScreen(
         ` : ''}
       </div>
 
-      <!-- Frequency Distribution Table -->
-      <div id="results-chart-container" class="flex-1 relative min-h-[220px] w-full p-2 sm:p-3 bg-base-100 rounded-box shadow flex items-center justify-center overflow-hidden">
-        <canvas id="frequencyChart" class="w-full h-full max-w-full max-h-full"></canvas>
+      <!-- Exposure history for feedback; frequency distribution for optimal tests. -->
+      <div class="flex-1 min-h-[220px] grid grid-cols-1 gap-3">
+      <div id="results-chart-container" class="relative min-h-[220px] min-w-0 w-full p-4 bg-base-100 rounded-box shadow overflow-hidden">
+        ${isFeedbackSession
+          ? '<canvas id="exposureTimeChart" role="img" data-localize-aria="exposureTimeChartTitle"></canvas>'
+          : '<canvas id="frequencyChart" class="w-full h-full max-w-full max-h-full"></canvas>'}
+      </div>
       </div>
     </div>
   `;
@@ -262,7 +267,20 @@ export function setupResultsScreen(
       void saveResultsAndSetupNextScreen(reactionTimes, {kind: 'next-test-settings', settings: nextTestRecommendation.settings});
     });
   }
-  reactionTimeStats.drawHistogram(document.getElementById('frequencyChart')! as HTMLCanvasElement);
+   let destroyChart = () => {};
+  if (isFeedbackSession) {
+    const canvas = appContainer.querySelector<HTMLCanvasElement>('#exposureTimeChart')!;
+    const adjustmentStep = feedbackTuning(testSettings).adjustmentStep;
+    let chart = drawExposureTimeChart(canvas, trialResults, adjustmentStep);
+    destroyChart = () => chart.destroy();
+    appContainer.querySelector('#language-toggle')!.addEventListener('change', () => {
+      chart.destroy();
+      chart = drawExposureTimeChart(canvas, trialResults, adjustmentStep);
+    });
+  } else {
+    const histogram = reactionTimeStats.drawHistogram(appContainer.querySelector<HTMLCanvasElement>('#frequencyChart')!);
+    destroyChart = () => histogram.destroy();
+  }
   updateLanguageUI();
 
   if (testType === "crt2-3") {
@@ -270,6 +288,9 @@ export function setupResultsScreen(
     // owns its loading and failure states while the baseline query completes.
     void loadAndDisplayCpi(appContainer, reactionTimeStats, testType, testSettings.testMode);
   }
+  return () => {
+    destroyChart();
+  };
 }
 
 async function loadAndDisplayCpi(

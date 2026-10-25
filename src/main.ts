@@ -46,7 +46,7 @@ function startApp(grant: Grant): void {
       appContainer.innerHTML = '<p>Error loading results. Please try again.</p>';
       return;
     }
-    setupResultsScreen(appContainer, reactionTimes);
+    return setupResultsScreen(appContainer, reactionTimes);
   });
   Router.registerRoute('/profile', () => {
     const state = history.state;

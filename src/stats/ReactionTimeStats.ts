@@ -509,7 +509,7 @@ export class ReactionTimeStats {
    * Draws a histogram of bins, highlighting the highest-frequency bin in pink,
    * and labeling it as "(Highest)" in the tooltip.
    */
-  public drawHistogram(ctx: HTMLCanvasElement): Chart {
+  public drawHistogram(ctx: HTMLCanvasElement, animate = true): Chart {
     const modeBin = this.getModalClass();
 
     const labels = this.bins.map((bin) => `${bin.binStart} - ${bin.binEnd} ${localize("ms")}`);
@@ -558,6 +558,7 @@ export class ReactionTimeStats {
         ],
       },
       options: {
+        animation: animate ? {} : false,
         responsive: true,
         maintainAspectRatio: false,
         scales: {
