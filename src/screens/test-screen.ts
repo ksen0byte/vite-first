@@ -9,6 +9,7 @@ import {TimerManager} from "../components/Timer.ts";
 import {Countdown} from "../components/Countdown.ts";
 import AppContextManager from "../config/AppContextManager.ts";
 import Router from "../routing/router.ts";
+import {features} from '../config/features.ts';
 import {
   TestState,
   toIdle,
@@ -89,6 +90,10 @@ export class TestScreen {
    * Set up the Test Screen UI and initialize all logic (countdown, timers, events).
    */
   public setupScreen(): void {
+    if (!features.feedbackModes && isFeedback(this.appContext.testSettings)) {
+      Router.navigate('/settings');
+      return;
+    }
     this.isDestroyed = false;
     this.stopTest(); // Ensure a clean state if re-initializing
     this.renderUI(this.appContext.debugMode);

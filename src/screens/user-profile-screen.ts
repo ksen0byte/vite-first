@@ -12,6 +12,7 @@ import {Chart} from "chart.js";
 import {printConfig, getHandLocalizationKey} from "../config/settings.ts";
 import {escapeHtml} from "../util/html.ts";
 import {summarizeExposure} from "../stats/exposure-curve.ts";
+import {features} from '../config/features.ts';
 import {
   calculateCpiFromRecords,
   computeUserProfileCpiSummary,
@@ -43,7 +44,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
       <div class="flex-1 space-y-4">
           ${personalDataCardHtml(user)}
           <div id="cpi-summary-container">
-            ${centralProcessingSummaryCardHtml(cpiSummary)}
+            ${features.advancedAnalysis ? centralProcessingSummaryCardHtml(cpiSummary) : ''}
           </div>
           <!-- Test Cards -->
           ${sortedTests.map((test, index) => testCardHTML((sortedTests.length - index), test, cpiSummary[test.testSettings.testMode].selectedPzmrTest)).join("")}
@@ -95,24 +96,24 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
 
     updateCpi();
   };
-  cpiSummaryContainer.addEventListener('change', handleCpiSelectionChange);
+  if (features.advancedAnalysis) cpiSummaryContainer.addEventListener('change', handleCpiSelectionChange);
 
   setupFooter(appContainer, userProfileFooterHTML(), [
     {buttonFn: () => document.getElementById("users-page-btn")! as HTMLButtonElement, callback: () => Router.navigate("/users")},
-    {buttonFn: () => document.getElementById("print-btn")! as HTMLButtonElement, callback: () => handlePrint(user)},
+    ...(features.dataTools ? [{buttonFn: () => document.getElementById("print-btn")! as HTMLButtonElement, callback: () => handlePrint(user)}] : []),
   ]);
   chartInstances = renderHistograms(sortedTests);
-  const languageToggle = appContainer.querySelector('#language-toggle')!;
+  const languageToggle = appContainer.querySelector('#language-toggle');
   const redrawCharts = () => {
     chartInstances.forEach(chart => chart.destroy());
     chartInstances = renderHistograms(sortedTests);
   };
-  languageToggle.addEventListener('change', redrawCharts);
-  const cleanupPrintHandlers = setupPrintHandlers();
+  languageToggle?.addEventListener('change', redrawCharts);
+  const cleanupPrintHandlers = features.dataTools ? setupPrintHandlers() : () => {};
   updateLanguageUI();
 
   return () => {
-    languageToggle.removeEventListener('change', redrawCharts);
+    languageToggle?.removeEventListener('change', redrawCharts);
     cpiSummaryContainer.removeEventListener('change', handleCpiSelectionChange);
     cleanupPrintHandlers();
     chartInstances.forEach((chart) => chart.destroy());
@@ -121,6 +122,7 @@ export function setupProfileScreen(appContainer: HTMLElement, user: User, tests:
 }
 
 function handlePrint(user: User): void {
+  if (!features.dataTools) return;
   const now = new Date();
   const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
   const timeStr = now.toTimeString().slice(0, 5).replace(/:/g, '');
@@ -294,7 +296,7 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, (handStats) => `${handStats.meanVal.toFixed(2)} <span data-localize="ms"></span>`)}
                   </td>
                 </tr>
-                <tr class="text-center bg-primary/10 font-semibold">
+                ${features.advancedAnalysis ? `<tr class="text-center bg-primary/10 font-semibold">
                   <td>
                     <div class="inline-flex items-center justify-center gap-1">
                       <strong data-localize="motorComponentLabel"></strong>
@@ -318,7 +320,8 @@ function testCardHTML(index: number, test: TestRecord, baselinePzmr: TestRecord 
                     ${handBreakdownStatsValueHtml(statsLeft, statsRight, formatSensoryComponent)}
                   </td>
                 </tr>
-                ${testType === "crt2-3" ? `
+                ` : ''}
+                ${features.advancedAnalysis && testType === "crt2-3" ? `
                 <tr class="text-center bg-primary/10 font-semibold">
                   <td>
                     <div class="inline-flex items-center justify-center gap-1">
@@ -637,7 +640,7 @@ function userProfileFooterHTML(): string {
         <button id="users-page-btn" class="btn btn-outline btn-success" data-localize="back"></button>
       </div>
       <div class="flex flex-wrap gap-2">
-        <button id="print-btn" class="btn btn-outline btn-primary" data-localize="printButton"></button>
+        ${features.dataTools ? '<button id="print-btn" class="btn btn-outline btn-primary" data-localize="printButton"></button>' : ''}
       </div>
     </footer>
   `;

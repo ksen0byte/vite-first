@@ -21,6 +21,7 @@ import Router from "../routing/router.ts";
 import {getColorRectangleHtml} from "../components/ColorRectangles.ts";
 import {getWordCategoryHtml} from "../components/Words.ts";
 import {escapeHtml} from "../util/html.ts";
+import {features} from '../config/features.ts';
 
 const PREVIEW_STIMULUS_SIZE = 28;
 const PREVIEW_COMBINED_COMPONENT_SIZE = 14;
@@ -138,9 +139,9 @@ function compactSettingsScreenHTML(appContext: AppContext): string {
     </div></section>
 
     <section class="card bg-base-100 shadow-sm"><div class="card-body p-4">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="protocolLabel"></span><select id="protocol-select" class="select select-md select-bordered w-full text-base"><option value="optimal" ${appContext.testSettings.protocolMode === 'optimal' ? 'selected' : ''} data-localize="optimalProtocol"></option><option value="feedback" ${appContext.testSettings.protocolMode !== 'optimal' ? 'selected' : ''} data-localize="feedbackProtocol"></option></select></label>
-        <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="regimeLabel"></span><select id="mode-select" class="select select-md select-bordered w-full text-base"></select></label>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 ${features.feedbackModes ? 'lg:grid-cols-5' : 'lg:grid-cols-3'}">
+        <label ${features.feedbackModes ? '' : 'hidden'} class="${features.feedbackModes ? 'block' : 'hidden'} w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="protocolLabel"></span><select id="protocol-select" class="select select-md select-bordered w-full text-base"><option value="optimal" ${appContext.testSettings.protocolMode === 'optimal' ? 'selected' : ''} data-localize="optimalProtocol"></option>${features.feedbackModes ? `<option value="feedback" ${appContext.testSettings.protocolMode !== 'optimal' ? 'selected' : ''} data-localize="feedbackProtocol"></option>` : ''}</select></label>
+        <label ${features.feedbackModes ? '' : 'hidden'} class="${features.feedbackModes ? 'block' : 'hidden'} w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="regimeLabel"></span><select id="mode-select" class="select select-md select-bordered w-full text-base"></select></label>
         <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="submodeLabel"></span><select id="test-type-select" class="select select-md select-bordered w-full text-base"></select></label>
         <label class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="stimulusTypeLabel"></span><select id="stimulus-select" class="select select-md select-bordered w-full text-base"></select></label>
         <label id="hand-select-label" class="block w-full min-w-0"><span class="mb-1 block text-sm font-medium" data-localize="handLabel"></span><select id="hand-select" class="select select-md select-bordered w-full text-base"></select></label>
@@ -161,7 +162,7 @@ function setupCompactSettings(appContext: AppContext): void {
   const stimulus = document.getElementById("stimulus-select") as HTMLSelectElement;
   const hand = document.getElementById("hand-select") as HTMLSelectElement;
   const handLabel = document.getElementById("hand-select-label") as HTMLElement;
-  const initialProtocol: CompactProtocolValue = appContext.testSettings.protocolMode === "optimal" ? "optimal" : "feedback";
+  const initialProtocol: CompactProtocolValue = features.feedbackModes && isFeedback(appContext.testSettings) ? "feedback" : "optimal";
   const initialFeedbackMode: CompactFeedbackModeValue =
     appContext.testSettings.protocolMode === "feedback-strength" ? "strength" : "mobility";
   const initialHand: Hand = appContext.testSettings.hand ?? "right";
@@ -227,14 +228,14 @@ function setupCompactSettings(appContext: AppContext): void {
     renderCompactPreview(state.stimulus, state.testType, state.protocol, getModeValue(state));
   };
   protocol.addEventListener("change", () => {
-    const nextProtocol = protocol.value as CompactProtocolValue;
+    const nextProtocol = features.feedbackModes ? protocol.value as CompactProtocolValue : 'optimal';
     state = nextProtocol === "optimal"
       ? {...state, protocol: "optimal"}
       : {...state, protocol: "feedback", testType: "crt2-3"};
     refresh(state);
   });
   mode.addEventListener("change", () => {
-    const nextMode = mode.value as CompactModeValue;
+    const nextMode = features.feedbackModes ? mode.value as CompactModeValue : 'standard';
     state = nextMode === "standard"
       ? {...state, protocol: "optimal"}
       : {...state, protocol: "feedback", feedbackMode: nextMode};
@@ -553,7 +554,7 @@ function compactStartButtonCallback(): void {
     return;
   }
   const current = AppContextManager.getContext();
-  const protocolMode = (document.getElementById("protocol-select") as HTMLSelectElement).value;
+  const protocolMode = features.feedbackModes ? (document.getElementById("protocol-select") as HTMLSelectElement).value : 'optimal';
   const feedbackSubmode = (document.getElementById("mode-select") as HTMLSelectElement).value;
   const testType = (document.getElementById("test-type-select") as HTMLSelectElement).value as TestType;
   const testMode = (document.getElementById("stimulus-select") as HTMLSelectElement).value as TestMode;

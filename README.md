@@ -243,6 +243,11 @@ npm run desktop:build    # збірка інсталяторів (src-tauri/targ
 
 ---
 
+## Feature configuration
+
+See [App features and build profiles](docs/FEATURES.md) for the feature table,
+the five build-time flags, and desktop build examples.
+
 ## 6. Технічна архітектура
 
 Детальний опис внутрішньої логіки екрана тестування, включаючи машину станів, таймери та обробку вводу, можна знайти у окремих технічних документах:

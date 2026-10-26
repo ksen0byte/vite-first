@@ -13,6 +13,7 @@ import {TrialResult, TestMode, TestSettings, OptimalSettings, FeedbackMobilitySe
 import {summarizeExposure} from "../stats/exposure-curve.ts";
 import {getHandLocalizationKey} from "../config/settings.ts";
 import {calculateCpiFromStats, getTestStats, CrtTestType} from "../stats/central-processing.ts";
+import {features} from '../config/features.ts';
 
 type NextTestRecommendation =
   | {kind: 'feedback-protocol'}
@@ -88,7 +89,7 @@ export function setupResultsScreen(
 
       <!-- Important measures share one highlighted panel. -->
       <div id="important-stats-group" class="bg-primary/10 ring-2 ring-primary ring-inset rounded-box shadow w-full shrink-0">
-      <div id="primary-stats-grid" class="grid grid-cols-1 ${testType === 'crt2-3' ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'} divide-y sm:divide-y-0 sm:divide-x divide-primary/20 w-full">
+      <div id="primary-stats-grid" class="grid grid-cols-1 ${features.advancedAnalysis ? (testType === 'crt2-3' ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3') : ''} divide-y sm:divide-y-0 sm:divide-x divide-primary/20 w-full">
 
         <!-- Mean -->
         <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
@@ -98,6 +99,7 @@ export function setupResultsScreen(
         </div>
 
         <!-- Motor Component -->
+        ${features.advancedAnalysis ? `
         <div class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
             <span data-localize="motorComponentLabel">Motor Component</span>
@@ -122,7 +124,8 @@ export function setupResultsScreen(
           </div>
           ${handBreakdownDescHtmlForStats(multiHandStats.left, multiHandStats.right, showHandBreakdown, formatSensoryComponentHtml)}
         </div>
-        ${testType === "crt2-3" ? `
+        ` : ''}
+        ${features.advancedAnalysis && testType === "crt2-3" ? `
         <div id="cpi-result-stat" class="stat min-w-0 p-2 sm:p-3 place-items-center text-center">
           <div class="stat-title text-xs font-medium flex items-center justify-center gap-1">
             <span data-localize="statCpi23"></span>
@@ -273,7 +276,7 @@ export function setupResultsScreen(
     const adjustmentStep = feedbackTuning(testSettings).adjustmentStep;
     let chart = drawExposureTimeChart(canvas, trialResults, adjustmentStep);
     destroyChart = () => chart.destroy();
-    appContainer.querySelector('#language-toggle')!.addEventListener('change', () => {
+    appContainer.querySelector('#language-toggle')?.addEventListener('change', () => {
       chart.destroy();
       chart = drawExposureTimeChart(canvas, trialResults, adjustmentStep);
     });
@@ -283,7 +286,7 @@ export function setupResultsScreen(
   }
   updateLanguageUI();
 
-  if (testType === "crt2-3") {
+  if (features.advancedAnalysis && testType === "crt2-3") {
     // Rendering the rest of the results must not wait on IndexedDB; the CPI card
     // owns its loading and failure states while the baseline query completes.
     void loadAndDisplayCpi(appContainer, reactionTimeStats, testType, testSettings.testMode);

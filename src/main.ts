@@ -12,6 +12,7 @@ import {setupSpamWarningScreen} from "./screens/spam-warning-screen.ts";
 import {setupActivationScreen} from "./screens/activation-screen.ts";
 import type {Grant} from "./licensing/domain.ts";
 import {detectPlatform, resolveStartup} from "./licensing/tauri-licensing.ts";
+import {features} from './config/features.ts';
 
 const appContainer = document.getElementById('app')! as HTMLElement;
 
@@ -26,7 +27,9 @@ function startApp(grant: Grant): void {
     return () => testScreen.destroy();
   });
   Router.registerRoute('/spam-warning', () => setupSpamWarningScreen(appContainer));
-  Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(appContainer));
+  if (features.biologicalAge) {
+    Router.registerRoute('/bio-age-calculator', () => setupBioAgeCalculatorScreen(appContainer));
+  }
   Router.registerRoute('/users', async () => {
     appContainer.innerHTML = '<p>Loading...</p>';
     try {

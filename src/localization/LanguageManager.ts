@@ -1,4 +1,5 @@
 import {settings} from "../config/settings.ts";
+import {features} from '../config/features.ts';
 
 export const LanguageManager = (() => {
   const LANGUAGE_KEY = "selectedLanguage";
@@ -7,10 +8,11 @@ export const LanguageManager = (() => {
   let currentLanguage = localStorage.getItem(LANGUAGE_KEY) || settings.default.language;
 
   function getCurrentLanguage(): string {
-    return currentLanguage;
+    return features.languageSwitching ? currentLanguage : settings.default.language;
   }
 
   function setCurrentLanguage(language: string): void {
+    if (!features.languageSwitching) return;
     currentLanguage = language;
     localStorage.setItem(LANGUAGE_KEY, language);
   }

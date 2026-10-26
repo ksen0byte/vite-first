@@ -423,14 +423,9 @@ for (const {testType, language} of crtResultCases) {
   });
 }
 
-test('biological age calculator page', async ({page}) => {
+test('disabled biological age calculator is unavailable', async ({page}) => {
   await openRoute(page, '/bio-age-calculator');
-  await expect(page.locator('#ba-calculate-btn')).toBeVisible();
-  await page.locator('#ba-age').fill('12');
-  await page.locator('#ba-gender').selectOption('female');
-  await page.locator('#ba-time').fill('250');
-  await page.locator('#ba-calculate-btn').click();
-  await expect(page.locator('#ba-result')).toBeVisible();
-  await expectStandardBackButton(page, '#ba-back-btn');
-  await expect(page).toHaveScreenshot('biological-age-calculator.png', snapshotOptions);
+  await expect(page.locator('#dashboard-content')).toBeVisible();
+  await expect(page.locator('#service-bio-age')).toHaveCount(0);
+  await expect(page.locator('#ba-calculate-btn')).toHaveCount(0);
 });

@@ -9,6 +9,7 @@ import {escapeHtml} from "../util/html.ts";
 import {ExportEnvelopeV1, parseImportedJson} from '../util/import-json.ts';
 import {importUsers} from '../application/import-users.ts';
 import {dialogs} from '../platform/dialogs.ts';
+import {features} from '../config/features.ts';
 
 /**
  * Exports all users and their test data as a JSON file
@@ -16,6 +17,7 @@ import {dialogs} from '../platform/dialogs.ts';
 type ExportUserBundle = { user: User; tests: TestRecord[] };
 
 async function exportAllUsersData(): Promise<void> {
+  if (!features.dataTools) return;
   try {
     const usersResult = await getAllUsers();
     if (usersResult._tag === 'Failure') {
@@ -59,6 +61,7 @@ async function exportAllUsersData(): Promise<void> {
  * Exports a specific user's data as a JSON file
  */
 async function exportUserData(firstName: string, lastName: string): Promise<void> {
+  if (!features.dataTools) return;
   try {
     const usersResult = await getAllUsers();
     if (usersResult._tag === 'Failure') {
@@ -138,14 +141,13 @@ export class UsersScreen {
         this.appContainer,
         this.usersScreenFooterHTML(),
         [
-          {
+          ...(features.dataTools ? [{
             buttonFn: () => document.getElementById("export-data-btn")! as HTMLButtonElement,
             callback: exportAllUsersData
-          },
-          {
+          }, {
             buttonFn: () => document.getElementById("import-data-btn")! as HTMLButtonElement,
             callback: () => this.importAllUsersData()
-          },
+          }] : []),
           {
             buttonFn: () => document.getElementById("main-page-btn")! as HTMLButtonElement,
             callback: () => this.navigateToMainPage()
@@ -197,10 +199,10 @@ export class UsersScreen {
           <div class="flex justify-between">
             <h2 class="card-title">${escapedFirstName} ${escapedLastName}</h2>
             <div class="flex justify-between gap-x-2">
-                <button class="btn btn-sm btn-outline btn-primary export-user-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
+                ${features.dataTools ? `<button class="btn btn-sm btn-outline btn-primary export-user-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /> </svg>
                   <span data-localize="exportData"></span>
-                </button>
+                </button>` : ''}
                 <button class="btn btn-sm btn-outline btn-info view-profile-btn" data-first-name="${escapedFirstName}" data-last-name="${escapedLastName}">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /> </svg>
                   <span data-localize="viewProfileButton"></span>
@@ -234,39 +236,39 @@ export class UsersScreen {
   }
 
   private async handleContainerClick(event: MouseEvent): Promise<void> {
-      const target = event.target as HTMLElement;
+    const target = event.target as HTMLElement;
 
-      // Delegate the event strictly to the delete-user-btn
-      const deleteButton = target.closest<HTMLButtonElement>('.delete-user-btn');
-      if (deleteButton) {
-        event.stopImmediatePropagation(); // Ensure the event is not processed multiple times
+    // Delegate the event strictly to the delete-user-btn
+    const deleteButton = target.closest<HTMLButtonElement>('.delete-user-btn');
+    if (deleteButton) {
+      event.stopImmediatePropagation(); // Ensure the event is not processed multiple times
 
-        const firstName = deleteButton.getAttribute('data-first-name')!;
-        const lastName = deleteButton.getAttribute('data-last-name')!;
-        await this.deleteUser(firstName, lastName);
-        return;
-      }
+      const firstName = deleteButton.getAttribute('data-first-name')!;
+      const lastName = deleteButton.getAttribute('data-last-name')!;
+      await this.deleteUser(firstName, lastName);
+      return;
+    }
 
-      // Delegate the event to the view-profile-btn
-      const viewButton = target.closest<HTMLButtonElement>('.view-profile-btn');
-      if (viewButton) {
-        event.stopImmediatePropagation(); // Prevent duplicate or unintended event handlers
+    // Delegate the event to the view-profile-btn
+    const viewButton = target.closest<HTMLButtonElement>('.view-profile-btn');
+    if (viewButton) {
+      event.stopImmediatePropagation(); // Prevent duplicate or unintended event handlers
 
-        const firstName = viewButton.getAttribute('data-first-name')!;
-        const lastName = viewButton.getAttribute('data-last-name')!;
-        await this.viewUserProfile(firstName, lastName);
-        return;
-      }
+      const firstName = viewButton.getAttribute('data-first-name')!;
+      const lastName = viewButton.getAttribute('data-last-name')!;
+      await this.viewUserProfile(firstName, lastName);
+      return;
+    }
 
-      // Delegate the event to the export-user-btn
-      const exportButton = target.closest<HTMLButtonElement>('.export-user-btn');
-      if (exportButton) {
-        event.stopImmediatePropagation(); // Prevent duplicate or unintended event handlers
+    // Delegate the event to the export-user-btn
+    const exportButton = target.closest<HTMLButtonElement>('.export-user-btn');
+    if (exportButton) {
+      event.stopImmediatePropagation(); // Prevent duplicate or unintended event handlers
 
-        const firstName = exportButton.getAttribute('data-first-name')!;
-        const lastName = exportButton.getAttribute('data-last-name')!;
-        await exportUserData(firstName, lastName);
-      }
+      const firstName = exportButton.getAttribute('data-first-name')!;
+      const lastName = exportButton.getAttribute('data-last-name')!;
+      await exportUserData(firstName, lastName);
+    }
   }
 
   /**
@@ -314,8 +316,8 @@ export class UsersScreen {
         <div class="flex-1">
           <button id="main-page-btn" class="btn btn-outline btn-success" data-localize="backToMainPage"></button>
         </div>
-        <button id="import-data-btn" class="btn btn-outline btn-secondary mr-2" data-localize="importAllData"></button>
-        <button id="export-data-btn" class="btn btn-outline btn-primary mr-2" data-localize="exportAllData"></button>
+        ${features.dataTools ? `<button id="import-data-btn" class="btn btn-outline btn-secondary mr-2" data-localize="importAllData"></button>
+        <button id="export-data-btn" class="btn btn-outline btn-primary mr-2" data-localize="exportAllData"></button>` : ''}
       </footer>
     `;
   }
@@ -354,6 +356,7 @@ export class UsersScreen {
    * Opens a file picker, reads exported JSON and imports users and tests.
    */
   private async importAllUsersData(): Promise<void> {
+    if (!features.dataTools) return;
     // Create a hidden file input for JSON files
     const input = document.createElement('input');
     input.type = 'file';

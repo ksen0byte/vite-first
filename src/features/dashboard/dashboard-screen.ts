@@ -3,9 +3,10 @@ import { setupHeader } from "../../components/header.ts";
 import { updateLanguageUI } from "../../localization/localization.ts";
 import { licenseSummaryHtml } from "../../components/license-summary.ts";
 import type { Grant } from "../../licensing/domain.ts";
+import {features} from '../../config/features.ts';
 
 export function setupDashboardScreen(appContainer: HTMLElement, grant: Grant) {
-  const bioAgeEnabled = false;
+  const bioAgeEnabled = features.biologicalAge;
 
   appContainer.innerHTML = `
     <div class="bg-base-200 flex flex-col">
@@ -27,7 +28,7 @@ export function setupDashboardScreen(appContainer: HTMLElement, grant: Grant) {
             </div>
           </div>
 
-          <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-secondary lg:col-span-2 ${bioAgeEnabled ? '' : 'hidden'}" id="service-bio-age" role="button" tabindex="0">
+          ${bioAgeEnabled ? `<div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-secondary lg:col-span-2" id="service-bio-age" role="button" tabindex="0">
             <figure class="px-10 pt-10">
               <span class="text-6xl">🧬</span>
             </figure>
@@ -40,6 +41,7 @@ export function setupDashboardScreen(appContainer: HTMLElement, grant: Grant) {
             </div>
           </div>
 
+          ` : ''}
           <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer focus:outline focus:outline-3 focus:outline-accent lg:col-span-2" id="service-profiles" role="button" tabindex="0">
             <figure class="px-10 pt-10">
               <span class="text-6xl">📂</span>

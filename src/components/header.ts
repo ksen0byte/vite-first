@@ -2,6 +2,7 @@ import {localize, updateLanguageUI} from "../localization/localization.ts";
 import {ThemeManager} from "./ThemeManager.ts";
 import {LanguageManager} from "../localization/LanguageManager.ts";
 import Router from "../routing/router.ts";
+import {features} from '../config/features.ts';
 
 export function setupHeader(container: HTMLElement) {
   container.insertAdjacentHTML('afterbegin', headerHTML());
@@ -25,14 +26,14 @@ function headerHTML() {
                 <span id="theme-toggle-text"></span>
             </button>
 
-            <label class="flex cursor-pointer items-center gap-2">
+            ${features.languageSwitching ? `<label class="flex cursor-pointer items-center gap-2">
               <!-- UA Label -->
               <span class="label-text" data-localize="languageUA">UA</span>
               <!-- Toggle Input -->
               <input type="checkbox" class="toggle" id="language-toggle" data-localize-aria="languageSelector" />
               <!-- EN Label -->
               <span class="label-text" data-localize="languageEN">EN</span>
-            </label>
+            </label>` : ''}
             
         </div>
     </header>`;
